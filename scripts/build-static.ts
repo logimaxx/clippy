@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import {
   readFileSync,
   writeFileSync,
@@ -9,6 +10,13 @@ import { join } from "node:path";
 const ROOT = join(import.meta.dir, "..");
 const STATIC = join(ROOT, "static");
 const OUT = join(ROOT, "dist", "pages");
+
+const scriptHashes = new Set<string>();
+
+function hashInlineScript(content: string): string {
+  const digest = createHash("sha256").update(content).digest("base64");
+  return `'sha256-${digest}'`;
+}
 
 interface LandingPage {
   slug: string;
@@ -138,9 +146,12 @@ function renderPage(
   const canonical = meta.canonical
     ? `<link rel="canonical" href="${meta.canonical}" />`
     : "";
-  const jsonLd = meta.jsonLd
-    ? `<script type="application/ld+json">${JSON.stringify(meta.jsonLd)}</script>`
-    : "";
+  let jsonLd = "";
+  if (meta.jsonLd) {
+    const jsonLdContent = JSON.stringify(meta.jsonLd);
+    scriptHashes.add(hashInlineScript(jsonLdContent));
+    jsonLd = `<script type="application/ld+json">${jsonLdContent}</script>`;
+  }
 
   const footerHtml = replaceVars(footer, {
     CONTACT_EMAIL: ctx.contactEmail,
@@ -360,6 +371,10 @@ const sitemapPaths = [
 writeFileSync(join(OUT, "sitemap-paths.json"), JSON.stringify(sitemapPaths, null, 2));
 
 writeFileSync(join(OUT, "routes.json"), JSON.stringify(routes, null, 2));
+writeFileSync(
+  join(OUT, "csp-script-hashes.json"),
+  JSON.stringify([...scriptHashes].sort())
+);
 
 console.log(`Static pages built → ${OUT} (${Object.keys(routes).length} pages)`);
 

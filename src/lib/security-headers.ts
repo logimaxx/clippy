@@ -1,4 +1,22 @@
+import { readFileSync, existsSync } from "node:fs";
+import { join } from "node:path";
 import { umamiScriptOrigin } from "./umami";
+
+const CSP_SCRIPT_HASHES_PATH = join(
+  process.cwd(),
+  "dist",
+  "pages",
+  "csp-script-hashes.json"
+);
+
+function loadScriptHashes(): string[] {
+  if (!existsSync(CSP_SCRIPT_HASHES_PATH)) return [];
+  try {
+    return JSON.parse(readFileSync(CSP_SCRIPT_HASHES_PATH, "utf-8")) as string[];
+  } catch {
+    return [];
+  }
+}
 
 const DEFAULT_SECRETS = new Set([
   "clippy-dev-secret-change-me",
@@ -30,7 +48,8 @@ export function securityHeaders(): Record<string, string> {
   const umamiOrigin = umamiScriptOrigin();
   const scriptParts = ["'self'"];
   if (umamiOrigin) scriptParts.push(umamiOrigin);
-  // JSON-LD and other inline scripts are blocked under strict script-src in dev.
+  scriptParts.push(...loadScriptHashes());
+  // Allow arbitrary inline scripts only in development (htmx swaps, ad-hoc debugging).
   if (isDevelopment()) scriptParts.push("'unsafe-inline'");
   const scriptSrc = scriptParts.join(" ");
   const connectSrc = umamiOrigin
