@@ -1,0 +1,37 @@
+<h1>Developer documentation</h1>
+<p class="legal-updated">Automate Clippy with the REST API, CLI, and webhooks.</p>
+
+<p>
+  Clippy exposes a JSON REST API for creating, reading, updating, and deleting clips.
+  Use it from scripts, CI pipelines, or any HTTP client. A small CLI wraps the same
+  endpoints for terminal workflows.
+</p>
+
+<h2>Quick start</h2>
+<p>Create a clip and read it back:</p>
+<pre><code>curl -s -X POST https://your-host/api/v1/clips/my-clip \
+  -H "Content-Type: application/json" \
+  -d '{"content":"hello from the API","burnOnRead":false,"ttl":3600}'
+
+curl -s https://your-host/api/v1/clips/my-clip</code></pre>
+
+<h2>Guides</h2>
+<ul class="docs-guide-list">
+  <li><a href="/docs/api"><strong>REST API</strong> — endpoints, request bodies, PIN headers, and rate limits</a></li>
+  <li><a href="/docs/cli"><strong>CLI</strong> — push and pull clip content from your terminal</a></li>
+  <li><a href="/docs/webhooks"><strong>Webhooks</strong> — get notified when clips are read, burned, or expired</a></li>
+</ul>
+
+<h2>Authentication</h2>
+<p>
+  Anonymous clips work without credentials — the slug URL is the access secret.
+  Signed-in users can create <a href="/account">API keys</a> for account-related endpoints
+  (<code>Authorization: Bearer …</code>). Clip CRUD does not require an API key.
+</p>
+
+<h2>Limits</h2>
+<ul>
+  <li>Clip slugs: 3–64 characters, letters, numbers, <code>_</code>, and <code>-</code></li>
+  <li>Content size: up to 1&nbsp;MB per update</li>
+  <li>Rate limits: per-IP caps on API requests and clip creation (see <code>X-RateLimit-Remaining</code> response header)</li>
+</ul>

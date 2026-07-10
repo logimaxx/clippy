@@ -1171,3 +1171,148 @@ a {
   font-size: 0.85em;
 }
 
+/* Developer docs */
+.docs-page {
+  display: grid;
+  gap: 2rem;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+}
+
+@media (min-width: 768px) {
+  .docs-page {
+    grid-template-columns: 11rem minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.docs-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .docs-nav {
+    flex-direction: column;
+    position: sticky;
+    top: 5rem;
+  }
+}
+
+.docs-nav a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.9rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
+}
+
+.docs-nav a:hover,
+.docs-nav a.is-active {
+  color: var(--text);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.docs-nav a.is-active {
+  font-weight: 600;
+}
+
+.docs-prose pre {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem 1.1rem;
+  overflow-x: auto;
+  margin: 0.75rem 0 1.25rem;
+}
+
+.docs-prose pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  white-space: pre;
+}
+
+.docs-endpoint {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 1rem 0 0.5rem;
+}
+
+.docs-method {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+  font-family: var(--mono);
+}
+
+.docs-method--get {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--accent);
+}
+
+.docs-method--post {
+  background: color-mix(in srgb, #4ade80 18%, transparent);
+  color: #4ade80;
+}
+
+.docs-method--put {
+  background: color-mix(in srgb, #fbbf24 18%, transparent);
+  color: #fbbf24;
+}
+
+.docs-method--delete {
+  background: color-mix(in srgb, #f87171 18%, transparent);
+  color: #f87171;
+}
+
+.docs-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0 1.25rem;
+  font-size: 0.9rem;
+}
+
+.docs-table th,
+.docs-table td {
+  text-align: left;
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.docs-table th {
+  color: var(--text);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.docs-guide-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.docs-guide-list li {
+  margin-bottom: 0.75rem;
+}
+
+.docs-guide-list a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.docs-guide-list a:hover strong {
+  color: var(--accent);
+}
+

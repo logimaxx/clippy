@@ -12,9 +12,8 @@
 
     <h2>Transport security</h2>
     <p>
-      In production, Clippy should be deployed behind a reverse proxy that terminates TLS (HTTPS).
-      We set secure cookies when HTTPS is detected and recommend always accessing the service over
-      encrypted connections.
+      Clippy is served over HTTPS. Secure cookies are used on encrypted connections.
+      Always access the service over an encrypted connection.
     </p>
 
     <h2>Access controls</h2>
@@ -51,7 +50,6 @@
     <ul>
       <li>We do not encrypt data at rest in the database by default</li>
       <li>We do not guarantee protection against someone who already has your link</li>
-      <li>Self-hosted deployments are the operator's responsibility to harden</li>
     </ul>
 
     <h2>Responsible disclosure</h2>

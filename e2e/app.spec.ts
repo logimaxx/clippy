@@ -67,6 +67,16 @@ test.describe("Clippy E2E", () => {
       expect(await robots.text()).toMatch(/Sitemap|User-agent/i);
     });
 
+    test("developer docs load", async ({ page }) => {
+      for (const path of ["/docs", "/docs/api", "/docs/cli", "/docs/webhooks"]) {
+        await page.goto(path);
+        await expect(page.getByRole("main")).toBeVisible();
+        await expect(page).toHaveTitle(/Clippy/i);
+      }
+      await page.goto("/docs/api");
+      await expect(page.getByRole("heading", { level: 1 })).toContainText("REST API");
+    });
+
     test("landing page loads", async ({ page }) => {
       await page.goto("/online-clipboard");
       await expect(page.getByRole("heading", { level: 1 })).toContainText(

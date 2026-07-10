@@ -1,0 +1,52 @@
+<h1>Webhooks</h1>
+<p class="legal-updated">POST notifications when clip lifecycle events occur.</p>
+
+<p>
+  Set a webhook URL when creating a clip via the API (<code>webhook</code> field) or from
+  clip settings in the UI. Clippy sends a JSON <code>POST</code> to your URL when the clip
+  is read, burned, or expired.
+</p>
+
+<h2>Payload</h2>
+<pre><code>{
+  "event": "read",
+  "slug": "my-clip",
+  "timestamp": "2026-07-07T12:00:00.000Z",
+  "viewCount": 2,
+  "burnOnRead": false,
+  "maxViews": 3,
+  "burned": false
+}</code></pre>
+
+<h2>Events</h2>
+<ul>
+  <li><code>read</code> — the clip was read via the API (after view counting)</li>
+  <li><code>burned</code> — the clip was deleted by burn-on-read or a view limit</li>
+  <li><code>expired</code> — the clip TTL elapsed and cleanup removed it</li>
+</ul>
+
+<p>
+  For burn events, <code>burned</code> in the payload is <code>true</code>. Additional fields
+  may be included depending on the event.
+</p>
+
+<h2>Delivery</h2>
+<ul>
+  <li>Method: <code>POST</code></li>
+  <li>Content-Type: <code>application/json</code></li>
+  <li>User-Agent: <code>Clippy-Webhook/1.0</code></li>
+  <li>Timeout: 10 seconds</li>
+</ul>
+<p>
+  Webhook URLs must be public <code>http</code> or <code>https</code> endpoints. Private and
+  loopback addresses are rejected to prevent server-side request forgery.
+</p>
+
+<h2>Example</h2>
+<pre><code>curl -X POST https://your-host/api/v1/clips/alert \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "deploy token",
+    "burnOnRead": true,
+    "webhook": "https://hooks.example.com/clippy"
+  }'</code></pre>

@@ -1,0 +1,49 @@
+<h1>CLI</h1>
+<p class="legal-updated">Run with <code>bun run cli --</code> from the project, or point at your server with <code>-u</code>.</p>
+
+<p>
+  The CLI wraps the REST API for quick terminal and CI workflows — create clips, push text,
+  fetch content, and upload files.
+</p>
+
+<h2>Examples</h2>
+<pre><code># Create or update clip content
+bun run cli -- -u https://your-host -l my-clip -m "hello world"
+
+# Fetch clip content (counts as an API read)
+bun run cli -- -u https://your-host -l my-clip -g
+
+# Create with PIN, webhook, and view limit
+bun run cli -- -u https://your-host -l secret -m "data" \
+  -p 1234 -w https://hooks.example.com/clippy --max-views 3
+
+# Disable burn-on-read on create
+bun run cli -- -u https://your-host -l notes -m "keep me" --no-burn
+
+# Upload a file to an existing clip
+bun run cli -- -u https://your-host -l my-clip -f ./photo.png</code></pre>
+
+<h2>Options</h2>
+<table class="docs-table">
+  <thead>
+    <tr><th>Flag</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>-u, --url</code></td><td>Server URL (default: <code>http://localhost:3000</code>)</td></tr>
+    <tr><td><code>-l, --slug</code></td><td>Clip slug (required)</td></tr>
+    <tr><td><code>-m, --message</code></td><td>Text content to create or update</td></tr>
+    <tr><td><code>-g, --get</code></td><td>Fetch clip via API (counts as a read)</td></tr>
+    <tr><td><code>-f, --file</code></td><td>Upload a file to the clip</td></tr>
+    <tr><td><code>-p, --pin</code></td><td>PIN for protected clips (<code>X-Clip-Pin</code>)</td></tr>
+    <tr><td><code>-w, --webhook</code></td><td>Webhook URL (on create only)</td></tr>
+    <tr><td><code>--max-views N</code></td><td>Delete after N API reads (<code>0</code> = unlimited)</td></tr>
+    <tr><td><code>--no-burn</code></td><td>Disable burn-on-read when creating a clip</td></tr>
+  </tbody>
+</table>
+
+<h2>Behaviour</h2>
+<ul>
+  <li>With <code>-m</code>, the CLI tries <code>PUT</code> first, then <code>POST</code> if the clip does not exist.</li>
+  <li>File uploads use the web upload endpoint (<code>POST /:slug/upload</code>), not the JSON API.</li>
+  <li><code>-g</code> prints content to stdout; burned clips print a note to stderr.</li>
+</ul>

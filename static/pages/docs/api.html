@@ -1,0 +1,118 @@
+<h1>REST API</h1>
+<p class="legal-updated">Base path: <code>/api/v1</code></p>
+
+<p>
+  All clip endpoints accept and return JSON unless noted. PIN-protected clips require
+  the <code>X-Clip-Pin</code> header or a <code>?pin=</code> query parameter.
+</p>
+
+<h2>Health check</h2>
+<div class="docs-endpoint">
+  <span class="docs-method docs-method--get">GET</span>
+  <code>/api/health</code>
+</div>
+<p>Returns service status.</p>
+<pre><code>{ "status": "ok", "version": "0.3.0" }</code></pre>
+
+<h2>Read a clip</h2>
+<div class="docs-endpoint">
+  <span class="docs-method docs-method--get">GET</span>
+  <code>/api/v1/clips/:slug</code>
+</div>
+<p>
+  Fetches clip content. Counts as a <strong>read</strong> for burn-on-read clips and view limits.
+  Link-preview crawlers receive a preview response without consuming a read.
+</p>
+<p>Response (200):</p>
+<pre><code>{
+  "slug": "my-clip",
+  "content": "hello",
+  "contentType": "text",
+  "expiresAt": 1720000000,
+  "burnOnRead": false,
+  "maxViews": null,
+  "viewCount": 1,
+  "webhookUrl": null
+}</code></pre>
+<p>After a burn-on-read clip is consumed, the final response includes <code>"burned": true</code>.</p>
+<p>Errors: <code>400</code> invalid slug, <code>401</code> PIN required, <code>404</code> not found, <code>429</code> rate limited.</p>
+
+<h2>Create a clip</h2>
+<div class="docs-endpoint">
+  <span class="docs-method docs-method--post">POST</span>
+  <code>/api/v1/clips/:slug</code>
+</div>
+<p>Creates a new clip. Returns <code>409</code> if the slug already exists.</p>
+<p>JSON body (all fields optional):</p>
+<pre><code>{
+  "content": "secret note",
+  "burnOnRead": true,
+  "ttl": 3600,
+  "maxViews": 3,
+  "pin": "1234",
+  "webhook": "https://example.com/hook"
+}</code></pre>
+<ul>
+  <li><code>burnOnRead</code> — defaults to <code>true</code>. Set <code>false</code> or provide <code>ttl</code> for a persistent clip.</li>
+  <li><code>ttl</code> — seconds until expiry (e.g. <code>3600</code> = 1 hour).</li>
+  <li><code>maxViews</code> — delete after N API reads (<code>0</code> = unlimited).</li>
+  <li><code>pin</code> — lock the clip; stored as a bcrypt hash.</li>
+  <li><code>webhook</code> — URL notified on read, burn, or expiry (see <a href="/docs/webhooks">Webhooks</a>).</li>
+</ul>
+<p>Plain-text body is also accepted (<code>Content-Type: text/plain</code>) as the clip content.</p>
+<p>Response (201):</p>
+<pre><code>{
+  "slug": "my-clip",
+  "content": "secret note",
+  "maxViews": 3,
+  "webhookUrl": "https://example.com/hook",
+  "pinSet": true
+}</code></pre>
+
+<h2>Update a clip</h2>
+<div class="docs-endpoint">
+  <span class="docs-method docs-method--put">PUT</span>
+  <code>/api/v1/clips/:slug</code>
+</div>
+<p>Replaces clip content. Creates the clip if it does not exist.</p>
+<pre><code>curl -X PUT https://your-host/api/v1/clips/my-clip \
+  -H "Content-Type: application/json" \
+  -d '{"content":"updated text"}'</code></pre>
+
+<h2>Delete a clip</h2>
+<div class="docs-endpoint">
+  <span class="docs-method docs-method--delete">DELETE</span>
+  <code>/api/v1/clips/:slug</code>
+</div>
+<p>Permanently deletes the clip, attached files, and version history.</p>
+<pre><code>{ "ok": true }</code></pre>
+
+<h2>Download a file</h2>
+<div class="docs-endpoint">
+  <span class="docs-method docs-method--get">GET</span>
+  <code>/api/v1/files/:slug/:fileId</code>
+</div>
+<p>
+  Returns the raw file bytes. Requires PIN header/query when the clip is locked.
+  File IDs are shown in the clip UI after upload.
+</p>
+
+<h2>Account &amp; API keys</h2>
+<p>These endpoints require a session cookie or <code>Authorization: Bearer &lt;api-key&gt;</code>.</p>
+<ul>
+  <li><code>GET /api/v1/auth/me</code> — current user</li>
+  <li><code>GET /api/v1/auth/api-keys</code> — list keys</li>
+  <li><code>POST /api/v1/auth/api-keys</code> — create key (returns the raw key once)</li>
+  <li><code>DELETE /api/v1/auth/api-keys/:id</code> — revoke key</li>
+</ul>
+<p>
+  Programmatic registration (<code>POST /api/v1/auth/register</code>) is only available when
+  enabled on the server. You can always sign in at <a href="/login">/login</a> and create
+  keys from <a href="/account">your account</a>.
+</p>
+
+<h2>Rate limits</h2>
+<p>
+  API responses include <code>X-RateLimit-Remaining</code>. When the limit is exceeded the
+  server returns <code>429</code> with <code>{ "error": "Rate limit exceeded" }</code>.
+</p>

@@ -31,6 +31,7 @@ interface BuildContext {
   umamiScript: string;
   footerTracking: string;
   trustAnalytics: string;
+  docsLinks: string;
   resourceLinks: string;
   umami: {
     cookiesNote: string;
@@ -85,11 +86,47 @@ function writeJsonLd(filename: string, data: Record<string, unknown>): string {
   return `<script type="application/ld+json" src="/structured-data/${filename}"></script>`;
 }
 
+function renderDocsNav(activePath: string): string {
+  const items = [
+    { path: "/docs", label: "Overview" },
+    { path: "/docs/api", label: "REST API" },
+    { path: "/docs/cli", label: "CLI" },
+    { path: "/docs/webhooks", label: "Webhooks" },
+  ];
+  const navItems = items
+    .map(
+      (item) =>
+        `<a href="${item.path}"${item.path === activePath ? ' class="is-active"' : ""}>${item.label}</a>`
+    )
+    .join("\n  ");
+  return replaceVars(readFileSync(join(STATIC, "partials", "docs-nav.html"), "utf-8"), {
+    DOCS_NAV_ITEMS: navItems,
+  });
+}
+
+function buildDocsBody(activePath: string, content: string): string {
+  return `<main class="docs-page">
+  ${renderDocsNav(activePath)}
+  <article class="docs-prose legal-prose">
+    ${content}
+  </article>
+</main>`;
+}
+
 function buildContext(): BuildContext {
   const umami = umamiConfig();
   const landingPages = JSON.parse(
     readFileSync(join(STATIC, "landing-pages.json"), "utf-8")
   ) as LandingPage[];
+
+  const docsLinks = [
+    { href: "/docs", label: "Overview" },
+    { href: "/docs/api", label: "REST API" },
+    { href: "/docs/cli", label: "CLI" },
+    { href: "/docs/webhooks", label: "Webhooks" },
+  ]
+    .map((link) => `<a href="${link.href}">${link.label}</a>`)
+    .join("\n    ");
 
   const resourceLinks = landingPages
     .map((p) => `<a href="/${p.slug}">${p.h1}</a>`)
@@ -107,6 +144,7 @@ function buildContext(): BuildContext {
     trustAnalytics: umami
       ? "Privacy-friendly analytics only — no cross-site trackers"
       : "No analytics trackers",
+    docsLinks,
     resourceLinks,
     umami: {
       cookiesNote: umami
@@ -155,6 +193,7 @@ function renderPage(
     YEAR: ctx.year,
     FOOTER_TRACKING: ctx.footerTracking,
     RESOURCE_LINKS: ctx.resourceLinks,
+    DOCS_LINKS: ctx.docsLinks,
   });
 
   return replaceVars(layout, {
@@ -360,12 +399,59 @@ for (const page of landingPages) {
   );
 }
 
+// Developer docs
+const docsPages = [
+  {
+    path: "/docs",
+    file: "docs-index.html",
+    src: "docs/index.html",
+    title: "Developer Docs — Clippy",
+    description: "REST API, CLI, and webhooks for automating Clippy.",
+  },
+  {
+    path: "/docs/api",
+    file: "docs-api.html",
+    src: "docs/api.html",
+    title: "REST API — Clippy Docs",
+    description: "Clippy REST API reference for clips, files, and authentication.",
+  },
+  {
+    path: "/docs/cli",
+    file: "docs-cli.html",
+    src: "docs/cli.html",
+    title: "CLI — Clippy Docs",
+    description: "Command-line interface for creating and reading clips.",
+  },
+  {
+    path: "/docs/webhooks",
+    file: "docs-webhooks.html",
+    src: "docs/webhooks.html",
+    title: "Webhooks — Clippy Docs",
+    description: "Webhook events and payloads for Clippy clips.",
+  },
+] as const;
+
+for (const page of docsPages) {
+  const content = readFileSync(join(STATIC, "pages", page.src), "utf-8");
+  const body = buildDocsBody(page.path, content);
+  writePage(
+    page.path,
+    page.file,
+    renderPage(layout, header, footer, body, ctx, {
+      title: page.title,
+      description: page.description,
+      canonical: page.path,
+    })
+  );
+}
+
 // Sitemap & robots (base URL placeholder — replaced at serve time or use relative)
 const sitemapPaths = [
   "/",
   "/privacy",
   "/terms",
   "/security",
+  ...docsPages.map((p) => p.path),
   ...landingPages.map((p) => `/${p.slug}`),
 ];
 writeFileSync(join(OUT, "sitemap-paths.json"), JSON.stringify(sitemapPaths, null, 2));
