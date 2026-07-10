@@ -1,0 +1,18 @@
+services:
+  clippy:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - clippy-data:/data
+    environment:
+      DATA_DIR: /data
+      PORT: 3000
+      NODE_ENV: production
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env}
+      SECURE_COOKIES: "true"
+      CONTACT_EMAIL: ${CONTACT_EMAIL:-security@example.com}
+    restart: unless-stopped
+
+volumes:
+  clippy-data:

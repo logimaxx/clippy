@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0c1222" />
+  <meta name="color-scheme" dark />
+  <title>Clippy — UI Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    /*
+      Design system: "Clippy Productivity"
+      — Radix Slate neutrals + Cyan accent (accessible dark-first)
+      — 4px base grid, 8px rhythm for layout
+      — Inter (UI) + JetBrains Mono (editor)
+      — Familiar VS Code / Linear density for power users
+    */
+    :root {
+      --bg-base: #0c1222;
+      --bg-elevated: #131b2e;
+      --bg-sunken: #080d18;
+      --bg-overlay: rgba(8, 13, 24, 0.72);
+
+      --border-subtle: #1e2a42;
+      --border-default: #2a3854;
+      --border-strong: #3d4f6f;
+
+      --text-primary: #eef2f9;
+      --text-secondary: #94a3b8;
+      --text-tertiary: #64748b;
+
+      --accent: #22d3ee;
+      --accent-muted: rgba(34, 211, 238, 0.14);
+      --accent-hover: #67e8f9;
+      --accent-text: #042f2e;
+
+      --success: #4ade80;
+      --success-muted: rgba(74, 222, 128, 0.14);
+      --warning: #fbbf24;
+      --warning-muted: rgba(251, 191, 36, 0.14);
+      --danger: #f87171;
+      --danger-muted: rgba(248, 113, 113, 0.14);
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-full: 999px;
+
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
+      --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
+      --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.55);
+
+      --font-ui: "Inter", system-ui, -apple-system, sans-serif;
+      --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+      --header-h: 56px;
+      --toolbar-h: 52px;
+      --bottom-nav-h: 64px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+      --transition: 160ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, input, select, textarea { font: inherit; color: inherit; }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100dvh;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      height: var(--header-h);
+      padding: 0 1rem;
+      background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
+      border-bottom: 1px solid var(--border-subtle);
+      backdrop-filter: blur(12px);
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-weight: 700;
+      font-size: 1.05rem;
+      letter-spacing: -0.03em;
+      color: var(--accent);
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .logo-mark {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--accent), #0ea5e9);
+      display: grid;
+      place-items: center;
+      color: var(--accent-text);
+      font-size: 0.72rem;
+      font-weight: 800;
+    }
+
+    .url-bar {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.5rem 0.35rem 0.75rem;
+      background: var(--bg-sunken);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+    }
+
+    .url-bar__path {
+      flex: 1;
+      min-width: 0;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .url-bar__path strong { color: var(--text-primary); font-weight: 500; }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-shrink: 0;
+    }
+
+    .header-actions { display: flex; }
+
+    /* Share menu — one entry point for copy, QR, system share */
+    .share-menu {
+      position: relative;
+    }
+
+    .share-menu__popover {
+      position: absolute;
+      top: calc(100% + 6px);
+      right: 0;
+      z-index: 50;
+      min-width: 11.5rem;
+      padding: 0.35rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-4px);
+      transition: opacity var(--transition), transform var(--transition), visibility var(--transition);
+    }
+
+    .share-menu.is-open .share-menu__popover {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .share-menu__item {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      width: 100%;
+      padding: 0.55rem 0.65rem;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-primary);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      text-align: left;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+
+    .share-menu__item:hover,
+    .share-menu__item:focus-visible {
+      background: color-mix(in srgb, var(--text-primary) 7%, transparent);
+      outline: none;
+    }
+
+    .share-menu__item svg {
+      width: 1rem;
+      height: 1rem;
+      color: var(--text-secondary);
+      flex-shrink: 0;
+    }
+
+    .share-menu__divider {
+      height: 1px;
+      margin: 0.25rem 0.35rem;
+      background: var(--border-subtle);
+    }
+
+    .share-menu__item--native { display: none; }
+    .share-menu--native .share-menu__item--native { display: flex; }
+    .share-menu--native .share-menu__divider--native { display: block; }
+
+    .header-chips { display: none; }
+
+    /* ── Buttons & chips ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      min-height: 2.25rem;
+      padding: 0 0.75rem;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color var(--transition), background var(--transition), color var(--transition), transform 80ms ease;
+      white-space: nowrap;
+    }
+
+    .btn:active { transform: scale(0.98); }
+
+    .btn:hover {
+      border-color: var(--border-strong);
+      background: color-mix(in srgb, var(--bg-elevated) 80%, white 4%);
+    }
+
+    .btn--primary {
+      background: var(--accent);
+      border-color: transparent;
+      color: var(--accent-text);
+      font-weight: 600;
+    }
+
+    .btn--primary:hover {
+      background: var(--accent-hover);
+      border-color: transparent;
+      color: var(--accent-text);
+    }
+
+    .btn--ghost {
+      background: transparent;
+      border-color: transparent;
+    }
+
+    .btn--ghost:hover {
+      background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+      border-color: transparent;
+    }
+
+    .btn--icon {
+      width: 2.25rem;
+      min-width: 2.25rem;
+      padding: 0;
+    }
+
+    .btn--sm {
+      min-height: 1.875rem;
+      padding: 0 0.55rem;
+      font-size: 0.75rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: var(--radius-full);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      background: color-mix(in srgb, var(--text-primary) 6%, transparent);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .chip--live {
+      background: var(--success-muted);
+      color: var(--success);
+      border-color: color-mix(in srgb, var(--success) 25%, transparent);
+    }
+
+    .chip--secure {
+      background: var(--accent-muted);
+      color: var(--accent);
+      border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+    }
+
+    .pulse {
+      width: 0.45rem;
+      height: 0.45rem;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.85); }
+    }
+
+    /* ── Workspace layout ── */
+    .workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      padding: 0.75rem;
+      gap: 0.75rem;
+      padding-bottom: calc(var(--bottom-nav-h) + var(--safe-bottom) + 0.75rem);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.65rem 0.75rem;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+    }
+
+    .toolbar__group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 0.5rem 0.75rem;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 0;
+    }
+
+    .field__label {
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-tertiary);
+    }
+
+    .field select,
+    .field input[type="password"],
+    .field input[type="url"] {
+      min-height: 2rem;
+      padding: 0.3rem 0.55rem;
+      background: var(--bg-sunken);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      font-size: 0.8125rem;
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+
+    .field select:focus,
+    .field input:focus,
+    .editor:focus {
+      border-color: color-mix(in srgb, var(--accent) 55%, var(--border-default));
+      box-shadow: 0 0 0 3px var(--accent-muted);
+    }
+
+    .toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45rem;
+      min-height: 2rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle input { position: absolute; opacity: 0; pointer-events: none; }
+
+    .toggle__track {
+      width: 2.25rem;
+      height: 1.25rem;
+      border-radius: var(--radius-full);
+      background: var(--bg-sunken);
+      border: 1px solid var(--border-default);
+      position: relative;
+      transition: background var(--transition), border-color var(--transition);
+    }
+
+    .toggle__track::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 0.95rem;
+      height: 0.95rem;
+      border-radius: 50%;
+      background: var(--text-secondary);
+      transition: transform var(--transition), background var(--transition);
+    }
+
+    .toggle input:checked + .toggle__track {
+      background: var(--accent-muted);
+      border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+    }
+
+    .toggle input:checked + .toggle__track::after {
+      transform: translateX(1rem);
+      background: var(--accent);
+    }
+
+    .countdown {
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--warning);
+      min-height: 2rem;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 0.35rem;
+    }
+
+    .toolbar__more {
+      margin-left: auto;
+    }
+
+    /* ── Main content area ── */
+    .main-grid {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      min-height: 0;
+    }
+
+    .editor-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--border-subtle);
+      background: color-mix(in srgb, var(--bg-sunken) 50%, var(--bg-elevated));
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-tertiary);
+    }
+
+    .panel-meta {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-tertiary);
+    }
+
+    .editor-wrap {
+      position: relative;
+      flex: 1;
+      min-height: 220px;
+      overflow: hidden;
+    }
+
+    .editor-highlight,
+    .editor {
+      position: absolute;
+      inset: 0;
+      margin: 0;
+      padding: 1rem 1.1rem;
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow: auto;
+      tab-size: 2;
+    }
+
+    .editor-highlight {
+      pointer-events: none;
+      color: transparent;
+      z-index: 1;
+    }
+
+    .editor-highlight .kw { color: #c792ea; }
+    .editor-highlight .str { color: #c3e88d; }
+    .editor-highlight .cm { color: var(--text-tertiary); }
+    .editor-highlight .fn { color: #82aaff; }
+
+    .editor {
+      z-index: 2;
+      resize: none;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text-primary);
+      caret-color: var(--accent);
+    }
+
+    .editor::placeholder { color: var(--text-tertiary); }
+
+    /* ── Files panel ── */
+    .files-panel {
+      display: none;
+      flex-direction: column;
+      min-height: 0;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .files-panel__body {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: auto;
+    }
+
+    .file-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      padding: 0 0.5rem 0.5rem;
+      overflow: auto;
+    }
+
+    .file-card {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.55rem 0.65rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: var(--bg-sunken);
+      transition: border-color var(--transition);
+    }
+
+    .file-card:hover { border-color: var(--border-default); }
+
+    .file-card__icon {
+      width: 2rem;
+      height: 2rem;
+      border-radius: var(--radius-sm);
+      display: grid;
+      place-items: center;
+      background: var(--accent-muted);
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .file-card__info { flex: 1; min-width: 0; }
+
+    .file-card__name {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .file-card__meta {
+      font-size: 0.7rem;
+      color: var(--text-tertiary);
+    }
+
+    .empty-state {
+      padding: 1.5rem 1rem;
+      text-align: center;
+      color: var(--text-tertiary);
+      font-size: 0.8125rem;
+    }
+
+    .drop-zone {
+      margin: 0.5rem;
+      padding: 1.25rem 1rem;
+      border: 1.5px dashed var(--border-default);
+      border-radius: var(--radius-md);
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.8125rem;
+      cursor: pointer;
+      transition: border-color var(--transition), background var(--transition);
+    }
+
+    .drop-zone:hover,
+    .drop-zone.is-dragover {
+      border-color: var(--accent);
+      background: var(--accent-muted);
+      color: var(--text-primary);
+    }
+
+    /* ── Mobile bottom nav ── */
+    .bottom-nav {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 50;
+      display: flex;
+      align-items: stretch;
+      height: calc(var(--bottom-nav-h) + var(--safe-bottom));
+      padding-bottom: var(--safe-bottom);
+      background: color-mix(in srgb, var(--bg-elevated) 95%, transparent);
+      border-top: 1px solid var(--border-subtle);
+      backdrop-filter: blur(12px);
+    }
+
+    .bottom-nav__item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.15rem;
+      border: none;
+      background: transparent;
+      color: var(--text-tertiary);
+      font-size: 0.65rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color var(--transition);
+    }
+
+    .bottom-nav__item.is-active { color: var(--accent); }
+
+    .bottom-nav__item svg { width: 1.25rem; height: 1.25rem; }
+
+    /* ── Sheet (mobile settings/files) ── */
+    .sheet-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: var(--bg-overlay);
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity var(--transition), visibility var(--transition);
+    }
+
+    .sheet-backdrop.is-open { opacity: 1; visibility: visible; }
+
+    .sheet {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 70;
+      max-height: 85dvh;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-elevated);
+      border-top: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      box-shadow: var(--shadow-lg);
+      transform: translateY(100%);
+      transition: transform 280ms cubic-bezier(0.32, 0.72, 0, 1);
+    }
+
+    .sheet.is-open { transform: translateY(0); }
+
+    .sheet__handle {
+      width: 2.5rem;
+      height: 0.25rem;
+      margin: 0.6rem auto 0;
+      border-radius: var(--radius-full);
+      background: var(--border-default);
+    }
+
+    .sheet__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem 0.5rem;
+    }
+
+    .sheet__title {
+      margin: 0;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .sheet__body {
+      overflow: auto;
+      padding: 0.5rem 1rem 1.5rem;
+    }
+
+    .sheet__section { margin-bottom: 1.25rem; }
+
+    .sheet__section-title {
+      margin: 0 0 0.65rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-tertiary);
+    }
+
+    .settings-grid {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .danger-zone {
+      padding: 0.75rem;
+      border-radius: var(--radius-md);
+      border: 1px solid color-mix(in srgb, var(--danger) 30%, var(--border-subtle));
+      background: var(--danger-muted);
+    }
+
+    .btn--danger {
+      background: transparent;
+      border-color: color-mix(in srgb, var(--danger) 45%, var(--border-default));
+      color: var(--danger);
+    }
+
+    .btn--danger:hover {
+      background: var(--danger-muted);
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    /* ── Toast ── */
+    .toast-host {
+      position: fixed;
+      top: calc(var(--header-h) + 0.75rem);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .toast {
+      padding: 0.55rem 1rem;
+      border-radius: var(--radius-full);
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      box-shadow: var(--shadow-md);
+      font-size: 0.8125rem;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(-8px);
+      transition: opacity 200ms ease, transform 200ms ease;
+    }
+
+    .toast.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ── Demo banner ── */
+    .demo-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.75rem;
+      background: linear-gradient(90deg, var(--accent-muted), color-mix(in srgb, #818cf8 14%, transparent));
+      border-bottom: 1px solid var(--border-subtle);
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    .demo-banner strong { color: var(--accent); }
+
+    /* ── Desktop breakpoints ── */
+    @media (min-width: 768px) {
+      .workspace {
+        padding: 1rem 1.25rem 1.25rem;
+        padding-bottom: 1.25rem;
+      }
+
+      .header-chips { display: flex; align-items: center; gap: 0.35rem; }
+
+      .toolbar--mobile-only { display: none; }
+
+      .main-grid {
+        flex-direction: row;
+        align-items: stretch;
+      }
+
+      .editor-panel { flex: 1.6; min-width: 0; }
+
+      .files-panel {
+        display: flex;
+        flex: 0 0 300px;
+        min-width: 260px;
+        max-width: 360px;
+      }
+
+      .editor-wrap { min-height: 0; }
+
+      .bottom-nav,
+      .sheet-backdrop,
+      .sheet { display: none !important; }
+    }
+
+    @media (max-width: 767px) {
+      .toolbar--desktop-only { display: none; }
+
+      .header .chip--devices { display: none; }
+
+      .toolbar__more { display: none; }
+
+      .field--pin { display: none; }
+    }
+
+    @media (min-width: 1024px) {
+      .files-panel { flex-basis: 340px; }
+
+      .toolbar__group { flex-wrap: nowrap; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" data-view="editor">
+    <div class="demo-banner" role="status">
+      <strong>UI prototype</strong>
+      <span>— static demo for Clippy clipboard app. Open on phone &amp; desktop to compare layouts.</span>
+    </div>
+
+    <header class="header">
+      <a href="/" class="logo" aria-label="Clippy home">
+        <span class="logo-mark" aria-hidden="true">C</span>
+        clippy
+      </a>
+
+      <div class="url-bar" role="group" aria-label="Clip URL">
+        <span class="url-bar__path">clippy.app/<strong>demo-clip</strong></span>
+      </div>
+
+      <div class="header-chips" aria-hidden="false">
+        <span class="chip chip--live chip--devices">
+          <span class="pulse" aria-hidden="true"></span>
+          2 devices
+        </span>
+        <span class="chip chip--secure">E2E</span>
+      </div>
+
+      <div class="header-actions">
+        <div class="share-menu" id="share-menu">
+          <button
+            type="button"
+            class="btn btn--primary"
+            id="share-trigger"
+            aria-haspopup="menu"
+            aria-expanded="false"
+            aria-controls="share-popover"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 12v7a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-7"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            Share
+          </button>
+          <div class="share-menu__popover" id="share-popover" role="menu" hidden>
+            <button type="button" class="share-menu__item" role="menuitem" data-share-action="copy">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy link
+            </button>
+            <button type="button" class="share-menu__item" role="menuitem" data-share-action="qr">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3z"/></svg>
+              Show QR code
+            </button>
+            <div class="share-menu__divider share-menu__divider--native" hidden></div>
+            <button type="button" class="share-menu__item share-menu__item--native" role="menuitem" data-share-action="native">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
+              Share via apps
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="workspace">
+      <!-- Desktop toolbar (compact inline settings) -->
+      <div class="toolbar toolbar--desktop-only" role="toolbar" aria-label="Clip settings">
+        <div class="toolbar__group">
+          <div class="field">
+            <label class="field__label" for="expires-d">Expires</label>
+            <select id="expires-d">
+              <option value="burn">Burn after read</option>
+              <option value="900">15 min</option>
+              <option value="3600">1 hour</option>
+              <option value="86400" selected>24 hours</option>
+              <option value="604800">7 days</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field__label" for="syntax-d">Syntax</label>
+            <select id="syntax-d">
+              <option value="">Plain text</option>
+              <option value="javascript" selected>JavaScript</option>
+              <option value="typescript">TypeScript</option>
+              <option value="python">Python</option>
+              <option value="json">JSON</option>
+            </select>
+          </div>
+          <div class="field field--pin">
+            <label class="field__label" for="pin-d">PIN</label>
+            <input type="password" id="pin-d" placeholder="Set PIN" autocomplete="off" />
+          </div>
+          <div class="field">
+            <span class="field__label">E2E encryption</span>
+            <label class="toggle">
+              <input type="checkbox" id="e2e-d" checked />
+              <span class="toggle__track" aria-hidden="true"></span>
+              <span>On</span>
+            </label>
+          </div>
+          <div class="field">
+            <span class="field__label">Countdown</span>
+            <span class="countdown" id="countdown-d">23:41:08</span>
+          </div>
+        </div>
+        <button type="button" class="btn btn--ghost btn--sm toolbar__more" data-open-sheet="settings">
+          More
+        </button>
+      </div>
+
+      <!-- Mobile quick toolbar -->
+      <div class="toolbar toolbar--mobile-only">
+        <span class="chip chip--live">
+          <span class="pulse"></span>
+          Synced · 2 devices
+        </span>
+        <span class="chip chip--secure">E2E on</span>
+        <span class="countdown" style="margin-left:auto">23:41:08</span>
+      </div>
+
+      <div class="main-grid">
+        <section class="editor-panel" aria-label="Clip content">
+          <div class="panel-header">
+            <h2 class="panel-title">Content</h2>
+            <span class="panel-meta" id="char-count">412 chars · saved</span>
+          </div>
+          <div class="editor-wrap">
+            <pre class="editor-highlight" id="highlight" aria-hidden="true"><code></code></pre>
+            <textarea
+              class="editor"
+              id="editor"
+              spellcheck="false"
+              placeholder="Paste or type anything…"
+              aria-label="Clip content editor"
+            >// Welcome to Clippy — paste anything, share instantly.
+
+async function fetchClip(slug) {
+  const res = await fetch(`/api/v1/clips/${slug}`);
+  return res.json(); // burn-after-read supported
+}
+
+// Open this page on another device to see real-time sync.
+// Try the settings panel to set expiry, PIN, or E2E encryption.</textarea>
+          </div>
+        </section>
+
+        <aside class="files-panel" aria-label="Attached files">
+          <div class="panel-header">
+            <h2 class="panel-title">Files</h2>
+            <span class="panel-meta">2 files · 249 KB</span>
+          </div>
+          <div class="files-panel__body">
+            <label class="drop-zone" id="drop-zone">
+              Drop files here or tap to browse
+              <input type="file" hidden multiple accept="image/*,.pdf,.txt,.zip,.json,.md" />
+            </label>
+            <div class="file-list">
+            <div class="file-card">
+              <div class="file-card__icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+              </div>
+              <div class="file-card__info">
+                <div class="file-card__name">screenshot.png</div>
+                <div class="file-card__meta">248 KB · image/png</div>
+              </div>
+              <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Download screenshot.png">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </button>
+            </div>
+            <div class="file-card">
+              <div class="file-card__icon" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              </div>
+              <div class="file-card__info">
+                <div class="file-card__name">notes.md</div>
+                <div class="file-card__meta">1.2 KB · text/markdown</div>
+              </div>
+              <button type="button" class="btn btn--ghost btn--icon btn--sm" aria-label="Download notes.md">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              </button>
+            </div>
+          </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Mobile bottom navigation -->
+    <nav class="bottom-nav" aria-label="Mobile navigation">
+      <button type="button" class="bottom-nav__item is-active" data-view="editor">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        Editor
+      </button>
+      <button type="button" class="bottom-nav__item" data-view="files" data-open-sheet="files">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Files
+      </button>
+      <button type="button" class="bottom-nav__item" data-open-sheet="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        Settings
+      </button>
+    </nav>
+
+    <!-- Mobile sheets -->
+    <div class="sheet-backdrop" id="sheet-backdrop" hidden></div>
+
+    <div class="sheet" id="sheet-settings" role="dialog" aria-modal="true" aria-labelledby="sheet-settings-title" hidden>
+      <div class="sheet__handle" aria-hidden="true"></div>
+      <div class="sheet__header">
+        <h2 class="sheet__title" id="sheet-settings-title">Settings</h2>
+        <button type="button" class="btn btn--ghost btn--icon" data-close-sheet aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="sheet__body">
+        <div class="settings-grid">
+          <div class="field">
+            <label class="field__label" for="expires-m">Expires</label>
+            <select id="expires-m">
+              <option value="burn">Burn after read</option>
+              <option value="900">15 min</option>
+              <option value="3600">1 hour</option>
+              <option value="86400" selected>24 hours</option>
+              <option value="604800">7 days</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field__label" for="syntax-m">Syntax highlighting</label>
+            <select id="syntax-m">
+              <option value="">Plain text</option>
+              <option value="javascript" selected>JavaScript</option>
+              <option value="typescript">TypeScript</option>
+              <option value="python">Python</option>
+              <option value="json">JSON</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field__label" for="pin-m">PIN protection</label>
+            <input type="password" id="pin-m" placeholder="Set a PIN" autocomplete="off" />
+          </div>
+          <div class="field">
+            <span class="field__label">End-to-end encryption</span>
+            <label class="toggle">
+              <input type="checkbox" id="e2e-m" checked />
+              <span class="toggle__track"></span>
+              <span>Encrypt in browser (key in URL hash)</span>
+            </label>
+          </div>
+        </div>
+        <div class="sheet__section">
+          <h3 class="sheet__section-title">Integrations</h3>
+          <div class="field">
+            <label class="field__label" for="webhook-m">Webhook URL</label>
+            <input type="url" id="webhook-m" placeholder="https://example.com/hook" />
+          </div>
+        </div>
+        <div class="sheet__section">
+          <h3 class="sheet__section-title">Danger zone</h3>
+          <div class="danger-zone">
+            <p style="margin:0 0 0.65rem;font-size:0.8125rem;color:var(--text-secondary)">Permanently delete this clip, files, and version history.</p>
+            <button type="button" class="btn btn--danger btn--sm">Delete clip</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sheet" id="sheet-files" role="dialog" aria-modal="true" aria-labelledby="sheet-files-title" hidden>
+      <div class="sheet__handle" aria-hidden="true"></div>
+      <div class="sheet__header">
+        <h2 class="sheet__title" id="sheet-files-title">Files</h2>
+        <button type="button" class="btn btn--ghost btn--icon" data-close-sheet aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <div class="sheet__body">
+        <label class="drop-zone">
+          Tap to attach files
+          <input type="file" hidden multiple />
+        </label>
+        <div class="file-list" style="padding:0">
+          <div class="file-card">
+            <div class="file-card__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+            </div>
+            <div class="file-card__info">
+              <div class="file-card__name">screenshot.png</div>
+              <div class="file-card__meta">248 KB</div>
+            </div>
+          </div>
+          <div class="file-card">
+            <div class="file-card__icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <div class="file-card__info">
+              <div class="file-card__name">notes.md</div>
+              <div class="file-card__meta">1.2 KB</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-host" aria-live="polite" aria-atomic="true">
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+
+  <script>
+    const $ = (sel, root = document) => root.querySelector(sel);
+    const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
+
+    const editor = $("#editor");
+    const highlight = $("#highlight code");
+    const charCount = $("#char-count");
+    const toast = $("#toast");
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add("is-visible");
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toast.classList.remove("is-visible"), 2200);
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function highlightJs(code) {
+      return escapeHtml(code)
+        .replace(/(\/\/.*$)/gm, '<span class="cm">$1</span>')
+        .replace(/\b(async|function|return|const|await)\b/g, '<span class="kw">$1</span>')
+        .replace(/(`[^`]*`|"[^"]*"|'[^']*')/g, '<span class="str">$1</span>')
+        .replace(/\b(fetch|json)\b/g, '<span class="fn">$1</span>');
+    }
+
+    function syncEditor() {
+      const val = editor.value;
+      highlight.innerHTML = highlightJs(val);
+      charCount.textContent = `${val.length} chars · saved`;
+    }
+
+    editor.addEventListener("input", syncEditor);
+    editor.addEventListener("scroll", () => {
+      highlight.parentElement.scrollTop = editor.scrollTop;
+      highlight.parentElement.scrollLeft = editor.scrollLeft;
+    });
+    syncEditor();
+
+    const CLIP_URL = "https://clippy.app/demo-clip";
+    const shareMenu = $("#share-menu");
+    const shareTrigger = $("#share-trigger");
+    const sharePopover = $("#share-popover");
+
+    if (navigator.share) {
+      shareMenu.classList.add("share-menu--native");
+      sharePopover.querySelector(".share-menu__divider--native").hidden = false;
+    }
+
+    function setShareMenuOpen(open) {
+      shareMenu.classList.toggle("is-open", open);
+      shareTrigger.setAttribute("aria-expanded", String(open));
+      sharePopover.hidden = !open;
+    }
+
+    function closeShareMenu() {
+      setShareMenuOpen(false);
+    }
+
+    shareTrigger.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setShareMenuOpen(!shareMenu.classList.contains("is-open"));
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!shareMenu.contains(e.target)) closeShareMenu();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeShareMenu();
+    });
+
+    async function copyLink() {
+      try {
+        await navigator.clipboard.writeText(CLIP_URL);
+        showToast("Link copied");
+      } catch {
+        showToast("Copy failed — select URL manually");
+      }
+      closeShareMenu();
+    }
+
+    async function shareNative() {
+      try {
+        await navigator.share({ title: "Clippy clip", url: CLIP_URL });
+      } catch { /* cancelled */ }
+      closeShareMenu();
+    }
+
+    sharePopover.addEventListener("click", (e) => {
+      const item = e.target.closest("[data-share-action]");
+      if (!item) return;
+      const action = item.dataset.shareAction;
+      if (action === "copy") copyLink();
+      else if (action === "qr") {
+        showToast("QR code would open here");
+        closeShareMenu();
+      } else if (action === "native") shareNative();
+    });
+
+    // Countdown demo
+    let seconds = 23 * 3600 + 41 * 60 + 8;
+    function tickCountdown() {
+      seconds = Math.max(0, seconds - 1);
+      const h = String(Math.floor(seconds / 3600)).padStart(2, "0");
+      const m = String(Math.floor((seconds % 3600) / 60)).padStart(2, "0");
+      const s = String(seconds % 60).padStart(2, "0");
+      const text = `${h}:${m}:${s}`;
+      $$(".countdown").forEach((el) => { el.textContent = text; });
+    }
+    setInterval(tickCountdown, 1000);
+
+    // Mobile sheets
+    const backdrop = $("#sheet-backdrop");
+    const sheets = { settings: $("#sheet-settings"), files: $("#sheet-files") };
+    let openSheet = null;
+
+    function openSheetPanel(name) {
+      closeSheets();
+      const sheet = sheets[name];
+      if (!sheet) return;
+      openSheet = name;
+      backdrop.hidden = false;
+      sheet.hidden = false;
+      requestAnimationFrame(() => {
+        backdrop.classList.add("is-open");
+        sheet.classList.add("is-open");
+      });
+      document.body.style.overflow = "hidden";
+    }
+
+    function closeSheets() {
+      backdrop.classList.remove("is-open");
+      Object.values(sheets).forEach((s) => s?.classList.remove("is-open"));
+      setTimeout(() => {
+        backdrop.hidden = true;
+        Object.values(sheets).forEach((s) => { if (s) s.hidden = true; });
+        document.body.style.overflow = "";
+        openSheet = null;
+      }, 280);
+    }
+
+    $$("[data-open-sheet]").forEach((btn) => {
+      btn.addEventListener("click", () => openSheetPanel(btn.dataset.openSheet));
+    });
+    $$("[data-close-sheet]").forEach((btn) => btn.addEventListener("click", closeSheets));
+    backdrop.addEventListener("click", closeSheets);
+
+    // Bottom nav
+    $$(".bottom-nav__item[data-view]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        $$(".bottom-nav__item").forEach((b) => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
+        if (btn.dataset.openSheet) openSheetPanel(btn.dataset.openSheet);
+        else closeSheets();
+      });
+    });
+
+    // Drag & drop demo
+    const dropZone = $("#drop-zone");
+    if (dropZone) {
+      ["dragenter", "dragover"].forEach((ev) => {
+        dropZone.addEventListener(ev, (e) => {
+          e.preventDefault();
+          dropZone.classList.add("is-dragover");
+        });
+      });
+      ["dragleave", "drop"].forEach((ev) => {
+        dropZone.addEventListener(ev, (e) => {
+          e.preventDefault();
+          dropZone.classList.remove("is-dragover");
+          if (ev === "drop") showToast("File upload demo — not connected");
+        });
+      });
+    }
+
+    // Sync mobile/desktop selects
+    function linkSelects(a, b) {
+      a.addEventListener("change", () => { b.value = a.value; });
+      b.addEventListener("change", () => { a.value = b.value; });
+    }
+    linkSelects($("#expires-d"), $("#expires-m"));
+    linkSelects($("#syntax-d"), $("#syntax-m"));
+  </script>
+</body>
+</html>

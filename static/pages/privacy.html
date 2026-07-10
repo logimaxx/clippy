@@ -1,0 +1,62 @@
+<main class="legal-page">
+  <article class="legal-prose">
+    <h1>Privacy Policy</h1>
+    <p class="legal-updated">Last updated: {{LEGAL_UPDATED}}</p>
+
+    <h2>Overview</h2>
+    <p>
+      Clippy is an ephemeral web clipboard. We store the content you paste,
+      optional file attachments, and settings you configure (TTL, PIN, webhooks)
+      only for as long as your clip exists.
+    </p>
+
+    <h2>Data we collect</h2>
+    <ul>
+      <li><strong>Clip content</strong> — text, files, and metadata you upload or type into a clip.</li>
+      <li><strong>IP addresses</strong> — used for rate limiting and PIN brute-force protection. Not stored long-term in a user profile.</li>
+      <li><strong>Cookies</strong> — functional cookies: PIN unlock tokens and optional session cookies if you sign in.{{COOKIES_ANALYTICS_NOTE}}</li>
+      {{UMAMI_ANALYTICS_LI}}
+      <li><strong>Account data</strong> — if you register, we store your email, name (optional), and bcrypt password hash.</li>
+    </ul>
+
+    <h2>What we do not do</h2>
+    <ul>
+      <li>We do not sell your data.</li>
+      <li>We do not run third-party advertising trackers.</li>
+      {{UMAMI_NOT_DO_LI}}
+      <li>We do not build persistent profiles for anonymous clip users.</li>
+    </ul>
+
+    <h2>Retention</h2>
+    <p>
+      Clips expire based on the TTL you set (default 24 hours). A background cleanup job
+      permanently deletes expired clips and orphan files. Burn-on-read and view limits can
+      delete clips sooner via the API.
+    </p>
+
+    <h2>End-to-end encryption</h2>
+    <p>
+      When you enable E2E encryption, content is encrypted in your browser before it reaches our
+      servers. We store ciphertext only. The decryption key stays in the URL fragment
+      (<code>#key=...</code>) and is never sent to the server.
+    </p>
+
+    <h2>Your rights</h2>
+    <p>
+      You can delete a clip at any time via the API or by letting it expire. Registered users can
+      contact us to request account deletion. For privacy questions, email
+      <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a>.
+    </p>
+
+    <h2>Cookies</h2>
+    <p>
+      We use essential cookies: PIN unlock tokens (httpOnly, 24 hours) and session cookies for
+      signed-in users (httpOnly, 30 days).{{COOKIE_CONSENT_NOTE}}
+    </p>
+
+    <h2>Changes</h2>
+    <p>
+      We may update this policy. Material changes will be reflected on this page with an updated date.
+    </p>
+  </article>
+</main>

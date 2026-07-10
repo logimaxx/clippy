@@ -1,0 +1,15 @@
+services:
+  clippy:
+    deploy:
+      replicas: 3
+    environment:
+      REDIS_URL: redis://redis:6379
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:
