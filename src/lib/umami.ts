@@ -34,3 +34,9 @@ export function umamiScriptOrigin(): string | null {
   if (!config) return null;
   return new URL(config.scriptUrl).origin;
 }
+
+export function umamiScriptTag(): string | null {
+  const config = getUmamiConfig();
+  if (!config) return null;
+  return `<script defer src="${config.scriptUrl}" data-website-id="${config.websiteId}"></script>`;
+}

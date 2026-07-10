@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import {
   readFileSync,
   writeFileSync,
@@ -10,13 +9,7 @@ import { join } from "node:path";
 const ROOT = join(import.meta.dir, "..");
 const STATIC = join(ROOT, "static");
 const OUT = join(ROOT, "dist", "pages");
-
-const scriptHashes = new Set<string>();
-
-function hashInlineScript(content: string): string {
-  const digest = createHash("sha256").update(content).digest("base64");
-  return `'sha256-${digest}'`;
-}
+const STRUCTURED_DATA_DIR = join(OUT, "structured-data");
 
 interface LandingPage {
   slug: string;
@@ -87,6 +80,11 @@ function replaceVars(template: string, vars: Record<string, string>): string {
   return out;
 }
 
+function writeJsonLd(filename: string, data: Record<string, unknown>): string {
+  writeFileSync(join(STRUCTURED_DATA_DIR, filename), JSON.stringify(data));
+  return `<script type="application/ld+json" src="/structured-data/${filename}"></script>`;
+}
+
 function buildContext(): BuildContext {
   const umami = umamiConfig();
   const landingPages = JSON.parse(
@@ -140,6 +138,7 @@ function renderPage(
     ogTitle?: string;
     ogDescription?: string;
     jsonLd?: Record<string, unknown>;
+    jsonLdFile?: string;
     bodyClass?: string;
   }
 ): string {
@@ -147,10 +146,8 @@ function renderPage(
     ? `<link rel="canonical" href="${meta.canonical}" />`
     : "";
   let jsonLd = "";
-  if (meta.jsonLd) {
-    const jsonLdContent = JSON.stringify(meta.jsonLd);
-    scriptHashes.add(hashInlineScript(jsonLdContent));
-    jsonLd = `<script type="application/ld+json">${jsonLdContent}</script>`;
+  if (meta.jsonLd && meta.jsonLdFile) {
+    jsonLd = writeJsonLd(meta.jsonLdFile, meta.jsonLd);
   }
 
   const footerHtml = replaceVars(footer, {
@@ -256,6 +253,7 @@ const landingPages = JSON.parse(
 
 const ctx = buildContext();
 mkdirSync(OUT, { recursive: true });
+mkdirSync(STRUCTURED_DATA_DIR, { recursive: true });
 
 const routes: Record<string, string> = {};
 
@@ -289,6 +287,7 @@ writePage(
       description:
         "A free online clipboard for instant text sharing and temporary file sharing between devices. No sign-up required.",
     },
+    jsonLdFile: "index.json",
   })
 );
 
@@ -356,6 +355,7 @@ for (const page of landingPages) {
         description: page.description,
         url: `/${page.slug}`,
       },
+      jsonLdFile: `${page.slug}.json`,
     })
   );
 }
@@ -371,10 +371,6 @@ const sitemapPaths = [
 writeFileSync(join(OUT, "sitemap-paths.json"), JSON.stringify(sitemapPaths, null, 2));
 
 writeFileSync(join(OUT, "routes.json"), JSON.stringify(routes, null, 2));
-writeFileSync(
-  join(OUT, "csp-script-hashes.json"),
-  JSON.stringify([...scriptHashes].sort())
-);
 
 console.log(`Static pages built → ${OUT} (${Object.keys(routes).length} pages)`);
 

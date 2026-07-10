@@ -1,5 +1,9 @@
 /* PWA install + service worker registration */
 (function () {
+  if (window.htmx) {
+    window.htmx.config.allowScriptTags = false;
+  }
+
   if ("serviceWorker" in navigator) {
     window.addEventListener("load", () => {
       navigator.serviceWorker.register("__SW_URL__").catch(() => {});

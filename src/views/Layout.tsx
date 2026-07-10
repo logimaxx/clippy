@@ -1,6 +1,7 @@
 /** @jsxImportSource hono/jsx */
 import type { Child } from "hono/jsx";
 import { asset } from "../lib/assets";
+import { getUmamiConfig } from "../lib/umami";
 
 interface LayoutProps {
   title: string;
@@ -19,6 +20,7 @@ export function Layout({
 }: LayoutProps) {
   const socialTitle = ogTitle ?? title;
   const socialDescription = ogDescription ?? description;
+  const umami = getUmamiConfig();
 
   return (
     <html lang="en">
@@ -41,6 +43,13 @@ export function Layout({
         <link rel="stylesheet" href={asset("app.css")} />
         <script src={asset("htmx.min.js")} defer></script>
         <script src={asset("app.js")} defer></script>
+        {umami && (
+          <script
+            defer
+            src={umami.scriptUrl}
+            data-website-id={umami.websiteId}
+          ></script>
+        )}
       </head>
       <body>
         <div id="toast-host" class="toast-host" aria-live="polite" aria-atomic="true"></div>

@@ -1,6 +1,7 @@
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { Hono } from "hono";
+import { getUmamiConfig, umamiScriptTag } from "../lib/umami";
 
 const PAGES_DIR = join(process.cwd(), "dist", "pages");
 
@@ -22,6 +23,16 @@ function readPage(filename: string): string {
   return readFileSync(join(PAGES_DIR, filename), "utf-8");
 }
 
+function injectRuntimeScripts(html: string): string {
+  const tag = umamiScriptTag();
+  if (!tag) return html;
+
+  const config = getUmamiConfig();
+  if (config && html.includes(config.scriptUrl)) return html;
+
+  return html.replace("</head>", `  ${tag}\n</head>`);
+}
+
 const staticPages = new Hono();
 
 staticPages.get("/sitemap.xml", (c) => {
@@ -35,6 +46,19 @@ staticPages.get("/sitemap.xml", (c) => {
 ${urls}
 </urlset>`;
   return c.body(xml, 200, { "Content-Type": "application/xml" });
+});
+
+staticPages.get("/structured-data/:file", (c) => {
+  const file = c.req.param("file");
+  if (!/^[\w-]+\.json$/.test(file)) return c.notFound();
+
+  const path = join(PAGES_DIR, "structured-data", file);
+  if (!existsSync(path)) return c.notFound();
+
+  return c.body(readFileSync(path), 200, {
+    "Content-Type": "application/ld+json; charset=utf-8",
+    "Cache-Control": "public, max-age=3600",
+  });
 });
 
 staticPages.get("/robots.txt", (c) => {
@@ -51,7 +75,7 @@ staticPages.get("*", (c, next) => {
   if (!filename || !existsSync(join(PAGES_DIR, filename))) {
     return next();
   }
-  return c.html(readPage(filename));
+  return c.html(injectRuntimeScripts(readPage(filename)));
 });
 
 export { staticPages, loadRoutes };
