@@ -31,7 +31,6 @@ interface BuildContext {
   umamiScript: string;
   footerTracking: string;
   trustAnalytics: string;
-  docsLinks: string;
   resourceLinks: string;
   umami: {
     cookiesNote: string;
@@ -119,22 +118,13 @@ function buildContext(): BuildContext {
     readFileSync(join(STATIC, "landing-pages.json"), "utf-8")
   ) as LandingPage[];
 
-  const docsLinks = [
-    { href: "/docs", label: "Overview" },
-    { href: "/docs/api", label: "REST API" },
-    { href: "/docs/cli", label: "CLI" },
-    { href: "/docs/webhooks", label: "Webhooks" },
-  ]
-    .map((link) => `<a href="${link.href}">${link.label}</a>`)
-    .join("\n    ");
-
   const resourceLinks = landingPages
     .map((p) => `<a href="/${p.slug}">${p.h1}</a>`)
     .join("\n    ");
 
   return {
     assetBase: loadManifest(),
-    contactEmail: process.env.CONTACT_EMAIL ?? "security@example.com",
+    contactEmail: process.env.CONTACT_EMAIL ?? "contact@logimaxx.ro",
     year: String(new Date().getFullYear()),
     legalUpdated: "July 7, 2026",
     umamiScript: umami?.script ?? "",
@@ -144,7 +134,6 @@ function buildContext(): BuildContext {
     trustAnalytics: umami
       ? "Privacy-friendly analytics only — no cross-site trackers"
       : "No analytics trackers",
-    docsLinks,
     resourceLinks,
     umami: {
       cookiesNote: umami
@@ -193,7 +182,6 @@ function renderPage(
     YEAR: ctx.year,
     FOOTER_TRACKING: ctx.footerTracking,
     RESOURCE_LINKS: ctx.resourceLinks,
-    DOCS_LINKS: ctx.docsLinks,
   });
 
   return replaceVars(layout, {
@@ -222,7 +210,7 @@ function buildLandingBody(page: LandingPage, allPages: LandingPage[]): string {
   const useCases = page.useCases.map((u) => `<li>${u}</li>`).join("\n      ");
   const relatedLinks = related
     .map((r) => `<a href="/${r.slug}">${r.h1}</a>`)
-    .concat('<a href="/">Clippy homepage</a>')
+    .concat('<a href="/">Webklip homepage</a>')
     .join("\n      ");
 
   return `<section class="seo-landing-hero">
@@ -238,7 +226,7 @@ function buildLandingBody(page: LandingPage, allPages: LandingPage[]): string {
 </section>
 
 <section class="landing-section">
-  <h2>Why use Clippy for ${page.h1.toLowerCase()}?</h2>
+  <h2>Why use Webklip for ${page.h1.toLowerCase()}?</h2>
   <ul class="trust-list">
     ${benefits}
   </ul>
@@ -268,7 +256,13 @@ function buildLandingBody(page: LandingPage, allPages: LandingPage[]): string {
 }
 
 function buildSitemap(baseUrl: string, routes: string[]): string {
-  const urls = routes.map((path) => `  <url><loc>${baseUrl}${path}</loc></url>`).join("\n");
+  const base = baseUrl.replace(/\/$/, "");
+  const urls = routes
+    .map((path) => {
+      const loc = `${base}${path === "/" ? "/" : path}`;
+      return `  <url><loc>${loc}</loc></url>`;
+    })
+    .join("\n");
   return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls}
@@ -309,17 +303,17 @@ writePage(
   "/",
   "index.html",
   renderPage(layout, header, footer, homeBody, ctx, {
-    title: "Clippy — Online Web Clipboard for Instant Text Sharing",
+    title: "Webklip — Online Web Clipboard for Instant Text Sharing",
     description:
       "Share text and files between devices with a free online clipboard. No sign-up, real-time sync, automatic deletion. Create a secure web clipboard in one click.",
     canonical: "/",
-    ogTitle: "Clippy — The fastest way to share text and files between devices",
+    ogTitle: "Webklip — The fastest way to share text and files between devices",
     ogDescription:
       "Free online clipboard with real-time sync. No account required — your link is the key.",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "WebApplication",
-      name: "Clippy",
+      name: "Webklip",
       applicationCategory: "UtilitiesApplication",
       operatingSystem: "Any",
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
@@ -336,23 +330,23 @@ const legalPages = [
     path: "/privacy",
     file: "privacy.html",
     src: "privacy.html",
-    title: "Privacy Policy — Clippy",
-    description: "How Clippy collects, uses, and deletes your data.",
+    title: "Privacy Policy — Webklip",
+    description: "How Webklip collects, uses, and deletes your data.",
   },
   {
     path: "/terms",
     file: "terms.html",
     src: "terms.html",
-    title: "Terms of Service — Clippy",
-    description: "Terms governing use of the Clippy web clipboard service.",
+    title: "Terms of Service — Webklip",
+    description: "Terms governing use of the Webklip web clipboard service.",
   },
   {
     path: "/security",
     file: "security.html",
     src: "security.html",
-    title: "Security — Clippy",
+    title: "Security — Webklip",
     description:
-      "How Clippy protects your data: ephemeral storage, PINs, rate limits, and encryption options.",
+      "How Webklip protects your data: ephemeral storage, PINs, rate limits, and encryption options.",
   },
 ] as const;
 
@@ -405,29 +399,29 @@ const docsPages = [
     path: "/docs",
     file: "docs-index.html",
     src: "docs/index.html",
-    title: "Developer Docs — Clippy",
-    description: "REST API, CLI, and webhooks for automating Clippy.",
+    title: "Developer Docs — Webklip",
+    description: "REST API, CLI, and webhooks for automating Webklip.",
   },
   {
     path: "/docs/api",
     file: "docs-api.html",
     src: "docs/api.html",
-    title: "REST API — Clippy Docs",
-    description: "Clippy REST API reference for clips, files, and authentication.",
+    title: "REST API — Webklip Docs",
+    description: "Webklip REST API reference for clips, files, and authentication.",
   },
   {
     path: "/docs/cli",
     file: "docs-cli.html",
     src: "docs/cli.html",
-    title: "CLI — Clippy Docs",
+    title: "CLI — Webklip Docs",
     description: "Command-line interface for creating and reading clips.",
   },
   {
     path: "/docs/webhooks",
     file: "docs-webhooks.html",
     src: "docs/webhooks.html",
-    title: "Webhooks — Clippy Docs",
-    description: "Webhook events and payloads for Clippy clips.",
+    title: "Webhooks — Webklip Docs",
+    description: "Webhook events and payloads for Webklip clips.",
   },
 ] as const;
 
@@ -445,16 +439,16 @@ for (const page of docsPages) {
   );
 }
 
-// Sitemap & robots (base URL placeholder — replaced at serve time or use relative)
-const sitemapPaths = [
-  "/",
-  "/privacy",
-  "/terms",
-  "/security",
-  ...docsPages.map((p) => p.path),
-  ...landingPages.map((p) => `/${p.slug}`),
-];
+const sitemapPaths = Object.keys(routes).sort((a, b) => {
+  if (a === "/") return -1;
+  if (b === "/") return 1;
+  return a.localeCompare(b);
+});
 writeFileSync(join(OUT, "sitemap-paths.json"), JSON.stringify(sitemapPaths, null, 2));
+
+const siteUrl = (process.env.SITE_URL ?? "https://webklip.com").trim().replace(/\/$/, "");
+writeFileSync(join(OUT, "sitemap.xml"), buildSitemap(siteUrl, sitemapPaths));
+writeFileSync(join(OUT, "robots.txt"), buildRobots(siteUrl));
 
 writeFileSync(join(OUT, "routes.json"), JSON.stringify(routes, null, 2));
 

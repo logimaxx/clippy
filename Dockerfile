@@ -1,5 +1,7 @@
 FROM oven/bun:1-alpine AS build
 WORKDIR /app
+ARG SITE_URL=https://webklip.com
+ENV SITE_URL=${SITE_URL}
 COPY package.json ./
 RUN bun install
 COPY . .

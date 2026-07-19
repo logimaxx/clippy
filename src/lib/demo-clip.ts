@@ -3,7 +3,7 @@ import { getClip, ensureClip, updateContent, updateSettings } from "../store/cli
 const DEMO_SLUG = "demo";
 const DEMO_TTL = 604800; // 7 days — within setTimeout 32-bit limit
 
-const DEMO_CONTENT = `Welcome to Clippy!
+const DEMO_CONTENT = `Welcome to Webklip!
 
 This is a sample clip so you can see how it works before creating your own.
 

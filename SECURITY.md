@@ -1,10 +1,10 @@
-# Clippy Security
+# Webklip Security
 
-This document is for operators deploying Clippy in production and for security researchers reporting vulnerabilities.
+This document is for operators deploying Webklip in production and for security researchers reporting vulnerabilities.
 
 ## Threat model
 
-Clippy is an **ephemeral web clipboard**. Access control for anonymous clips relies on the **link-as-secret** model: anyone who knows the URL can read and edit unless you add a PIN or client-side end-to-end encryption.
+Webklip is an **ephemeral web clipboard**. Access control for anonymous clips relies on the **link-as-secret** model: anyone who knows the URL can read and edit unless you add a PIN or client-side end-to-end encryption.
 
 | Asset | Risk if compromised |
 |-------|---------------------|
@@ -98,12 +98,12 @@ When `UMAMI_WEBSITE_ID` is set, CSP also allows the Umami script origin for `scr
 
 ## Responsible disclosure
 
-Report security issues to the address configured in `CONTACT_EMAIL` (default: `security@example.com`). Please allow reasonable time to patch before public disclosure.
+Report security issues to the address configured in `CONTACT_EMAIL` (default: `contact@logimaxx.ro`). Please allow reasonable time to patch before public disclosure.
 
 ## User-facing documentation
 
 End users should read:
 
-- `/security` — how Clippy protects data
+- `/security` — how Webklip protects data
 - `/privacy` — what we collect and retain
 - `/terms` — acceptable use and liability

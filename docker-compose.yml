@@ -1,17 +1,18 @@
 services:
-  clippy:
+  webklip:
     build: .
     ports:
       - "${PORT:-3000}:${PORT:-3000}"
     volumes:
-      - clippy-data:/data
+      - webklip-data:/data
     environment:
       DATA_DIR: /data
       PORT: ${PORT:-3000}
       NODE_ENV: production
       SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env}
       SECURE_COOKIES: ${SECURE_COOKIES:-true}
-      CONTACT_EMAIL: ${CONTACT_EMAIL:-security@example.com}
+      CONTACT_EMAIL: ${CONTACT_EMAIL:-contact@logimaxx.ro}
+      SITE_URL: ${SITE_URL:-https://webklip.com}
       MAX_FILE_SIZE_MB: ${MAX_FILE_SIZE_MB:-10}
       # Per-IP rate limits (rolling 1-hour window; IP from X-Forwarded-For / X-Real-IP)
       RATE_LIMIT_CLIPS_PER_HOUR: ${RATE_LIMIT_CLIPS_PER_HOUR:-30}  # POST /api/v1/clips/:slug
@@ -25,4 +26,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  clippy-data:
+  webklip-data:

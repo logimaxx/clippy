@@ -3,7 +3,7 @@
 
 <p>
   Set a webhook URL when creating a clip via the API (<code>webhook</code> field) or from
-  clip settings in the UI. Clippy sends a JSON <code>POST</code> to your URL when the clip
+  clip settings in the UI. Webklip sends a JSON <code>POST</code> to your URL when the clip
   is read, burned, or expired.
 </p>
 
@@ -34,7 +34,7 @@
 <ul>
   <li>Method: <code>POST</code></li>
   <li>Content-Type: <code>application/json</code></li>
-  <li>User-Agent: <code>Clippy-Webhook/1.0</code></li>
+  <li>User-Agent: <code>Webklip-Webhook/1.0</code></li>
   <li>Timeout: 10 seconds</li>
 </ul>
 <p>
@@ -43,10 +43,10 @@
 </p>
 
 <h2>Example</h2>
-<pre><code>curl -X POST https://your-host/api/v1/clips/alert \
+<pre><code>curl -X POST https://webklip.com/api/v1/clips/alert \
   -H "Content-Type: application/json" \
   -d '{
     "content": "deploy token",
     "burnOnRead": true,
-    "webhook": "https://hooks.example.com/clippy"
+    "webhook": "https://hooks.example.com/webklip"
   }'</code></pre>

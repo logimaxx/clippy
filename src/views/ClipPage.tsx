@@ -52,19 +52,19 @@ export function ClipPage({
   const deviceLabel = `${devices} device${devices === 1 ? "" : "s"}`;
 
   return (
-    <Layout title={`Clippy — ${slug}`}>
+    <Layout title={`Webklip — ${slug}`}>
       <div class="app" data-view="editor">
         <header class="header">
-          <a href="/" class="logo" aria-label="Clippy home">
+          <a href="/" class="logo" aria-label="Webklip home">
             <span class="logo-mark" aria-hidden="true">
               C
             </span>
-            clippy
+            webklip
           </a>
 
           <div class="url-bar" role="group" aria-label="Clip URL">
             <span class="url-bar__path">
-              clippy.app/<strong>{slug}</strong>
+              webklip.app/<strong>{slug}</strong>
             </span>
           </div>
 

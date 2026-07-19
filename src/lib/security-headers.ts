@@ -17,7 +17,7 @@ function extraScriptHashes(): string[] {
 }
 
 const DEFAULT_SECRETS = new Set([
-  "clippy-dev-secret-change-me",
+  "webklip-dev-secret-change-me",
   "change-me-in-production",
 ]);
 

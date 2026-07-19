@@ -18,7 +18,7 @@
     if (btn) btn.hidden = false;
   });
 
-  window.clippyInstall = async function () {
+  window.webklipInstall = async function () {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     await deferredPrompt.userChoice;
@@ -65,13 +65,13 @@
 
   document.addEventListener("click", (e) => {
     const e2eBtn = e.target.closest("#e2e-generate-key");
-    if (e2eBtn && window.ClippyE2E) {
-      window.ClippyE2E.enableEncryption();
+    if (e2eBtn && window.WebklipE2E) {
+      window.WebklipE2E.enableEncryption();
       const ta = document.getElementById("clip-content");
       if (ta && ta.value.trim()) {
         ta.dispatchEvent(new Event("input", { bubbles: true }));
       }
-      navigator.clipboard.writeText(window.ClippyE2E.shareUrl()).catch(() => {});
+      navigator.clipboard.writeText(window.WebklipE2E.shareUrl()).catch(() => {});
       alert(
         "Encryption key added to URL and copied to clipboard. Share this full link to decrypt."
       );
@@ -225,4 +225,36 @@
       alert(message);
     }
   });
+
+  const siteHeader = document.querySelector(".site-header");
+  const navToggle = document.querySelector(".site-nav-toggle");
+  const siteNav = document.getElementById("site-nav");
+
+  if (siteHeader && navToggle && siteNav) {
+    const backdrop = siteHeader.querySelector(".site-nav-backdrop");
+
+    function setNavOpen(open) {
+      siteHeader.classList.toggle("is-nav-open", open);
+      navToggle.setAttribute("aria-expanded", open ? "true" : "false");
+      navToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+      document.body.classList.toggle("site-nav-open", open);
+    }
+
+    navToggle.addEventListener("click", () => {
+      setNavOpen(!siteHeader.classList.contains("is-nav-open"));
+    });
+
+    backdrop?.addEventListener("click", () => setNavOpen(false));
+
+    siteNav.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => setNavOpen(false));
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && siteHeader.classList.contains("is-nav-open")) {
+        setNavOpen(false);
+        navToggle.focus();
+      }
+    });
+  }
 })();

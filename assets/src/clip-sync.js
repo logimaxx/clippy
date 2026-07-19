@@ -1,7 +1,7 @@
-/* Clippy real-time textarea sync */
+/* Webklip real-time textarea sync */
 (async function () {
-  if (window.ClippyE2EDecryptReady) {
-    await window.ClippyE2EDecryptReady;
+  if (window.WebklipE2EDecryptReady) {
+    await window.WebklipE2EDecryptReady;
   }
 
   const textarea = document.getElementById("clip-content");
@@ -11,7 +11,7 @@
   const wsPath = textarea.dataset.wsUrl || `/ws/${slug}`;
   if (!slug) return;
 
-  const syncKey = `__clippySync_${slug}`;
+  const syncKey = `__webklipSync_${slug}`;
   if (window[syncKey]) {
     window[syncKey].stop();
   }
@@ -29,18 +29,18 @@
   let intentionalClose = false;
 
   async function wireContent(text) {
-    if (isEncrypted() && window.ClippyE2E?.hasKey()) {
-      return await window.ClippyE2E.encrypt(text);
+    if (isEncrypted() && window.WebklipE2E?.hasKey()) {
+      return await window.WebklipE2E.encrypt(text);
     }
     return text;
   }
 
   async function plainContent(wire) {
-    if (!window.ClippyE2E?.hasKey()) return wire;
+    if (!window.WebklipE2E?.hasKey()) return wire;
     const trimmed = wire.trim();
-    if (!window.ClippyE2E.isLikelyCiphertext(trimmed)) return wire;
+    if (!window.WebklipE2E.isLikelyCiphertext(trimmed)) return wire;
     try {
-      return await window.ClippyE2E.decrypt(trimmed);
+      return await window.WebklipE2E.decrypt(trimmed);
     } catch {
       return wire;
     }
@@ -98,7 +98,7 @@
           isRemote = true;
           textarea.value = await plainContent(data.content);
           isRemote = false;
-          window.ClippyEditor?.refresh();
+          window.WebklipEditor?.refresh();
         } else if (data.type === "status") {
           const n = data.devices ?? 0;
           const label = `${n} device${n === 1 ? "" : "s"}`;

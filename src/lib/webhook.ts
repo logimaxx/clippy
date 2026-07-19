@@ -73,7 +73,7 @@ export async function fireWebhook(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "Clippy-Webhook/1.0",
+        "User-Agent": "Webklip-Webhook/1.0",
       },
       body: JSON.stringify(payload),
       signal: AbortSignal.timeout(10_000),

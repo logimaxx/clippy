@@ -1,4 +1,4 @@
-# Clippy
+# Webklip
 
 Lightweight self-contained web clipboard with real-time sync, HTMX UI, and PWA support.
 
@@ -20,7 +20,7 @@ Open http://localhost:3000
 ```bash
 bun run cli -- -l myclip -m "hello world"
 bun run cli -- -l myclip -g
-bun run cli -- -l myclip -g -u https://clippy.example.com
+bun run cli -- -l myclip -g -u https://webklip.com
 ```
 
 ## Phase 3 features
@@ -35,7 +35,7 @@ bun run cli -- -l myclip -g -u https://clippy.example.com
 
 1. Register and create a team at `/account`
 2. Open `/teams/{team-slug}` and create a clip
-3. Share `https://your-host/{team}/{clip-name}`
+3. Share `https://webklip.com/{team}/{clip-name}`
 
 ### E2E encryption
 
@@ -68,7 +68,7 @@ bun run cli -- -l myclip -g -u https://clippy.example.com
 ### CLI examples
 
 ```bash
-bun run cli -- -l secret -m "data" -p 1234 -w https://hooks.example.com/clippy
+bun run cli -- -l secret -m "data" -p 1234 -w https://hooks.example.com/webklip
 bun run cli -- -l secret -g -p 1234
 bun run cli -- -l secret -f ./photo.png
 ```
@@ -91,7 +91,8 @@ bun run cli -- -l secret -f ./photo.png
 | `NODE_ENV` | — | Set to `production` in production |
 | `SESSION_SECRET` | — | **Required in production.** HMAC signing for cookies |
 | `SECURE_COOKIES` | `false` | Set `true` behind HTTPS reverse proxy |
-| `CONTACT_EMAIL` | `security@example.com` | Legal/security contact on public pages |
+| `CONTACT_EMAIL` | `contact@logimaxx.ro` | Legal/security contact on public pages |
+| `SITE_URL` | `https://webklip.com` | Public site URL (no trailing slash) — writes `sitemap.xml` at build time |
 | `ENABLE_AUTH_API` | `false` | Enable `POST /api/v1/auth/register` and API key API |
 | `UMAMI_WEBSITE_ID` | — | Umami website ID — enables analytics when set |
 | `UMAMI_SCRIPT_URL` | — | Full URL to `script.js` (or set `UMAMI_URL` instead) |

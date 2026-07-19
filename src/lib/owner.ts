@@ -3,10 +3,10 @@ import type { Context } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 import { shouldUseSecureCookies } from "./pin";
 
-const SECRET = process.env.SESSION_SECRET ?? "clippy-dev-secret-change-me";
+const SECRET = process.env.SESSION_SECRET ?? "webklip-dev-secret-change-me";
 
 function cookieName(slug: string) {
-  return `clippy_owner_${slug}`;
+  return `webklip_owner_${slug}`;
 }
 
 function signOwner(slug: string): string {

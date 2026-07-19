@@ -82,6 +82,6 @@ export function adminBasicAuth() {
 }
 
 function unauthorized(c: Context) {
-  c.header("WWW-Authenticate", 'Basic realm="Clippy Admin", charset="UTF-8"');
+  c.header("WWW-Authenticate", 'Basic realm="Webklip Admin", charset="UTF-8"');
   return c.text("Unauthorized", 401);
 }

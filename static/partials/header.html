@@ -1,10 +1,18 @@
 <header class="site-header">
-  <a href="/" class="logo">clippy</a>
-  <nav class="site-nav">
+  <a href="/" class="logo">webklip</a>
+  <button
+    type="button"
+    class="site-nav-toggle"
+    aria-expanded="false"
+    aria-controls="site-nav"
+    aria-label="Open menu"
+  >
+    <span class="site-nav-toggle-icon" aria-hidden="true"></span>
+  </button>
+  <div class="site-nav-backdrop" aria-hidden="true"></div>
+  <nav id="site-nav" class="site-nav" aria-label="Main">
     <a href="/#how-it-works">How it works</a>
     <a href="/#features">Features</a>
-    <a href="/docs">Docs</a>
     <a href="/security">Security</a>
-    <a href="/login" class="btn btn-ghost">Sign in</a>
   </nav>
 </header>

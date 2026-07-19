@@ -15,16 +15,16 @@ const get = args.includes("-g") || args.includes("--get");
 const help = args.includes("-h") || args.includes("--help");
 
 if (help || (!get && !message && !filePath) || !slug) {
-  console.log(`Clippy CLI
+  console.log(`Webklip CLI
 
 Usage:
-  clippy -l <slug> -m <message>              Create/update clip
-  clippy -l <slug> -f <file>                 Upload file to clip
-  clippy -l <slug> -g                        Get clip content (API read)
-  clippy -l <slug> -m "text" -p <pin>        Set content with PIN
-  clippy -l <slug> -m "text" -w <url>        Set webhook URL
-  clippy -l <slug> -m "text" --max-views 3   Limit to 3 reads
-  clippy -l <slug> -m "text" --no-burn       Disable burn-on-read
+  webklip -l <slug> -m <message>              Create/update clip
+  webklip -l <slug> -f <file>                 Upload file to clip
+  webklip -l <slug> -g                        Get clip content (API read)
+  webklip -l <slug> -m "text" -p <pin>        Set content with PIN
+  webklip -l <slug> -m "text" -w <url>        Set webhook URL
+  webklip -l <slug> -m "text" --max-views 3   Limit to 3 reads
+  webklip -l <slug> -m "text" --no-burn       Disable burn-on-read
 
 Options:
   -u, --url         Server URL (default: http://localhost:3000)

@@ -1,6 +1,6 @@
 {
-  "name": "Clippy",
-  "short_name": "Clippy",
+  "name": "Webklip",
+  "short_name": "Webklip",
   "description": "Lightweight internet clipboard with real-time sync",
   "start_url": "/",
   "display": "standalone",

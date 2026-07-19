@@ -8,7 +8,7 @@ import { dirname } from "node:path";
 const dataDir = process.env.DATA_DIR ?? "./data";
 mkdirSync(dataDir, { recursive: true });
 
-const dbPath = `${dataDir}/clippy.db`;
+const dbPath = `${dataDir}/webklip.db`;
 const sqlite = new Database(dbPath);
 sqlite.exec("PRAGMA journal_mode = WAL;");
 sqlite.exec("PRAGMA synchronous = NORMAL;");

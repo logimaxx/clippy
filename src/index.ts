@@ -141,5 +141,5 @@ const server = Bun.serve({
   },
 });
 
-console.log(`Clippy running on http://localhost:${server.port}`);
+console.log(`Webklip running on http://localhost:${server.port}`);
 console.log(`Assets: /assets/${manifest.hash}/`);

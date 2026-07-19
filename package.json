@@ -1,5 +1,5 @@
 {
-  "name": "clippy",
+  "name": "webklip",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -7,7 +7,7 @@
     "importSource": "hono/jsx"
   },
   "scripts": {
-    "dev": "CLIPPY_DEV=1 bun run scripts/build-assets.ts --dev && bun run scripts/build-static.ts && CLIPPY_DEV=1 bun run --watch src/index.ts",
+    "dev": "WEBKLIP_DEV=1 bun run scripts/build-assets.ts --dev && bun run scripts/build-static.ts && WEBKLIP_DEV=1 bun run --watch src/index.ts",
     "start": "bun run src/index.ts",
     "build:assets": "bun run scripts/build-assets.ts",
     "build:static": "bun run scripts/build-static.ts",

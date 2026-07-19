@@ -9,7 +9,7 @@ interface PinGateProps {
 
 export function PinGate({ slug, error, remaining }: PinGateProps) {
   return (
-    <Layout title={`Clippy — ${slug} (locked)`}>
+    <Layout title={`Webklip — ${slug} (locked)`}>
       <main class="home pin-gate">
         <h1>🔒 PIN required</h1>
         <p class="tagline">This clip is protected. Enter the PIN to continue.</p>

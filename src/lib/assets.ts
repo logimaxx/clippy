@@ -9,7 +9,7 @@ export interface AssetManifest {
 let manifest: AssetManifest | null = null;
 
 function isDevAssets(): boolean {
-  return process.env.CLIPPY_DEV === "1" || process.env.NODE_ENV !== "production";
+  return process.env.WEBKLIP_DEV === "1" || process.env.NODE_ENV !== "production";
 }
 
 export function loadAssetManifest(): AssetManifest {

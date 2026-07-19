@@ -123,9 +123,9 @@ export function AdminPage({ stats, history, adminPath }: AdminPageProps) {
     .map(([label, value]) => ({ label, value }));
 
   return (
-    <Layout title="Admin — Clippy" description="Clippy admin statistics">
+    <Layout title="Admin — Webklip" description="Webklip admin statistics">
       <main class="home admin-page">
-        <h1>Clippy stats</h1>
+        <h1>Webklip stats</h1>
         <p class="muted">Aggregates only — no clip content or slugs. Updated {formatTime(stats.recordedAt)}.</p>
 
         <section class="admin-hero">

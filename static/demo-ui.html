@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0c1222" />
   <meta name="color-scheme" dark />
-  <title>Clippy — UI Demo</title>
+  <title>Webklip — UI Demo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     /*
-      Design system: "Clippy Productivity"
+      Design system: "Webklip Productivity"
       — Radix Slate neutrals + Cyan accent (accessible dark-first)
       — 4px base grid, 8px rhythm for layout
       — Inter (UI) + JetBrains Mono (editor)
@@ -870,17 +870,17 @@
   <div class="app" data-view="editor">
     <div class="demo-banner" role="status">
       <strong>UI prototype</strong>
-      <span>— static demo for Clippy clipboard app. Open on phone &amp; desktop to compare layouts.</span>
+      <span>— static demo for Webklip clipboard app. Open on phone &amp; desktop to compare layouts.</span>
     </div>
 
     <header class="header">
-      <a href="/" class="logo" aria-label="Clippy home">
+      <a href="/" class="logo" aria-label="Webklip home">
         <span class="logo-mark" aria-hidden="true">C</span>
-        clippy
+        webklip
       </a>
 
       <div class="url-bar" role="group" aria-label="Clip URL">
-        <span class="url-bar__path">clippy.app/<strong>demo-clip</strong></span>
+        <span class="url-bar__path">webklip.app/<strong>demo-clip</strong></span>
       </div>
 
       <div class="header-chips" aria-hidden="false">
@@ -993,7 +993,7 @@
               spellcheck="false"
               placeholder="Paste or type anything…"
               aria-label="Clip content editor"
-            >// Welcome to Clippy — paste anything, share instantly.
+            >// Welcome to Webklip — paste anything, share instantly.
 
 async function fetchClip(slug) {
   const res = await fetch(`/api/v1/clips/${slug}`);
@@ -1207,7 +1207,7 @@ async function fetchClip(slug) {
     });
     syncEditor();
 
-    const CLIP_URL = "https://clippy.app/demo-clip";
+    const CLIP_URL = "https://webklip.app/demo-clip";
     const shareMenu = $("#share-menu");
     const shareTrigger = $("#share-trigger");
     const sharePopover = $("#share-popover");
@@ -1252,7 +1252,7 @@ async function fetchClip(slug) {
 
     async function shareNative() {
       try {
-        await navigator.share({ title: "Clippy clip", url: CLIP_URL });
+        await navigator.share({ title: "Webklip clip", url: CLIP_URL });
       } catch { /* cancelled */ }
       closeShareMenu();
     }

@@ -8,20 +8,20 @@
 
 <h2>Examples</h2>
 <pre><code># Create or update clip content
-bun run cli -- -u https://your-host -l my-clip -m "hello world"
+bun run cli -- -u https://webklip.com -l my-clip -m "hello world"
 
 # Fetch clip content (counts as an API read)
-bun run cli -- -u https://your-host -l my-clip -g
+bun run cli -- -u https://webklip.com -l my-clip -g
 
 # Create with PIN, webhook, and view limit
-bun run cli -- -u https://your-host -l secret -m "data" \
-  -p 1234 -w https://hooks.example.com/clippy --max-views 3
+bun run cli -- -u https://webklip.com -l secret -m "data" \
+  -p 1234 -w https://hooks.example.com/webklip --max-views 3
 
 # Disable burn-on-read on create
-bun run cli -- -u https://your-host -l notes -m "keep me" --no-burn
+bun run cli -- -u https://webklip.com -l notes -m "keep me" --no-burn
 
 # Upload a file to an existing clip
-bun run cli -- -u https://your-host -l my-clip -f ./photo.png</code></pre>
+bun run cli -- -u https://webklip.com -l my-clip -f ./photo.png</code></pre>
 
 <h2>Options</h2>
 <table class="docs-table">

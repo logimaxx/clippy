@@ -10,7 +10,7 @@ export function LoginPage({ mode = "login", error }: LoginPageProps) {
   const isRegister = mode === "register";
 
   return (
-    <Layout title={isRegister ? "Register — Clippy" : "Login — Clippy"}>
+    <Layout title={isRegister ? "Register — Webklip" : "Login — Webklip"}>
       <main class="home account-page">
         <h1>{isRegister ? "Create account" : "Sign in"}</h1>
         {error && <p class="pin-error">{error}</p>}
@@ -72,7 +72,7 @@ interface AccountPageProps {
 
 export function AccountPage({ user, teams, apiKeys }: AccountPageProps) {
   return (
-    <Layout title="Account — Clippy">
+    <Layout title="Account — Webklip">
       <main class="home account-page">
         <h1>Account</h1>
         <p class="tagline">

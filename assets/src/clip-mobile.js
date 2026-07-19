@@ -145,7 +145,7 @@
         closeShareMenu();
       } else if (action === "native" && navigator.share) {
         try {
-          await navigator.share({ title: "Clippy clip", url: location.href });
+          await navigator.share({ title: "Webklip clip", url: location.href });
         } catch {
           /* cancelled */
         }
@@ -238,5 +238,5 @@
     if (openSheetName) openSheet(openSheetName);
   });
 
-  window.ClippyMobile = { openSheet, closeSheets };
+  window.WebklipMobile = { openSheet, closeSheets };
 })();

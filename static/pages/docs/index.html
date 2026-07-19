@@ -1,19 +1,19 @@
 <h1>Developer documentation</h1>
-<p class="legal-updated">Automate Clippy with the REST API, CLI, and webhooks.</p>
+<p class="legal-updated">Automate Webklip with the REST API, CLI, and webhooks.</p>
 
 <p>
-  Clippy exposes a JSON REST API for creating, reading, updating, and deleting clips.
+  Webklip exposes a JSON REST API for creating, reading, updating, and deleting clips.
   Use it from scripts, CI pipelines, or any HTTP client. A small CLI wraps the same
   endpoints for terminal workflows.
 </p>
 
 <h2>Quick start</h2>
 <p>Create a clip and read it back:</p>
-<pre><code>curl -s -X POST https://your-host/api/v1/clips/my-clip \
+<pre><code>curl -s -X POST https://webklip.com/api/v1/clips/my-clip \
   -H "Content-Type: application/json" \
   -d '{"content":"hello from the API","burnOnRead":false,"ttl":3600}'
 
-curl -s https://your-host/api/v1/clips/my-clip</code></pre>
+curl -s https://webklip.com/api/v1/clips/my-clip</code></pre>
 
 <h2>Guides</h2>
 <ul class="docs-guide-list">
@@ -25,8 +25,7 @@ curl -s https://your-host/api/v1/clips/my-clip</code></pre>
 <h2>Authentication</h2>
 <p>
   Anonymous clips work without credentials — the slug URL is the access secret.
-  Signed-in users can create <a href="/account">API keys</a> for account-related endpoints
-  (<code>Authorization: Bearer …</code>). Clip CRUD does not require an API key.
+  Clip CRUD does not require sign-in or an API key.
 </p>
 
 <h2>Limits</h2>

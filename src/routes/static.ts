@@ -36,6 +36,14 @@ function injectRuntimeScripts(html: string): string {
 const staticPages = new Hono();
 
 staticPages.get("/sitemap.xml", (c) => {
+  const staticPath = join(PAGES_DIR, "sitemap.xml");
+  if (existsSync(staticPath)) {
+    return c.body(readFileSync(staticPath, "utf-8"), 200, {
+      "Content-Type": "application/xml; charset=utf-8",
+      "Cache-Control": "public, max-age=3600",
+    });
+  }
+
   const base = new URL(c.req.url).origin;
   const paths = existsSync(join(PAGES_DIR, "sitemap-paths.json"))
     ? (JSON.parse(readFileSync(join(PAGES_DIR, "sitemap-paths.json"), "utf-8")) as string[])
@@ -45,7 +53,7 @@ staticPages.get("/sitemap.xml", (c) => {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls}
 </urlset>`;
-  return c.body(xml, 200, { "Content-Type": "application/xml" });
+  return c.body(xml, 200, { "Content-Type": "application/xml; charset=utf-8" });
 });
 
 staticPages.get("/structured-data/:file", (c) => {
@@ -62,6 +70,13 @@ staticPages.get("/structured-data/:file", (c) => {
 });
 
 staticPages.get("/robots.txt", (c) => {
+  const staticPath = join(PAGES_DIR, "robots.txt");
+  if (existsSync(staticPath)) {
+    return c.text(readFileSync(staticPath, "utf-8"), 200, {
+      "Cache-Control": "public, max-age=3600",
+    });
+  }
+
   const base = new URL(c.req.url).origin;
   return c.text(`User-agent: *
 Allow: /

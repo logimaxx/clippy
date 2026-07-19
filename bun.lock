@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "clippy",
+      "name": "webklip",
       "dependencies": {
         "@codemirror/commands": "^6.10.4",
         "@codemirror/lang-css": "^6.3.1",

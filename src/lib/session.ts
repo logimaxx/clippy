@@ -6,8 +6,8 @@ import { db } from "../db/client";
 import { users, apiKeys, type User } from "../db/schema";
 import { shouldUseSecureCookies } from "./pin";
 
-const SECRET = process.env.SESSION_SECRET ?? "clippy-dev-secret-change-me";
-const SESSION_COOKIE = "clippy_session";
+const SECRET = process.env.SESSION_SECRET ?? "webklip-dev-secret-change-me";
+const SESSION_COOKIE = "webklip_session";
 const SESSION_DAYS = 30;
 
 export interface AuthUser {
@@ -116,7 +116,7 @@ export async function requireAuth(c: Context): Promise<AuthUser | null> {
 }
 
 export function createApiKeyRaw(): string {
-  return `clippy_${randomBytes(24).toString("base64url")}`;
+  return `webklip_${randomBytes(24).toString("base64url")}`;
 }
 
 export function hashApiKey(raw: string): string {

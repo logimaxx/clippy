@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import type { Context } from "hono";
 import { getCookie, setCookie } from "hono/cookie";
 
-const SECRET = process.env.SESSION_SECRET ?? "clippy-dev-secret-change-me";
+const SECRET = process.env.SESSION_SECRET ?? "webklip-dev-secret-change-me";
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_MS = 15 * 60 * 1000;
 
@@ -15,7 +15,7 @@ export function shouldUseSecureCookies(headers?: Headers): boolean {
 }
 
 function cookieName(slug: string) {
-  return `clippy_unlock_${slug}`;
+  return `webklip_unlock_${slug}`;
 }
 
 function signSlug(slug: string): string {

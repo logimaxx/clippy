@@ -5,8 +5,8 @@
 
     <h2>Overview</h2>
     <p>
-      Clippy is an ephemeral web clipboard. We store the content you paste,
-      optional file attachments, and settings you configure (TTL, PIN, webhooks)
+      Webklip is an ephemeral web clipboard. We store the content you paste,
+      optional file attachments, and settings you configure (TTL, PIN, and other clip options)
       only for as long as your clip exists.
     </p>
 
@@ -14,9 +14,8 @@
     <ul>
       <li><strong>Clip content</strong> — text, files, and metadata you upload or type into a clip.</li>
       <li><strong>IP addresses</strong> — used for rate limiting and PIN brute-force protection. Not stored long-term in a user profile.</li>
-      <li><strong>Cookies</strong> — functional cookies: PIN unlock tokens and optional session cookies if you sign in.{{COOKIES_ANALYTICS_NOTE}}</li>
+      <li><strong>Cookies</strong> — functional cookies: PIN unlock tokens (httpOnly, 24 hours).{{COOKIES_ANALYTICS_NOTE}}</li>
       {{UMAMI_ANALYTICS_LI}}
-      <li><strong>Account data</strong> — if you register, we store your email, name (optional), and bcrypt password hash.</li>
     </ul>
 
     <h2>What we do not do</h2>
@@ -31,7 +30,7 @@
     <p>
       Clips expire based on the TTL you set (default 24 hours). A background cleanup job
       permanently deletes expired clips and orphan files. Burn-on-read and view limits can
-      delete clips sooner via the API.
+      delete clips sooner when those limits are reached.
     </p>
 
     <h2>End-to-end encryption</h2>
@@ -43,15 +42,13 @@
 
     <h2>Your rights</h2>
     <p>
-      You can delete a clip at any time via the API or by letting it expire. Registered users can
-      contact us to request account deletion. For privacy questions, email
+      You can delete a clip at any time from the clip page or by letting it expire. For privacy questions, email
       <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a>.
     </p>
 
     <h2>Cookies</h2>
     <p>
-      We use essential cookies: PIN unlock tokens (httpOnly, 24 hours) and session cookies for
-      signed-in users (httpOnly, 30 days).{{COOKIE_CONSENT_NOTE}}
+      We use essential cookies: PIN unlock tokens (httpOnly, 24 hours).{{COOKIE_CONSENT_NOTE}}
     </p>
 
     <h2>Changes</h2>

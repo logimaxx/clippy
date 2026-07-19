@@ -1,4 +1,4 @@
-/* Clippy E2E encryption — AES-256-GCM, key in URL fragment (#key=) */
+/* Webklip E2E encryption — AES-256-GCM, key in URL fragment (#key=) */
 (function () {
   const encoder = new TextEncoder();
   const decoder = new TextDecoder();
@@ -75,7 +75,7 @@
     const ta = document.getElementById("clip-content");
     if (!ta || ta.dataset.encrypted !== "true") return;
 
-    if (!window.ClippyE2E.hasKey()) {
+    if (!window.WebklipE2E.hasKey()) {
       ta.placeholder = "Enter encryption key in URL (#key=...) to decrypt";
       ta.disabled = true;
       return;
@@ -98,10 +98,10 @@
     }
 
     try {
-      ta.value = await window.ClippyE2E.decrypt(stored);
+      ta.value = await window.WebklipE2E.decrypt(stored);
       ta.dataset.decrypted = "true";
       ta.disabled = false;
-      window.ClippyEditor?.refresh();
+      window.WebklipEditor?.refresh();
     } catch {
       ta.value = "";
       ta.placeholder = "Wrong encryption key";
@@ -109,7 +109,7 @@
     }
   }
 
-  window.ClippyE2E = {
+  window.WebklipE2E = {
     hasKey() {
       return !!keyFromHash();
     },
@@ -142,5 +142,5 @@
     initClipDecrypt,
   };
 
-  window.ClippyE2EDecryptReady = initClipDecrypt();
+  window.WebklipE2EDecryptReady = initClipDecrypt();
 })();

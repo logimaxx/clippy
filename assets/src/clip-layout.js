@@ -4,7 +4,7 @@
   const splitter = document.querySelector(".clip-workspace-splitter");
   if (!workspace || !settings || !splitter) return;
 
-  const STORAGE_KEY = "clippy-settings-height";
+  const STORAGE_KEY = "webklip-settings-height";
   let moreOpen = false;
 
   function applySavedHeight() {

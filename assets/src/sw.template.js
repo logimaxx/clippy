@@ -1,4 +1,4 @@
-const CACHE_NAME = "clippy-static-__HASH__";
+const CACHE_NAME = "webklip-static-__HASH__";
 const ASSETS = __ASSET_URLS__;
 
 self.addEventListener("install", (event) => {
@@ -13,7 +13,7 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) =>
       Promise.all(
         keys
-          .filter((k) => k.startsWith("clippy-static-") && k !== CACHE_NAME)
+          .filter((k) => k.startsWith("webklip-static-") && k !== CACHE_NAME)
           .map((k) => caches.delete(k))
       )
     )

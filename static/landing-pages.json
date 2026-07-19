@@ -1,14 +1,14 @@
 [
   {
     "slug": "online-clipboard",
-    "title": "Online Clipboard — Share Text Instantly | Clippy",
+    "title": "Online Clipboard — Share Text Instantly | Webklip",
     "description": "Free online clipboard for instant text sharing. No sign-up, real-time sync, automatic expiry. Create a web clipboard in one click.",
     "h1": "Online Clipboard",
     "intro": "Copy text on one device and paste it on another — without email, chat apps, or cloud storage accounts.",
     "paragraphs": [
-      "An online clipboard is a web-based tool that stores text temporarily so you can access it from any browser. Clippy turns any URL into a shared clipboard: paste your content, send the link, and open it on your phone, laptop, or tablet.",
+      "An online clipboard is a web-based tool that stores text temporarily so you can access it from any browser. Webklip turns any URL into a shared clipboard: paste your content, send the link, and open it on your phone, laptop, or tablet.",
       "Unlike system clipboards that only work on one machine, a web clipboard syncs in real time. Type on your desktop and see the same text appear on your phone seconds later. When you are done, the clip expires automatically — no leftover copies in your message history.",
-      "Clippy is free, requires no account, and works in any modern browser. It is the simplest way to share text online when you just need to move something between devices quickly."
+      "Webklip is free, requires no account, and works in any modern browser. It is the simplest way to share text online when you just need to move something between devices quickly."
     ],
     "benefits": [
       "No sign-up — create a clip and share the link immediately",
@@ -29,13 +29,13 @@
   },
   {
     "slug": "share-text-between-devices",
-    "title": "Share Text Between Devices — Copy Instantly | Clippy",
+    "title": "Share Text Between Devices — Copy Instantly | Webklip",
     "description": "Copy text between phone and desktop instantly. Free web clipboard with real-time sync. No app install required.",
     "h1": "Share Text Between Devices",
     "intro": "Stop emailing yourself. Copy between devices with a single link that syncs in real time.",
     "paragraphs": [
-      "Moving text between your phone and computer should take seconds, not minutes. Clippy lets you copy between devices by creating a temporary web page that acts as a shared clipboard. Paste on one device, open the link on another, and your content is there.",
-      "Real-time synchronization means you do not even need to refresh. Keep both devices open and watch text appear as you type. This makes Clippy ideal for quick transfers — a code snippet, a phone number, a paragraph you are editing — without installing anything.",
+      "Moving text between your phone and computer should take seconds, not minutes. Webklip lets you copy between devices by creating a temporary web page that acts as a shared clipboard. Paste on one device, open the link on another, and your content is there.",
+      "Real-time synchronization means you do not even need to refresh. Keep both devices open and watch text appear as you type. This makes Webklip ideal for quick transfers — a code snippet, a phone number, a paragraph you are editing — without installing anything.",
       "Every clip expires on a schedule you control, from 15 minutes to 7 days. Your text does not sit in a chat thread or email inbox forever. It is a disposable clipboard built for the moment."
     ],
     "benefits": [
@@ -57,14 +57,14 @@
   },
   {
     "slug": "temporary-file-sharing",
-    "title": "Temporary File Sharing — Send Files Online | Clippy",
+    "title": "Temporary File Sharing — Send Files Online | Webklip",
     "description": "Share files online temporarily without permanent cloud links. Attach images and PDFs to clips that auto-expire.",
     "h1": "Temporary File Sharing",
     "intro": "Send a file for a few hours, not forever. Attach to a clip that deletes itself when done.",
     "paragraphs": [
-      "Most file sharing tools create permanent links that linger in cloud storage for years. Clippy takes a different approach: attach files to a temporary clip that expires on a schedule. Share an image, PDF, or document with a single URL, and let it disappear when you no longer need it.",
+      "Most file sharing tools create permanent links that linger in cloud storage for years. Webklip takes a different approach: attach files to a temporary clip that expires on a schedule. Share an image, PDF, or document with a single URL, and let it disappear when you no longer need it.",
       "File attachments work alongside text content in the same clip. Paste a note, attach a screenshot, and send one link. Recipients open it in their browser — no account, no download folder full of old transfers.",
-      "Automatic cleanup removes expired clips and their files on a schedule. You do not need to remember to delete anything. Temporary file sharing should be temporary, and Clippy makes sure it stays that way."
+      "Automatic cleanup removes expired clips and their files on a schedule. You do not need to remember to delete anything. Temporary file sharing should be temporary, and Webklip makes sure it stays that way."
     ],
     "benefits": [
       "Attach images, PDFs, and documents to any clip",
@@ -85,14 +85,14 @@
   },
   {
     "slug": "secure-clipboard",
-    "title": "Secure Clipboard — PIN & Encryption | Clippy",
+    "title": "Secure Clipboard — PIN & Encryption | Webklip",
     "description": "Secure clipboard with optional PIN protection and end-to-end encryption. Share sensitive text safely, then let it expire.",
     "h1": "Secure Clipboard",
     "intro": "Share sensitive content with PIN locks and optional encryption — then let it disappear automatically.",
     "paragraphs": [
-      "A secure clipboard needs more than a random URL. Clippy lets you add a PIN so only people who know the code can read your content. PINs are never stored in plain text — they are hashed before saving.",
+      "A secure clipboard needs more than a random URL. Webklip lets you add a PIN so only people who know the code can read your content. PINs are never stored in plain text — they are hashed before saving.",
       "For maximum privacy, enable end-to-end encryption. Your content is encrypted in the browser before it reaches the server. Only people with the decryption key in the URL can read it. The server stores ciphertext only.",
-      "Combine security with ephemerality: set a short TTL, enable burn-after-read, or cap the number of API reads. A secure clipboard should protect your data and then delete it when the job is done."
+      "Combine security with ephemerality: set a short TTL, enable burn-after-read, or cap the number of views. A secure clipboard should protect your data and then delete it when the job is done."
     ],
     "benefits": [
       "PIN protection — PINs are never stored in plain text",
@@ -113,96 +113,68 @@
   },
   {
     "slug": "share-code-snippets",
-    "title": "Share Code Snippets Online — Developer Clipboard | Clippy",
-    "description": "Share code snippets between devices and teammates. Syntax highlighting, real-time sync, no chat app required.",
+    "title": "Share Code Snippets Online — Developer Clipboard | Webklip",
+    "description": "Share code snippets between devices and colleagues. Syntax highlighting, real-time sync, no chat app required.",
     "h1": "Share Code Snippets",
     "intro": "Move code between workstations with a link that syncs in real time and expires when you are done.",
     "paragraphs": [
-      "Developers constantly need to share code snippets — between their own machines, with a colleague, or from a CI pipeline. Pasting into Slack or email leaves permanent copies and strips formatting. Clippy gives you a temporary page with syntax highlighting and real-time sync.",
-      "Set the language for proper highlighting, paste your snippet, and share the URL. Open it on another monitor, your laptop, or send it to a teammate. Changes sync instantly if you are pair-editing.",
-      "Use the API or CLI to push snippets from your terminal. Automate clip creation in CI to share build logs or test output. When the review is done, the clip expires — no snippet graveyard in your chat history."
+      "Developers constantly need to share code snippets — between their own machines or with a colleague. Pasting into Slack or email leaves permanent copies and strips formatting. Webklip gives you a temporary page with syntax highlighting and real-time sync.",
+      "Set the language for proper highlighting, paste your snippet, and share the URL. Open it on another monitor, your laptop, or send it to a colleague. Changes sync instantly if you are pair-editing.",
+      "When the review is done, the clip expires — no snippet graveyard in your chat history."
     ],
     "benefits": [
       "Syntax highlighting for dozens of languages",
       "Real-time sync for collaborative editing",
-      "API and CLI for terminal and CI workflows",
-      "Automatic expiry — no permanent chat logs"
+      "Automatic expiry — no permanent chat logs",
+      "Works in any modern browser — no install required"
     ],
     "useCases": [
       "Move a function between your desktop and laptop",
-      "Share a config file with a teammate for review",
-      "Push build output from CI to a temporary URL"
+      "Share a config file with a colleague for review",
+      "Paste a quick fix while pair-editing"
     ],
     "relatedSlugs": [
-      "clipboard-api",
       "share-text-between-devices",
-      "online-clipboard"
-    ]
-  },
-  {
-    "slug": "clipboard-api",
-    "title": "Clipboard API — Automate Clip Creation | Clippy",
-    "description": "REST API for programmatic clipboard sharing. Create, read, and manage clips from scripts, CI pipelines, and apps.",
-    "h1": "Clipboard API",
-    "intro": "Automate clipboard sharing from any language. Create clips, read content, and trigger webhooks programmatically.",
-    "paragraphs": [
-      "Clippy exposes a REST API so you can create and manage clips without opening a browser. Push text from a script, pull content in your CI pipeline, or integrate clipboard sharing into your own tools.",
-      "Authenticate with an API key from your account, or use anonymous clips for quick one-off transfers. Set TTL, PIN, burn-on-read, and webhook URLs through the same API you use for content.",
-      "Webhooks notify your service when a clip is read, burned, or expired. Build workflows around ephemeral data — share a secret, get notified when it is consumed, and let Clippy handle cleanup."
-    ],
-    "benefits": [
-      "REST API for create, read, update, and delete",
-      "API keys for authenticated access",
-      "Webhooks for read, burn, and expiry events",
-      "CLI wrapper for terminal workflows"
-    ],
-    "useCases": [
-      "Push deployment secrets from CI to a temporary URL",
-      "Share test output with a webhook on read",
-      "Integrate clipboard sharing into internal tools"
-    ],
-    "relatedSlugs": [
-      "share-code-snippets",
-      "burn-after-read",
-      "online-clipboard"
+      "online-clipboard",
+      "secure-clipboard"
     ]
   },
   {
     "slug": "burn-after-read",
-    "title": "Burn After Read Links — Self-Destructing Clips | Clippy",
-    "description": "Create burn after read links that delete themselves after a single API read. Perfect for one-time secrets and passwords.",
+    "title": "Burn After Read Links — Self-Destructing Clips | Webklip",
+    "description": "Create burn after read links that delete themselves after a single view. Perfect for one-time secrets and passwords.",
     "h1": "Burn After Read Links",
-    "intro": "Share a secret once. After it is read via the API, the clip deletes itself permanently.",
+    "intro": "Share a secret once. After it has been viewed, the clip deletes itself permanently.",
     "paragraphs": [
-      "Some information should only be seen once — a password, an API token, a recovery code. Burn after read links delete the clip automatically after a single API read. The recipient gets the content, and it is gone.",
-      "Combine burn-on-read with PIN protection for an extra layer: even if someone guesses the URL, they still need the PIN. Set a short TTL as a backup so the clip expires even if nobody reads it.",
-      "Webhooks fire a notification when a clip is burned, so your system knows the secret was consumed. Build one-time secret sharing into your workflow without building infrastructure from scratch."
+      "Some information should only be seen once — a password, a recovery code, or a temporary credential. Burn after read links delete the clip automatically after a single view. The recipient gets the content, and it is gone.",
+      "Combine burn-on-read with PIN protection for an extra layer: even if someone guesses the URL, they still need the PIN. Set a short TTL as a backup so the clip expires even if nobody opens it.",
+      "Burn after read is built for one-time handoffs — share a secret, know it was consumed, and let Webklip handle cleanup."
     ],
     "benefits": [
-      "Automatic deletion after a single API read",
+      "Automatic deletion after a single view",
       "Combine with PIN protection for sensitive secrets",
-      "Webhook notification when content is burned",
-      "Configurable TTL as a fallback expiry"
+      "Configurable TTL as a fallback expiry",
+      "No permanent copies left behind"
     ],
     "useCases": [
-      "Send a one-time password to a new team member",
-      "Share an API token that self-destructs on retrieval",
+      "Send a one-time password to a colleague",
+      "Share a temporary credential that self-destructs on retrieval",
       "Deliver a recovery code that cannot be re-read"
     ],
     "relatedSlugs": [
       "secure-clipboard",
       "encrypted-clipboard",
-      "clipboard-api"
+      "share-text-between-devices"
     ]
   },
   {
     "slug": "encrypted-clipboard",
-    "title": "End-to-End Encrypted Clipboard | Clippy",
+    "title": "End-to-End Encrypted Clipboard | Webklip",
     "description": "End-to-end encrypted clipboard. Content encrypted in your browser — the server never sees plaintext.",
     "h1": "End-to-End Encrypted Clipboard",
     "intro": "Encrypt your content in the browser before it leaves your device. Only people with the key can read it.",
     "paragraphs": [
-      "Standard clipboard sharing trusts the server with your content. Clippy's end-to-end encryption option encrypts text in your browser before sending it. The server stores ciphertext only — it cannot read your data even if compelled.",
+      "Standard clipboard sharing trusts the server with your content. Webklip's end-to-end encryption option encrypts text in your browser before sending it. The server stores ciphertext only — it cannot read your data even if compelled.",
       "The decryption key lives in the URL fragment (the part after #), which browsers never send to the server. Share the full URL including the key, and recipients decrypt locally in their browser.",
       "Combine encryption with automatic expiry and burn-on-read for a complete ephemeral secret-sharing workflow. Your content is encrypted in transit and at rest on the server, readable only by people you share the key with."
     ],

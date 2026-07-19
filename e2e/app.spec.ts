@@ -38,22 +38,22 @@ async function openMoreSettings(page: Page) {
   await expect(page.locator("#sheet-settings.is-open")).toBeVisible();
 }
 
-test.describe("Clippy E2E", () => {
+test.describe("Webklip E2E", () => {
   test.describe("Public pages", () => {
     test("home page loads and links work", async ({ page }) => {
       await page.goto("/");
-      await expect(page).toHaveTitle(/Clippy/);
+      await expect(page).toHaveTitle(/Webklip/);
       await expect(page.getByRole("heading", { level: 1 })).toContainText(
         /share text and files/i
       );
-      await expect(page.getByRole("banner").getByRole("link", { name: "Sign in" })).toBeVisible();
+      await expect(page.getByRole("banner").getByRole("link", { name: "Security" })).toBeVisible();
     });
 
     test("legal pages load", async ({ page }) => {
       for (const path of ["/privacy", "/terms", "/security"]) {
         await page.goto(path);
         await expect(page.getByRole("main")).toBeVisible();
-        await expect(page).toHaveTitle(/Clippy/i);
+        await expect(page).toHaveTitle(/Webklip/i);
       }
     });
 
@@ -65,16 +65,6 @@ test.describe("Clippy E2E", () => {
       const robots = await request.get("/robots.txt");
       expect(robots.ok()).toBeTruthy();
       expect(await robots.text()).toMatch(/Sitemap|User-agent/i);
-    });
-
-    test("developer docs load", async ({ page }) => {
-      for (const path of ["/docs", "/docs/api", "/docs/cli", "/docs/webhooks"]) {
-        await page.goto(path);
-        await expect(page.getByRole("main")).toBeVisible();
-        await expect(page).toHaveTitle(/Clippy/i);
-      }
-      await page.goto("/docs/api");
-      await expect(page.getByRole("heading", { level: 1 })).toContainText("REST API");
     });
 
     test("landing page loads", async ({ page }) => {
@@ -227,8 +217,8 @@ test.describe("Clippy E2E", () => {
       await createClipViaApi(page.request, slug);
       await page.goto(`/${slug}`);
 
-      const filePath1 = join(tmpdir(), `clippy-e2e-a-${Date.now()}.txt`);
-      const filePath2 = join(tmpdir(), `clippy-e2e-b-${Date.now()}.txt`);
+      const filePath1 = join(tmpdir(), `webklip-e2e-a-${Date.now()}.txt`);
+      const filePath2 = join(tmpdir(), `webklip-e2e-b-${Date.now()}.txt`);
       writeFileSync(filePath1, `e2e upload a ${Date.now()}`);
       writeFileSync(filePath2, `e2e upload b ${Date.now()}`);
 

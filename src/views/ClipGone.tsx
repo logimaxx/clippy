@@ -8,9 +8,9 @@ interface ClipGoneProps {
 export function ClipGone({ slug }: ClipGoneProps) {
   return (
     <Layout
-      title={`Clippy — ${slug} (gone)`}
+      title={`Webklip — ${slug} (gone)`}
       description="This clip has already been read or has expired."
-      ogTitle="Clippy — Clip unavailable"
+      ogTitle="Webklip — Clip unavailable"
       ogDescription="This one-time clip has already been read or has expired."
     >
       <main class="home pin-gate">

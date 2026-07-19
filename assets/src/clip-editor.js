@@ -16,7 +16,7 @@ import { marked } from "marked";
 const languageConf = new Compartment();
 const editableConf = new Compartment();
 
-const clippyHighlight = HighlightStyle.define([
+const webklipHighlight = HighlightStyle.define([
   { tag: tags.keyword, color: "#c792ea" },
   { tag: [tags.string, tags.special(tags.string)], color: "#c3e88d" },
   { tag: tags.comment, color: "#546e7a" },
@@ -56,7 +56,7 @@ function languageExtension(lang) {
   }
 }
 
-function clippyTheme() {
+function webklipTheme() {
   return EditorView.theme(
     {
       "&": {
@@ -191,8 +191,8 @@ function clippyTheme() {
     wrap.classList.add("clip-editor--codemirror");
 
     const extensions = [
-      clippyTheme(),
-      syntaxHighlighting(clippyHighlight),
+      webklipTheme(),
+      syntaxHighlighting(webklipHighlight),
       bracketMatching(),
       history(),
       drawSelection(),
@@ -339,7 +339,7 @@ function clippyTheme() {
 
   function init() {
     bind();
-    window.ClippyEditor = {
+    window.WebklipEditor = {
       refresh,
       getValue() {
         return view?.state.doc.toString() ?? getTextarea()?.value ?? "";
