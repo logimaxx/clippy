@@ -140,7 +140,7 @@ function buildContext(): BuildContext {
         ? " Umami analytics does not use cookies."
         : " No analytics or advertising cookies.",
       analyticsLi: umami
-        ? `<li><strong>Website analytics</strong> — aggregated page views via <a href="https://umami.is" rel="noopener noreferrer">Umami</a>. No personal profiles, no cross-site tracking, no ad cookies.</li>`
+        ? `<li><strong>Website analytics</strong> — aggregated page views via <a href="https://umami.is" rel="noopener noreferrer">Umami</a>. Clip opens are counted under generic paths (for example <code>/clip</code>); we do not record which clip was opened. No personal profiles, no cross-site tracking, no ad cookies.</li>`
         : "",
       notDoLi: umami
         ? "<li>We do not use Google Analytics or other invasive analytics platforms.</li>"

@@ -1,5 +1,31 @@
 /* PWA install + service worker registration */
 (function () {
+  function trackSanitizedPageView() {
+    const path = document.body?.dataset.analyticsPath;
+    if (!path) return;
+
+    const send = () => {
+      if (typeof window.umami?.track !== "function") return;
+      window.umami.track((props) => ({ ...props, url: path, title: path }));
+    };
+
+    send();
+
+    if (typeof window.umami?.track === "function") return;
+
+    const started = Date.now();
+    const timer = window.setInterval(() => {
+      if (typeof window.umami?.track === "function") {
+        window.clearInterval(timer);
+        send();
+      } else if (Date.now() - started > 5000) {
+        window.clearInterval(timer);
+      }
+    }, 100);
+  }
+
+  trackSanitizedPageView();
+
   if (window.htmx) {
     window.htmx.config.allowScriptTags = false;
   }

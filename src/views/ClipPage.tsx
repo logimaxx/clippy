@@ -12,6 +12,7 @@ import {
   SettingsNavIcon,
 } from "./partials/ClipIcons";
 import { asset } from "../lib/assets";
+import { clipAnalyticsPath } from "../lib/umami";
 import type { Clip, ClipVersion } from "../db/schema";
 import { getClipFiles } from "../store/clips";
 
@@ -52,7 +53,7 @@ export function ClipPage({
   const deviceLabel = `${devices} device${devices === 1 ? "" : "s"}`;
 
   return (
-    <Layout title={`Webklip — ${slug}`}>
+    <Layout title={`Webklip — ${slug}`} analyticsPath={clipAnalyticsPath(slug)}>
       <div class="app" data-view="editor">
         <header class="header">
           <a href="/" class="logo" aria-label="Webklip home">

@@ -1,5 +1,6 @@
 /** @jsxImportSource hono/jsx */
 import { Layout } from "./Layout";
+import { clipAnalyticsPath } from "../lib/umami";
 
 interface ClipLinkPreviewProps {
   slug: string;
@@ -12,6 +13,7 @@ export function ClipLinkPreview({ slug }: ClipLinkPreviewProps) {
       description="One-time secure clipboard link on Webklip."
       ogTitle="Webklip — Secure clipboard"
       ogDescription="Open this link to view a one-time clip."
+      analyticsPath={clipAnalyticsPath(slug)}
     >
       <main class="home pin-gate">
         <h1>Webklip</h1>

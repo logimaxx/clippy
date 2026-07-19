@@ -1,5 +1,6 @@
 /** @jsxImportSource hono/jsx */
 import { Layout } from "./Layout";
+import { clipAnalyticsPath } from "../lib/umami";
 
 interface ClipGoneProps {
   slug: string;
@@ -12,6 +13,7 @@ export function ClipGone({ slug }: ClipGoneProps) {
       description="This clip has already been read or has expired."
       ogTitle="Webklip — Clip unavailable"
       ogDescription="This one-time clip has already been read or has expired."
+      analyticsPath={clipAnalyticsPath(slug)}
     >
       <main class="home pin-gate">
         <h1>Clip unavailable</h1>

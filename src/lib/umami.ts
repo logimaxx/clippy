@@ -35,8 +35,19 @@ export function umamiScriptOrigin(): string | null {
   return new URL(config.scriptUrl).origin;
 }
 
-export function umamiScriptTag(): string | null {
+export interface UmamiScriptOptions {
+  /** Default true — set false when sending sanitized paths from app.js */
+  autoTrack?: boolean;
+}
+
+export function clipAnalyticsPath(slug: string): "/clip" | "/clip/vanity" {
+  return slug.includes("/") ? "/clip/vanity" : "/clip";
+}
+
+export function umamiScriptTag(options: UmamiScriptOptions = {}): string | null {
   const config = getUmamiConfig();
   if (!config) return null;
-  return `<script defer src="${config.scriptUrl}" data-website-id="${config.websiteId}"></script>`;
+  const autoTrack = options.autoTrack !== false;
+  const autoTrackAttr = autoTrack ? "" : ' data-auto-track="false"';
+  return `<script defer src="${config.scriptUrl}" data-website-id="${config.websiteId}"${autoTrackAttr}></script>`;
 }

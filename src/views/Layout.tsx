@@ -1,12 +1,15 @@
 /** @jsxImportSource hono/jsx */
 import type { Child } from "hono/jsx";
 import { asset } from "../lib/assets";
+import { getUmamiConfig } from "../lib/umami";
 
 interface LayoutProps {
   title: string;
   description?: string;
   ogTitle?: string;
   ogDescription?: string;
+  /** Sanitized Umami path — clip slugs are never sent to analytics */
+  analyticsPath?: "/clip" | "/clip/vanity";
   children: Child;
 }
 
@@ -15,10 +18,12 @@ export function Layout({
   description = "Webklip — instant web clipboard with real-time sync",
   ogTitle,
   ogDescription,
+  analyticsPath,
   children,
 }: LayoutProps) {
   const socialTitle = ogTitle ?? title;
   const socialDescription = ogDescription ?? description;
+  const umami = analyticsPath ? getUmamiConfig() : null;
 
   return (
     <html lang="en">
@@ -39,10 +44,18 @@ export function Layout({
         <link rel="icon" href={asset("icons/icon-192.png")} />
         <link rel="apple-touch-icon" href={asset("icons/icon-192.png")} />
         <link rel="stylesheet" href={asset("app.css")} />
+        {umami && (
+          <script
+            defer
+            src={umami.scriptUrl}
+            data-website-id={umami.websiteId}
+            data-auto-track="false"
+          ></script>
+        )}
         <script src={asset("htmx.min.js")} defer></script>
         <script src={asset("app.js")} defer></script>
       </head>
-      <body>
+      <body data-analytics-path={umami ? analyticsPath : undefined}>
         <div id="toast-host" class="toast-host" aria-live="polite" aria-atomic="true"></div>
         {children}
       </body>
