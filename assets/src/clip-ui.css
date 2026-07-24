@@ -326,6 +326,126 @@ button, input, select, textarea { font: inherit; color: inherit; }
   font-weight: 600;
 }
 
+/* ── Docs modal (API / webhooks) ── */
+.docs-modal-backdrop {
+  z-index: 90;
+  align-items: stretch;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.docs-modal {
+  width: min(100%, 44rem);
+  max-height: min(90vh, 52rem);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.docs-modal__header {
+  flex-shrink: 0;
+  padding-bottom: 0.5rem;
+}
+
+.docs-modal__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.docs-modal__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  padding: 0 1rem 0.65rem;
+  border-bottom: 1px solid var(--border-subtle);
+  flex-shrink: 0;
+}
+
+.docs-modal__tab {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 0.35rem 0.65rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.docs-modal__tab:hover {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--accent) 10%, transparent);
+}
+
+.docs-modal__tab.is-active {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.docs-modal__body {
+  align-items: stretch;
+  overflow-y: auto;
+  max-height: none;
+  flex: 1;
+  min-height: 0;
+  padding: 1rem 1.15rem 1.35rem;
+  text-align: left;
+}
+
+.docs-modal__body .docs-embed > h1:first-child {
+  font-size: 1.35rem;
+  margin-top: 0;
+}
+
+.docs-modal__body .legal-updated {
+  margin-bottom: 1rem;
+}
+
+.docs-modal__loading,
+.docs-modal__error {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.header-api-label {
+  display: none;
+}
+
+@media (min-width: 480px) {
+  .header-api-label {
+    display: inline;
+  }
+}
+
+.settings-api-hint {
+  margin: 0.65rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+.link-btn {
+  appearance: none;
+  border: 0;
+  background: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link-btn:hover {
+  color: var(--accent-hover);
+}
+
 .header-chips { display: none; }
 
 /* ── Buttons & chips ── */

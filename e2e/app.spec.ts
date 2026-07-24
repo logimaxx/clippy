@@ -74,6 +74,12 @@ test.describe("Webklip E2E", () => {
       }
     });
 
+    test("API docs page loads", async ({ page }) => {
+      await page.goto("/docs/api");
+      await expect(page.getByRole("heading", { name: "REST API" })).toBeVisible();
+      await expect(page.getByText("/api/v1/clips/:slug").first()).toBeVisible();
+    });
+
     test("explore page loads", async ({ page }) => {
       await page.goto("/explore");
       await expect(page.getByRole("heading", { name: "Explore" })).toBeVisible();
@@ -484,6 +490,23 @@ test.describe("Webklip E2E", () => {
   });
 
   test.describe("REST API", () => {
+    test("docs open in a modal from the clip app", async ({ page }) => {
+      const slug = uniqueSlug("docs-modal");
+      await createClipViaApi(page.request, slug, "docs modal");
+      await page.goto(`/${slug}`);
+
+      await page.getByRole("button", { name: /API documentation/i }).click();
+      const dialog = page.locator("#docs-modal");
+      await expect(dialog).toBeVisible();
+      await expect(dialog.getByText("/api/v1/clips/:slug").first()).toBeVisible();
+
+      await dialog.getByRole("button", { name: "Webhooks" }).click();
+      await expect(dialog.getByRole("heading", { name: "Webhooks" })).toBeVisible();
+
+      await page.keyboard.press("Escape");
+      await expect(dialog).toBeHidden();
+    });
+
     test("health check", async ({ request }) => {
       const res = await request.get("/api/health");
       expect(res.ok()).toBeTruthy();

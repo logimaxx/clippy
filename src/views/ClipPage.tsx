@@ -12,6 +12,7 @@ import {
   FilesNavIcon,
   SettingsNavIcon,
   CloseIcon,
+  ApiDocsIcon,
 } from "./partials/ClipIcons";
 import { asset } from "../lib/assets";
 import { siteHost } from "../lib/constants";
@@ -105,6 +106,19 @@ export function ClipPage({
 
           <div class="header-actions">
             <ThemeToggle />
+            <button
+              type="button"
+              class="btn btn--ghost"
+              data-open-docs-modal
+              data-docs-path="/docs/api"
+              aria-label="API documentation"
+              aria-haspopup="dialog"
+              aria-controls="docs-modal"
+              title="API documentation"
+            >
+              <ApiDocsIcon />
+              <span class="header-api-label" aria-hidden="true">API</span>
+            </button>
             <div class="share-menu" id="share-menu">
               <button
                 type="button"
@@ -338,6 +352,58 @@ export function ClipPage({
               <p class="qr-modal__hint">
                 {host}/<strong>{slug}</strong>
               </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-backdrop docs-modal-backdrop" id="docs-modal-backdrop" hidden data-docs-modal>
+          <div
+            class="modal docs-modal"
+            id="docs-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="docs-modal-title"
+            hidden
+          >
+            <div class="modal__header docs-modal__header">
+              <h2 class="modal__title" id="docs-modal-title">
+                Developer docs
+              </h2>
+              <div class="docs-modal__header-actions">
+                <a
+                  href="/docs/api"
+                  class="btn btn--ghost btn--sm"
+                  id="docs-modal-open-page"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open page
+                </a>
+                <button
+                  type="button"
+                  class="btn btn--ghost btn--icon"
+                  data-close-docs-modal
+                  aria-label="Close documentation"
+                >
+                  <CloseIcon />
+                </button>
+              </div>
+            </div>
+            <nav class="docs-modal__nav" aria-label="Documentation sections">
+              <button
+                type="button"
+                class="docs-modal__tab is-active"
+                data-docs-path="/docs/api"
+                aria-current="page"
+              >
+                REST API
+              </button>
+              <button type="button" class="docs-modal__tab" data-docs-path="/docs/webhooks">
+                Webhooks
+              </button>
+            </nav>
+            <div class="modal__body docs-modal__body" id="docs-modal-body" tabindex="0">
+              <p class="docs-modal__loading">Loading documentation…</p>
             </div>
           </div>
         </div>

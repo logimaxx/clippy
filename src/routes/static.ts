@@ -38,6 +38,15 @@ function injectRuntimeScripts(html: string): string {
   return html.replace("</head>", `  ${tag}\n</head>`);
 }
 
+/** Article body for in-app docs modal (`?embed=1`). */
+function extractDocsEmbed(html: string): string | null {
+  const match = html.match(
+    /<article class="docs-prose[^"]*"[^>]*>([\s\S]*?)<\/article>/i
+  );
+  if (!match) return null;
+  return `<div class="docs-prose legal-prose docs-embed">${match[1].trim()}</div>`;
+}
+
 async function injectExplorePreview(html: string): Promise<string> {
   if (!html.includes(EXPLORE_PREVIEW_MARKER)) return html;
   const clips = await listPublicClips(3);
@@ -129,6 +138,13 @@ staticPages.get("*", async (c, next) => {
   let html = injectRuntimeScripts(readPage(filename));
   if (c.req.path === "/") {
     html = await injectExplorePreview(html);
+  }
+  if (c.req.query("embed") === "1" && c.req.path.startsWith("/docs")) {
+    const embed = extractDocsEmbed(html);
+    if (!embed) return c.notFound();
+    return c.html(embed, 200, {
+      "Cache-Control": "public, max-age=300",
+    });
   }
   return c.html(html);
 });

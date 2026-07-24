@@ -87,7 +87,6 @@ function renderDocsNav(activePath: string): string {
   const items = [
     { path: "/docs", label: "Overview" },
     { path: "/docs/api", label: "REST API" },
-    { path: "/docs/cli", label: "CLI" },
     { path: "/docs/webhooks", label: "Webhooks" },
   ];
   const navItems = items
@@ -309,11 +308,11 @@ writePage(
   renderPage(layout, header, footer, homeBody, ctx, {
     title: "Webklip — Temporary Workspace for Instant Text & File Sharing",
     description:
-      "Stop sending yourself links through WhatsApp. Share text and files instantly between devices with a temporary private link. No account, real-time sync, automatic deletion.",
+      "Stop sending yourself links through WhatsApp. Share text and files instantly between devices with a temporary private link — plus a full REST API. No account, real-time sync, automatic deletion.",
     canonical: "/",
     ogTitle: "Webklip — Stop sending yourself links through WhatsApp",
     ogDescription:
-      "A disposable workspace for text, files, and code. Share instantly between devices, then let it expire.",
+      "A disposable workspace for text, files, and code with a real REST API. Share instantly between devices, then let it expire.",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "WebApplication",
@@ -322,7 +321,7 @@ writePage(
       operatingSystem: "Any",
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
       description:
-        "A free temporary workspace for instant text and file sharing between devices. No sign-up required.",
+        "A free temporary workspace for instant text and file sharing between devices, with a REST API for automation. No sign-up required.",
     },
     jsonLdFile: "index.json",
   })
@@ -403,7 +402,7 @@ const docsPages = [
     file: "docs-index.html",
     src: "docs/index.html",
     title: "Developer Docs — Webklip",
-    description: "REST API, CLI, and webhooks for automating Webklip.",
+    description: "REST API and webhooks for automating Webklip.",
   },
   {
     path: "/docs/api",
@@ -411,13 +410,6 @@ const docsPages = [
     src: "docs/api.html",
     title: "REST API — Webklip Docs",
     description: "Webklip REST API reference for clips, files, and authentication.",
-  },
-  {
-    path: "/docs/cli",
-    file: "docs-cli.html",
-    src: "docs/cli.html",
-    title: "CLI — Webklip Docs",
-    description: "Command-line interface for creating and reading clips.",
   },
   {
     path: "/docs/webhooks",

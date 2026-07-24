@@ -20,13 +20,20 @@
   </p>
   <div class="landing-hero-actions">
     <a href="/demo" class="btn btn-ghost">View Demo</a>
-    <a href="/#how-it-works" class="btn btn-ghost">See how it works</a>
+    <a href="/docs/api" class="btn btn-ghost">REST API</a>
   </div>
 </section>
 
 <section class="landing-section feature-highlights-section">
   <h2>Everything you need for quick, private sharing</h2>
   <div class="feature-highlights">
+    <div class="feature-highlight">
+      <span class="feature-highlight-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      </span>
+      <strong>REST API</strong>
+      <span>Script clips from curl, CI, or any HTTP client</span>
+    </div>
     <div class="feature-highlight">
       <span class="feature-highlight-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3z"/></svg>
@@ -36,7 +43,7 @@
     </div>
     <div class="feature-highlight">
       <span class="feature-highlight-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6-6-6"/><path d="M12 19h8"/></svg>
       </span>
       <strong>Syntax highlighting</strong>
       <span>Share code with proper formatting</span>
@@ -76,6 +83,21 @@
       <strong>Burn after read</strong>
       <span>Delete automatically after one view</span>
     </div>
+  </div>
+</section>
+
+<section id="api" class="landing-section api-showcase-section">
+  <h2>A clipboard with a real REST API</h2>
+  <p class="api-showcase-intro">
+    Create, read, and delete clips over plain HTTP — no account required.
+    Pipe secrets into CI, or get a webhook when a clip is read or burned.
+  </p>
+  <pre class="landing-code" tabindex="0"><code>curl -X POST https://webklip.com/api/v1/clips/deploy-notes \
+  -H "Content-Type: application/json" \
+  -d '{"content":"rollback plan","ttl":3600,"burnOnRead":true}'</code></pre>
+  <div class="landing-hero-actions">
+    <a href="/docs/api" class="btn btn-primary">API reference</a>
+    <a href="/docs/webhooks" class="btn btn-ghost">Webhooks</a>
   </div>
 </section>
 
@@ -151,7 +173,7 @@
   <div class="use-case-grid">
     <div class="use-case-card">
       <h3>Developers</h3>
-      <p>Move snippets between machines with syntax highlighting — no Slack threads that never disappear.</p>
+      <p>Move snippets between machines — or push them via the REST API from scripts and tools.</p>
     </div>
     <div class="use-case-card">
       <h3>IT support</h3>
@@ -159,7 +181,7 @@
     </div>
     <div class="use-case-card">
       <h3>DevOps</h3>
-      <p>Share config snippets, logs, or deploy notes that expire after the incident is resolved.</p>
+      <p>Post deploy notes from CI, get a webhook when they are read, then let the clip expire.</p>
     </div>
     <div class="use-case-card">
       <h3>Students</h3>
@@ -192,9 +214,9 @@
       Create a private link, paste your content, and open it on any browser — phone, tablet, or desktop.
     </p>
     <p>
-      Real-time sync, optional PIN locks, end-to-end encryption, and automatic expiry make it ideal for
-      <strong>secure sharing</strong> that does not linger in chat history or email inboxes.
-      Share instantly, then let it disappear.
+      Real-time sync, a full <strong>REST API</strong>, optional PIN locks, end-to-end encryption, and automatic
+      expiry make it ideal for <strong>secure sharing</strong> that does not linger in chat history or email
+      inboxes. Share instantly, then let it disappear.
     </p>
   </div>
 </section>
@@ -222,6 +244,20 @@
     <div class="feature-group">
       <h3 class="feature-group-title">For developers</h3>
       <div class="feature-grid">
+        <div class="feature-card">
+          <h4>REST API</h4>
+          <p>
+            Full clip CRUD over JSON — create, read, update, and delete with curl or any HTTP client.
+            <a href="/docs/api">API docs</a>
+          </p>
+        </div>
+        <div class="feature-card">
+          <h4>Webhooks</h4>
+          <p>
+            Get notified on read, burn, or expiry — wire clips into your own automation.
+            <a href="/docs/webhooks">Webhook docs</a>
+          </p>
+        </div>
         <div class="feature-card">
           <h4>Syntax highlighting</h4>
           <p>Dozens of languages with proper code formatting.</p>

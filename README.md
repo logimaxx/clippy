@@ -1,6 +1,6 @@
 # Webklip
 
-Lightweight self-contained web clipboard with real-time sync, HTMX UI, and PWA support.
+Lightweight self-contained web clipboard with a REST API, real-time sync, HTMX UI, and PWA support.
 
 ## Quick start
 
@@ -14,14 +14,6 @@ bun run dev
 ```
 
 Open http://localhost:3000
-
-## CLI
-
-```bash
-bun run cli -- -l myclip -m "hello world"
-bun run cli -- -l myclip -g
-bun run cli -- -l myclip -g -u https://webklip.com
-```
 
 ## Phase 3 features
 
@@ -49,7 +41,6 @@ bun run cli -- -l myclip -g -u https://webklip.com
 - **View limits** — 1, 3, 10 reads or unlimited (API reads only)
 - **Webhooks** — `POST` JSON to your URL on `read`, `burned`, `expired` events
 - **File/image upload** — HTMX multipart, image preview inline
-- **CLI** — extended flags: `-p`, `-w`, `-f`, `--max-views`, `--no-burn`
 
 ### Webhook payload
 
@@ -63,14 +54,6 @@ bun run cli -- -l myclip -g -u https://webklip.com
   "maxViews": 3,
   "burned": false
 }
-```
-
-### CLI examples
-
-```bash
-bun run cli -- -l secret -m "data" -p 1234 -w https://hooks.example.com/webklip
-bun run cli -- -l secret -g -p 1234
-bun run cli -- -l secret -f ./photo.png
 ```
 
 ## API

@@ -2,9 +2,17 @@
 <p class="legal-updated">Base path: <code>/api/v1</code></p>
 
 <p>
+  Automate Webklip with plain HTTP — no account required for anonymous clips.
   All clip endpoints accept and return JSON unless noted. PIN-protected clips require
   the <code>X-Clip-Pin</code> header or a <code>?pin=</code> query parameter.
 </p>
+
+<h2>Quick start</h2>
+<pre><code>curl -s -X POST https://webklip.com/api/v1/clips/my-clip \
+  -H "Content-Type: application/json" \
+  -d '{"content":"hello from the API","ttl":3600}'
+
+curl -s https://webklip.com/api/v1/clips/my-clip</code></pre>
 
 <h2>Health check</h2>
 <div class="docs-endpoint">
@@ -50,7 +58,9 @@
   "ttl": 3600,
   "maxViews": 3,
   "pin": "1234",
-  "webhook": "https://example.com/hook"
+  "webhook": "https://example.com/hook",
+  "visibility": "private",
+  "ownerPassword": "optional-owner-secret"
 }</code></pre>
 <ul>
   <li><code>burnOnRead</code> — defaults to <code>false</code>. Set <code>true</code> for burn-after-read (no timed expiry).</li>
@@ -58,6 +68,8 @@
   <li><code>maxViews</code> — delete after N API reads (<code>0</code> = unlimited).</li>
   <li><code>pin</code> — lock the clip; stored as a bcrypt hash.</li>
   <li><code>webhook</code> — URL notified on read, burn, or expiry (see <a href="/docs/webhooks">Webhooks</a>).</li>
+  <li><code>visibility</code> — <code>private</code> (default) or <code>public</code> (listed on Explore; requires <code>ownerPassword</code>).</li>
+  <li><code>ownerPassword</code> — recovers edit access on a new device (min 8 characters; required for public clips).</li>
 </ul>
 <p>Plain-text body is also accepted (<code>Content-Type: text/plain</code>) as the clip content.</p>
 <p>Response (201):</p>
@@ -74,7 +86,7 @@
   <span class="docs-method docs-method--put">PUT</span>
   <code>/api/v1/clips/:slug</code>
 </div>
-<p>Replaces clip content. Creates the clip if it does not exist.</p>
+<p>Replaces clip content. Returns <code>404</code> if the clip does not exist. May return <code>403</code> when write access is restricted.</p>
 <pre><code>curl -X PUT https://webklip.com/api/v1/clips/my-clip \
   -H "Content-Type: application/json" \
   -d '{"content":"updated text"}'</code></pre>

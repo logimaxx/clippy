@@ -479,6 +479,18 @@ export function SettingsPanel({
                 placeholder="https://example.com/hook"
               />
             </div>
+            <p class="settings-api-hint">
+              Automate clips with the{" "}
+              <button
+                type="button"
+                class="link-btn"
+                data-open-docs-modal
+                data-docs-path="/docs/api"
+              >
+                REST API
+              </button>{" "}
+              and webhooks.
+            </p>
           </div>
           <div class="sheet__section">
             <VersionsPanel slug={slug} versions={versions} />

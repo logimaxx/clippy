@@ -63,9 +63,18 @@
     return Boolean(backdrop && !backdrop.hidden);
   }
 
+  function getDocsModal() {
+    return document.querySelector("[data-docs-modal]");
+  }
+
+  function isDocsModalOpen() {
+    const backdrop = getDocsModal();
+    return Boolean(backdrop && !backdrop.hidden);
+  }
+
   function syncBodyScrollLock() {
     document.body.style.overflow =
-      openSheetName || isQrModalOpen() ? "hidden" : "";
+      openSheetName || isQrModalOpen() || isDocsModalOpen() ? "hidden" : "";
   }
 
   function closeSheets() {
@@ -142,9 +151,143 @@
     backdrop.querySelectorAll("[data-close-qr-modal]").forEach((btn) => {
       btn.addEventListener("click", closeQrModal);
     });
+  }
 
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeQrModal();
+  const DOCS_TITLES = {
+    "/docs": "Developer docs",
+    "/docs/api": "REST API",
+    "/docs/webhooks": "Webhooks",
+  };
+
+  let docsLoadToken = 0;
+
+  function normalizeDocsPath(path) {
+    if (!path) return "/docs/api";
+    try {
+      const url = new URL(path, location.origin);
+      if (!url.pathname.startsWith("/docs")) return "/docs/api";
+      return url.pathname.replace(/\/$/, "") || "/docs";
+    } catch {
+      return "/docs/api";
+    }
+  }
+
+  function setDocsTabs(activePath) {
+    const backdrop = getDocsModal();
+    if (!backdrop) return;
+    backdrop.querySelectorAll("[data-docs-path].docs-modal__tab").forEach((tab) => {
+      const path = normalizeDocsPath(tab.getAttribute("data-docs-path"));
+      const active = path === activePath;
+      tab.classList.toggle("is-active", active);
+      if (active) tab.setAttribute("aria-current", "page");
+      else tab.removeAttribute("aria-current");
+    });
+  }
+
+  async function loadDocsContent(path) {
+    const backdrop = getDocsModal();
+    const body = document.getElementById("docs-modal-body");
+    const title = document.getElementById("docs-modal-title");
+    const openPage = document.getElementById("docs-modal-open-page");
+    if (!backdrop || !body) return;
+
+    const docsPath = normalizeDocsPath(path);
+    const token = ++docsLoadToken;
+    backdrop.dataset.docsPath = docsPath;
+    setDocsTabs(docsPath);
+    if (title) title.textContent = DOCS_TITLES[docsPath] ?? "Developer docs";
+    if (openPage) openPage.setAttribute("href", docsPath);
+    body.innerHTML = `<p class="docs-modal__loading">Loading documentation…</p>`;
+
+    try {
+      const res = await fetch(`${docsPath}?embed=1`, {
+        headers: { Accept: "text/html" },
+        credentials: "same-origin",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const html = await res.text();
+      if (token !== docsLoadToken) return;
+      body.innerHTML = html;
+      body.scrollTop = 0;
+    } catch {
+      if (token !== docsLoadToken) return;
+      body.innerHTML = `<p class="docs-modal__error">Could not load docs. <a href="${docsPath}" target="_blank" rel="noopener noreferrer">Open full page</a>.</p>`;
+    }
+  }
+
+  function openDocsModal(path) {
+    const backdrop = getDocsModal();
+    const modal = document.getElementById("docs-modal");
+    if (!backdrop || !modal) return;
+    closeSheets();
+    closeQrModal();
+    backdrop.hidden = false;
+    modal.hidden = false;
+    requestAnimationFrame(() => {
+      backdrop.classList.add("is-open");
+    });
+    syncBodyScrollLock();
+    void loadDocsContent(path ?? backdrop.dataset.docsPath ?? "/docs/api");
+    const closeBtn = backdrop.querySelector("[data-close-docs-modal]");
+    closeBtn?.focus();
+  }
+
+  function closeDocsModal() {
+    const backdrop = getDocsModal();
+    const modal = document.getElementById("docs-modal");
+    if (!backdrop || !modal || backdrop.hidden) return;
+    backdrop.classList.remove("is-open");
+    window.setTimeout(() => {
+      backdrop.hidden = true;
+      modal.hidden = true;
+      syncBodyScrollLock();
+    }, 220);
+  }
+
+  function initDocsModal() {
+    const backdrop = getDocsModal();
+    if (!backdrop || backdrop.dataset.bound === "1") return;
+    backdrop.dataset.bound = "1";
+
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop) closeDocsModal();
+    });
+
+    backdrop.querySelectorAll("[data-close-docs-modal]").forEach((btn) => {
+      btn.addEventListener("click", closeDocsModal);
+    });
+
+    backdrop.querySelectorAll(".docs-modal__tab[data-docs-path]").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        void loadDocsContent(tab.getAttribute("data-docs-path"));
+      });
+    });
+
+    const body = document.getElementById("docs-modal-body");
+    body?.addEventListener("click", (e) => {
+      const link = e.target.closest("a[href]");
+      if (!link) return;
+      const href = link.getAttribute("href");
+      if (!href || href.startsWith("#") || link.target === "_blank") return;
+      try {
+        const url = new URL(href, location.origin);
+        if (url.origin === location.origin && url.pathname.startsWith("/docs")) {
+          e.preventDefault();
+          void loadDocsContent(url.pathname);
+        }
+      } catch {
+        /* ignore invalid href */
+      }
+    });
+  }
+
+  function bindDocsTriggers() {
+    document.querySelectorAll("[data-open-docs-modal]").forEach((btn) => {
+      if (btn.dataset.docsBound === "1") return;
+      btn.dataset.docsBound = "1";
+      btn.addEventListener("click", () => {
+        openDocsModal(btn.getAttribute("data-docs-path"));
+      });
     });
   }
 
@@ -180,10 +323,6 @@
 
     document.addEventListener("click", (e) => {
       if (!shareMenu.contains(e.target)) closeShareMenu();
-    });
-
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeShareMenu();
     });
 
     sharePopover.addEventListener("click", async (e) => {
@@ -281,6 +420,8 @@
   function init() {
     bindSheetControls();
     initQrModal();
+    initDocsModal();
+    bindDocsTriggers();
     initShareMenu();
     initDropZone();
     syncFormFieldsets();
@@ -295,6 +436,31 @@
     editor.addEventListener("input", updateCharCount);
   }
 
+  if (!window.__webklipModalEscapeBound) {
+    window.__webklipModalEscapeBound = true;
+    document.addEventListener("keydown", (e) => {
+      if (e.key !== "Escape") return;
+      if (isDocsModalOpen()) {
+        closeDocsModal();
+        return;
+      }
+      if (isQrModalOpen()) {
+        closeQrModal();
+        return;
+      }
+      const shareMenu = document.getElementById("share-menu");
+      if (shareMenu?.classList.contains("is-open")) {
+        shareMenu.classList.remove("is-open");
+        const trigger = document.getElementById("share-trigger");
+        const popover = document.getElementById("share-popover");
+        trigger?.setAttribute("aria-expanded", "false");
+        if (popover) popover.hidden = true;
+        return;
+      }
+      if (openSheetName) closeSheets();
+    });
+  }
+
   mobileQuery.addEventListener("change", syncFormFieldsets);
   init();
 
@@ -304,5 +470,5 @@
     if (openSheetName) openSheet(openSheetName);
   });
 
-  window.WebklipMobile = { openSheet, closeSheets };
+  window.WebklipMobile = { openSheet, closeSheets, openDocsModal, closeDocsModal };
 })();
