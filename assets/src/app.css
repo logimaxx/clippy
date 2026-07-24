@@ -1290,63 +1290,15 @@ a {
   line-height: 1.5;
 }
 
-/* Security flow diagram */
-.security-flow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.35rem 0.25rem;
-  max-width: 640px;
+.trust-features {
+  max-width: 720px;
   margin: 0 auto 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  text-align: center;
 }
 
-.security-flow-step {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  min-width: 88px;
-  padding: 0.75rem 0.5rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.security-flow-step-final {
-  border-color: rgba(74, 222, 128, 0.35);
-  background: rgba(74, 222, 128, 0.06);
-}
-
-.security-flow-label {
-  font-weight: 700;
-  font-size: 0.9rem;
-  color: var(--accent);
-}
-
-.security-flow-step-final .security-flow-label {
-  color: var(--success);
-}
-
-.security-flow-desc {
-  font-size: 0.75rem;
-  color: var(--muted);
-}
-
-.security-flow-arrow {
-  color: var(--border);
-  font-size: 1.1rem;
-  flex-shrink: 0;
-}
-
-@media (max-width: 640px) {
-  .security-flow {
-    flex-direction: column;
-  }
-
-  .security-flow-arrow {
-    transform: rotate(90deg);
-  }
+.trust-features .feature-card h3 {
+  margin-bottom: 0.35rem;
 }
 
 .landing-section {
