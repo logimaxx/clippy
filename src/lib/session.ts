@@ -65,6 +65,18 @@ export function clearSessionCookie(c: Context) {
   deleteCookie(c, SESSION_COOKIE, { path: "/" });
 }
 
+/** Session user id from a raw Request (e.g. WebSocket upgrade). */
+export function getSessionUserIdFromRequest(req: Request): string | null {
+  const cookieHeader = req.headers.get("cookie") ?? "";
+  for (const part of cookieHeader.split(";")) {
+    const [key, ...rest] = part.trim().split("=");
+    if (key === SESSION_COOKIE) {
+      return verifySessionToken(rest.join("="));
+    }
+  }
+  return null;
+}
+
 export async function resolveAuth(c: Context): Promise<AuthUser | null> {
   const authHeader = c.req.header("authorization");
   if (authHeader?.startsWith("Bearer ")) {

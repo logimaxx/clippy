@@ -1,12 +1,14 @@
 import { Hono } from "hono";
-import { mkdir } from "node:fs/promises";
+import { mkdir, readdir, unlink } from "node:fs/promises";
 import { existsSync } from "node:fs";
+import { join } from "node:path";
 import type { Context } from "hono";
 import { getFilesDir } from "../lib/cleanup";
 import { MAX_FILES_PER_CLIP } from "../lib/constants";
 import {
   ensureClip,
   getClip,
+  getClipFresh,
   getClipFilePath,
   getClipFiles,
   type ClipFileMeta,
@@ -15,6 +17,35 @@ import { isUnlocked, verifyPin } from "../lib/pin";
 import * as memory from "../store/memory";
 
 const MAX_FILE_SIZE = Number(process.env.MAX_FILE_SIZE_MB ?? 10) * 1024 * 1024;
+const MAX_TOTAL_FILES_SIZE =
+  Number(process.env.MAX_TOTAL_FILES_MB ?? 50) * 1024 * 1024;
+
+/** Serialize uploads per clip so quota checks can't race. */
+const uploadLocks = new Map<string, Promise<unknown>>();
+
+function withUploadLock<T>(slug: string, fn: () => Promise<T>): Promise<T> {
+  const prev = uploadLocks.get(slug) ?? Promise.resolve();
+  const run = prev.then(fn, fn);
+  uploadLocks.set(
+    slug,
+    run.then(
+      () => undefined,
+      () => undefined
+    )
+  );
+  return run;
+}
+
+async function getOnDiskAttachmentBytes(slug: string): Promise<number> {
+  const dir = join(getFilesDir(), slug);
+  if (!existsSync(dir)) return 0;
+  const entries = await readdir(dir);
+  let total = 0;
+  for (const name of entries) {
+    total += Bun.file(join(dir, name)).size;
+  }
+  return total;
+}
 
 function escapeHtml(s: string) {
   return s
@@ -60,86 +91,103 @@ export async function handleUpload(c: Context, slug: string) {
     return c.html('<span class="error">No file selected</span>');
   }
 
-  if (file.size > MAX_FILE_SIZE) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const size = bytes.byteLength;
+
+  if (size > MAX_FILE_SIZE) {
     const message = `File too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB)`;
     if (wantsJson) return c.json({ ok: false, error: message }, 400);
     return c.html(`<span class="error">${message}</span>`);
   }
 
-  await ensureClip(slug);
-  const clip = await getClip(slug);
-  const existing = clip ? getClipFiles(clip) : [];
+  return withUploadLock(slug, async () => {
+    await ensureClip(slug);
+    // Fresh DB read — memory cache can lag behind concurrent uploads.
+    const clip = await getClipFresh(slug);
+    const existing = clip ? getClipFiles(clip) : [];
 
-  if (existing.length >= MAX_FILES_PER_CLIP) {
-    const message = `Maximum ${MAX_FILES_PER_CLIP} files per clip`;
-    if (wantsJson) return c.json({ ok: false, error: message }, 400);
-    return c.html(`<span class="error">${message}</span>`);
-  }
+    if (existing.length >= MAX_FILES_PER_CLIP) {
+      const message = `Maximum ${MAX_FILES_PER_CLIP} files per clip`;
+      if (wantsJson) return c.json({ ok: false, error: message }, 400);
+      return c.html(`<span class="error">${message}</span>`);
+    }
 
-  const id = crypto.randomUUID();
-  const dir = getFilesDir() + "/" + slug;
-  await mkdir(dir, { recursive: true });
+    // Disk is source of truth (metadata can be stale/racy under concurrency).
+    const existingTotal = await getOnDiskAttachmentBytes(slug);
+    if (existingTotal + size > MAX_TOTAL_FILES_SIZE) {
+      const maxMb = MAX_TOTAL_FILES_SIZE / 1024 / 1024;
+      const message = `Total attachments too large (max ${maxMb}MB)`;
+      if (wantsJson) return c.json({ ok: false, error: message }, 400);
+      return c.html(`<span class="error">${message}</span>`);
+    }
 
-  const filePath = getClipFilePath(slug, id);
-  await Bun.write(filePath, await file.arrayBuffer());
+    const id = crypto.randomUUID();
+    const dir = join(getFilesDir(), slug);
+    await mkdir(dir, { recursive: true });
 
-  const mimeType = file.type || "application/octet-stream";
-  const newFile: ClipFileMeta = {
-    fileId: id,
-    filename: file.name,
-    size: file.size,
-    mimeType,
-  };
-  const files = [...existing, newFile];
-  const contentType = files.some((f) => isImageMime(f.mimeType)) ? "image" : "file";
+    const filePath = getClipFilePath(slug, id);
+    await Bun.write(filePath, bytes);
 
-  const { db } = await import("../db/client");
-  const { clips } = await import("../db/schema");
-  const { eq } = await import("drizzle-orm");
-
-  await db
-    .update(clips)
-    .set({
-      filePath,
-      contentType,
-      metadata: JSON.stringify({ files }),
-    })
-    .where(eq(clips.slug, slug));
-
-  memory.deleteCached(slug);
-
-  const statusHtml = `<span class="success">Uploaded <strong>${escapeHtml(file.name)}</strong></span>`;
-  const fileUrl = `/api/v1/files/${slug}/${id}`;
-  const isImage = isImageMime(mimeType);
-
-  if (wantsJson) {
-    return c.json({
-      ok: true,
-      slug,
+    const mimeType = file.type || "application/octet-stream";
+    const newFile: ClipFileMeta = {
       fileId: id,
       filename: file.name,
-      size: file.size,
+      size,
       mimeType,
-      isImage,
-      url: fileUrl,
-      fileCount: files.length,
-    });
-  }
+    };
+    const files = [...existing, newFile];
+    const contentType = files.some((f) => isImageMime(f.mimeType))
+      ? "image"
+      : "file";
 
-  if (c.req.header("HX-Request")) {
-    const attachmentHtml = renderAttachmentHtml(slug, newFile);
-    const emptyOob =
-      existing.length === 0
-        ? `<div id="clip-files-empty" hx-swap-oob="delete"></div>`
-        : "";
-    return c.html(
-      statusHtml +
-        emptyOob +
-        `<div hx-swap-oob="beforeend:#clip-files-list">${attachmentHtml}</div>`
-    );
-  }
+    const { db } = await import("../db/client");
+    const { clips } = await import("../db/schema");
+    const { eq } = await import("drizzle-orm");
 
-  return c.html(statusHtml);
+    await db
+      .update(clips)
+      .set({
+        filePath,
+        contentType,
+        metadata: JSON.stringify({ files }),
+      })
+      .where(eq(clips.slug, slug));
+
+    memory.deleteCached(slug);
+
+    const statusHtml = `<span class="success">Uploaded <strong>${escapeHtml(file.name)}</strong></span>`;
+    const fileUrl = `/api/v1/files/${slug}/${id}`;
+    const isImage = isImageMime(mimeType);
+
+    if (wantsJson) {
+      return c.json({
+        ok: true,
+        slug,
+        fileId: id,
+        filename: file.name,
+        size,
+        mimeType,
+        isImage,
+        url: fileUrl,
+        fileCount: files.length,
+      });
+    }
+
+    if (c.req.header("HX-Request")) {
+      const attachmentHtml = renderAttachmentHtml(slug, newFile);
+      const emptyOob =
+        existing.length === 0
+          ? `<div id="clip-files-empty" hx-swap-oob="delete"></div>`
+          : "";
+      return c.html(
+        statusHtml +
+          emptyOob +
+          `<div hx-swap-oob="beforeend:#clip-files-list">${attachmentHtml}</div>`
+      );
+    }
+
+    return c.html(statusHtml);
+  });
 }
 
 export async function handleDelete(c: Context, slug: string, fileId: string) {
@@ -160,7 +208,6 @@ export async function handleDelete(c: Context, slug: string, fileId: string) {
 
   const filePath = getClipFilePath(slug, fileId);
   if (existsSync(filePath)) {
-    const { unlink } = await import("node:fs/promises");
     await unlink(filePath).catch(() => {});
   }
 

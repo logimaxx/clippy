@@ -1,5 +1,70 @@
 /* PWA install + service worker registration */
 (function () {
+  const THEME_KEY = "webklip-theme";
+
+  function getDefaultTheme() {
+    return document.documentElement.dataset.themeDefault === "light"
+      ? "light"
+      : "dark";
+  }
+
+  function getStoredTheme() {
+    try {
+      const stored = localStorage.getItem(THEME_KEY);
+      return stored === "light" || stored === "dark" ? stored : getDefaultTheme();
+    } catch {
+      return getDefaultTheme();
+    }
+  }
+
+  function getTheme() {
+    return document.documentElement.dataset.theme === "light" ? "light" : "dark";
+  }
+
+  function updateThemeColor(theme) {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute("content", theme === "light" ? "#f8fafc" : "#0c1222");
+    }
+  }
+
+  function updateThemeToggle(btn, theme) {
+    const next = theme === "light" ? "dark" : "light";
+    btn.setAttribute(
+      "aria-label",
+      next === "light" ? "Switch to light theme" : "Switch to dark theme"
+    );
+  }
+
+  function applyTheme(theme, persist) {
+    document.documentElement.dataset.theme = theme;
+    updateThemeColor(theme);
+    const toggle = document.getElementById("theme-toggle");
+    if (toggle) updateThemeToggle(toggle, theme);
+    if (persist) {
+      try {
+        localStorage.setItem(THEME_KEY, theme);
+      } catch {
+        /* ignore */
+      }
+    }
+    document.dispatchEvent(
+      new CustomEvent("webklip-theme-change", { detail: { theme } })
+    );
+  }
+
+  function initTheme() {
+    applyTheme(getStoredTheme(), false);
+    const toggle = document.getElementById("theme-toggle");
+    if (!toggle) return;
+    updateThemeToggle(toggle, getTheme());
+    toggle.addEventListener("click", () => {
+      applyTheme(getTheme() === "light" ? "dark" : "light", true);
+    });
+  }
+
+  initTheme();
+
   function trackSanitizedPageView() {
     const path = document.body?.dataset.analyticsPath;
     if (!path) return;

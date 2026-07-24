@@ -19,17 +19,17 @@
     */
     :root {
       --bg-base: #0c1222;
-      --bg-elevated: #131b2e;
-      --bg-sunken: #080d18;
-      --bg-overlay: rgba(8, 13, 24, 0.72);
+      --bg-elevated: #1a2438;
+      --bg-sunken: #060a14;
+      --bg-overlay: rgba(6, 10, 20, 0.78);
 
-      --border-subtle: #1e2a42;
-      --border-default: #2a3854;
-      --border-strong: #3d4f6f;
+      --border-subtle: #334155;
+      --border-default: #475569;
+      --border-strong: #64748b;
 
-      --text-primary: #eef2f9;
-      --text-secondary: #94a3b8;
-      --text-tertiary: #64748b;
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-tertiary: #94a3b8;
 
       --accent: #22d3ee;
       --accent-muted: rgba(34, 211, 238, 0.14);
@@ -93,7 +93,7 @@
       align-items: center;
       gap: 0.75rem;
       height: var(--header-h);
-      padding: 0 1rem;
+      padding: 0.5rem 1rem;
       background: color-mix(in srgb, var(--bg-elevated) 92%, transparent);
       border-bottom: 1px solid var(--border-subtle);
       backdrop-filter: blur(12px);
@@ -155,7 +155,55 @@
       flex-shrink: 0;
     }
 
-    .header-actions { display: flex; }
+    .header-actions .btn {
+      min-height: 2rem;
+      padding: 0 0.65rem;
+      font-size: 0.75rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .header-actions .btn svg {
+      width: 0.875rem;
+      height: 0.875rem;
+    }
+
+    .header .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      padding: 0;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      background: var(--bg-sunken);
+      color: var(--text-secondary);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .header .theme-toggle .theme-toggle-icon {
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .header .theme-toggle:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .theme-toggle-icon {
+      width: 1.125rem;
+      height: 1.125rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .theme-toggle-icon--sun { display: none; }
+    .theme-toggle-icon--moon { display: block; }
 
     /* Share menu — one entry point for copy, QR, system share */
     .share-menu {
@@ -880,7 +928,7 @@
       </a>
 
       <div class="url-bar" role="group" aria-label="Clip URL">
-        <span class="url-bar__path">webklip.app/<strong>demo-clip</strong></span>
+        <span class="url-bar__path">webklip.com/<strong>demo-clip</strong></span>
       </div>
 
       <div class="header-chips" aria-hidden="false">
@@ -892,6 +940,15 @@
       </div>
 
       <div class="header-actions">
+        <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch to light theme">
+          <svg class="theme-toggle-icon theme-toggle-icon--sun" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" />
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+          </svg>
+          <svg class="theme-toggle-icon theme-toggle-icon--moon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
         <div class="share-menu" id="share-menu">
           <button
             type="button"
@@ -1207,7 +1264,7 @@ async function fetchClip(slug) {
     });
     syncEditor();
 
-    const CLIP_URL = "https://webklip.app/demo-clip";
+    const CLIP_URL = `${location.origin}/demo-clip`;
     const shareMenu = $("#share-menu");
     const shareTrigger = $("#share-trigger");
     const sharePopover = $("#share-popover");

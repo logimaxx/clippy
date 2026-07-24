@@ -27,9 +27,17 @@ export async function seedDemoClip(): Promise<void> {
     clip = await ensureClip(DEMO_SLUG, {
       burnOnRead: false,
       expiresAt,
+      visibility: "public",
     });
   } else {
-    await updateSettings(DEMO_SLUG, { burnOnRead: false, expiresAt });
+    await updateSettings(DEMO_SLUG, {
+      burnOnRead: false,
+      expiresAt,
+      visibility: "public",
+      pinHash: null,
+      encrypted: false,
+      maxViews: null,
+    });
     clip = await getClip(DEMO_SLUG);
   }
 

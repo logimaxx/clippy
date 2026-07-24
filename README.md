@@ -97,7 +97,8 @@ bun run cli -- -l secret -f ./photo.png
 | `UMAMI_WEBSITE_ID` | — | Umami website ID — enables analytics when set |
 | `UMAMI_SCRIPT_URL` | — | Full URL to `script.js` (or set `UMAMI_URL` instead) |
 | `CORS_ORIGIN` | — | Allow cross-origin API access from this origin |
-| `MAX_FILE_SIZE_MB` | `10` | Max upload size |
+| `MAX_FILE_SIZE_MB` | `10` | Max size per uploaded file |
+| `MAX_TOTAL_FILES_MB` | `50` | Max total size of all attachments on a clip |
 | `RATE_LIMIT_CLIPS_PER_HOUR` | `30` | Clip creation limit per IP |
 | `RATE_LIMIT_API_PER_HOUR` | `200` | API limit per IP |
 

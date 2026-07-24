@@ -7,7 +7,7 @@
     "importSource": "hono/jsx"
   },
   "scripts": {
-    "dev": "WEBKLIP_DEV=1 bun run scripts/build-assets.ts --dev && bun run scripts/build-static.ts && WEBKLIP_DEV=1 bun run --watch src/index.ts",
+    "dev": "bun run scripts/dev.ts",
     "start": "bun run src/index.ts",
     "build:assets": "bun run scripts/build-assets.ts",
     "build:static": "bun run scripts/build-static.ts",

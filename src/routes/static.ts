@@ -2,13 +2,17 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { Hono } from "hono";
 import { getUmamiConfig, umamiScriptTag } from "../lib/umami";
+import { listPublicClips } from "../store/clips";
+import { renderExplorePreviewHtml } from "../lib/explore-preview";
 
 const PAGES_DIR = join(process.cwd(), "dist", "pages");
+const EXPLORE_PREVIEW_MARKER = "<!--EXPLORE_PREVIEW-->";
 
 let routes: Record<string, string> | null = null;
 
 function loadRoutes(): Record<string, string> {
-  if (routes) return routes;
+  const isDev = process.env.WEBKLIP_DEV === "1";
+  if (routes && !isDev) return routes;
   const manifestPath = join(PAGES_DIR, "routes.json");
   if (!existsSync(manifestPath)) {
     console.warn("Static pages not built — run: bun run build:static");
@@ -31,6 +35,12 @@ function injectRuntimeScripts(html: string): string {
   if (config && html.includes(config.scriptUrl)) return html;
 
   return html.replace("</head>", `  ${tag}\n</head>`);
+}
+
+async function injectExplorePreview(html: string): Promise<string> {
+  if (!html.includes(EXPLORE_PREVIEW_MARKER)) return html;
+  const clips = await listPublicClips(3);
+  return html.replace(EXPLORE_PREVIEW_MARKER, renderExplorePreviewHtml(clips));
 }
 
 const staticPages = new Hono();
@@ -85,12 +95,16 @@ Sitemap: ${base}/sitemap.xml
 `);
 });
 
-staticPages.get("*", (c, next) => {
+staticPages.get("*", async (c, next) => {
   const filename = loadRoutes()[c.req.path];
   if (!filename || !existsSync(join(PAGES_DIR, filename))) {
     return next();
   }
-  return c.html(injectRuntimeScripts(readPage(filename)));
+  let html = injectRuntimeScripts(readPage(filename));
+  if (c.req.path === "/") {
+    html = await injectExplorePreview(html);
+  }
+  return c.html(html);
 });
 
 export { staticPages, loadRoutes };

@@ -12,7 +12,7 @@ async function createClipViaUi(page: Page, slug?: string) {
   if (slug) {
     await page.fill('input[name="slug"]', slug);
   }
-  await page.getByRole("button", { name: "Create clip" }).click();
+  await page.getByRole("button", { name: /Create a? clip/i }).click();
   if (slug) {
     await expect(page).toHaveURL(new RegExp(`/${slug}$`));
     return slug;
@@ -25,12 +25,18 @@ async function createClipViaApi(
   request: APIRequestContext,
   slug: string,
   content = "",
-  opts: { ttl?: number; burnOnRead?: boolean } = {}
+  opts: {
+    ttl?: number;
+    burnOnRead?: boolean;
+    visibility?: "private" | "public";
+    ownerPassword?: string;
+  } = {}
 ) {
   const res = await request.post(`/api/v1/clips/${slug}`, {
     data: { content, ...opts },
   });
   expect(res.ok()).toBeTruthy();
+  return res.json();
 }
 
 async function openMoreSettings(page: Page) {
@@ -44,9 +50,20 @@ test.describe("Webklip E2E", () => {
       await page.goto("/");
       await expect(page).toHaveTitle(/Webklip/);
       await expect(page.getByRole("heading", { level: 1 })).toContainText(
-        /share text and files/i
+        /WhatsApp/i
       );
       await expect(page.getByRole("banner").getByRole("link", { name: "Security" })).toBeVisible();
+    });
+
+    test("public pages default to light theme", async ({ page }) => {
+      await page.goto("/");
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
+
+      await page.getByRole("button", { name: "Switch to dark theme" }).click();
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+      await page.reload();
+      await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
     });
 
     test("legal pages load", async ({ page }) => {
@@ -55,6 +72,20 @@ test.describe("Webklip E2E", () => {
         await expect(page.getByRole("main")).toBeVisible();
         await expect(page).toHaveTitle(/Webklip/i);
       }
+    });
+
+    test("explore page loads", async ({ page }) => {
+      await page.goto("/explore");
+      await expect(page.getByRole("heading", { name: "Explore" })).toBeVisible();
+      await expect(page).toHaveTitle(/Explore/i);
+    });
+
+    test("home shows Explore teaser", async ({ page }) => {
+      await page.goto("/");
+      const section = page.locator("#explore");
+      await expect(section.getByRole("heading", { name: /public/i })).toBeVisible();
+      await expect(section.getByRole("link", { name: /Browse all on Explore/i })).toBeVisible();
+      await expect(page.locator(".site-footer a[href='/explore']")).toBeVisible();
     });
 
     test("SEO endpoints respond", async ({ request }) => {
@@ -150,6 +181,106 @@ test.describe("Webklip E2E", () => {
       await page.selectOption("#ttl", "burn");
       await expect(page.locator("#ttl")).toHaveValue("burn");
       await expect(page.locator(".toast")).toContainText("Burn after read");
+    });
+
+    test("can list a clip on Explore", async ({ page }) => {
+      const slug = uniqueSlug("public");
+      await createClipViaApi(page.request, slug, "hello explore", {
+        burnOnRead: false,
+        ttl: 3600,
+      });
+      await page.goto(`/${slug}`);
+
+      await page.locator("#settings-form-desktop [data-public-toggle]").click({ force: true });
+      const modal = page.locator("#public-publish-modal");
+      await expect(modal).toBeVisible();
+      await modal.locator("#public-owner-password").fill("ownerpass1");
+      await modal.getByRole("button", { name: "Publish" }).click();
+      await expect(page.locator(".toast")).toContainText(/public|Explore|Published/i);
+      await expect(
+        page.locator("#settings-form-desktop [data-public-toggle]")
+      ).toBeChecked();
+      await page.reload();
+      await expect(page.locator(".header-chips .chip--public")).toBeVisible();
+      await expect(page.locator("#ttl")).not.toHaveValue("burn");
+
+      await page.goto("/explore");
+      await expect(page.getByRole("heading", { name: "Explore" })).toBeVisible();
+      await expect(page.locator(`a[href="/${slug}"]`)).toBeVisible();
+    });
+
+    test("canceling public modal leaves Public off", async ({ page }) => {
+      const slug = uniqueSlug("pubcancel");
+      await createClipViaApi(page.request, slug, "stay private", {
+        burnOnRead: false,
+        ttl: 3600,
+      });
+      await page.goto(`/${slug}`);
+
+      await page.locator("#settings-form-desktop [data-public-toggle]").click({ force: true });
+      const modal = page.locator("#public-publish-modal");
+      await expect(modal).toBeVisible();
+      await modal.getByRole("button", { name: "Cancel" }).click();
+      await expect(modal).toBeHidden();
+      await expect(page.locator("#settings-form-desktop [data-public-toggle]")).not.toBeChecked();
+      await expect(page.locator(".header-chips .chip--public")).toHaveCount(0);
+    });
+
+    test("burn after read removes a public clip from Explore", async ({ page }) => {
+      const slug = uniqueSlug("pubburn");
+      await createClipViaApi(page.request, slug, "public then burn", {
+        visibility: "public",
+        burnOnRead: true,
+        ownerPassword: "ownerpass1",
+      });
+
+      const created = await page.request.get(`/api/v1/clips/${slug}`);
+      const body = await created.json();
+      expect(body.visibility).toBe("public");
+      expect(body.burnOnRead).toBe(false);
+
+      await page.goto(`/${slug}`);
+      await expect(page.locator(".header-chips .chip--public")).toBeVisible();
+
+      await page.selectOption("#ttl", "burn");
+      await expect(page.locator("#ttl")).toHaveValue("burn");
+      await expect(page.locator(".toast")).toContainText(/removed from Explore/i);
+      await page.reload();
+      await expect(page.locator(".header-chips .chip--public")).toHaveCount(0);
+
+      await page.goto("/explore");
+      await expect(page.locator(`a[href="/${slug}"]`)).toHaveCount(0);
+    });
+
+    test("public clip is view-only without owner cookie", async ({ browser, page }) => {
+      const slug = uniqueSlug("pubro");
+      await createClipViaApi(page.request, slug, "owner content", {
+        visibility: "public",
+        burnOnRead: false,
+        ttl: 3600,
+        ownerPassword: "ownerpass1",
+      });
+
+      await page.goto(`/${slug}`);
+      await expect(page.locator("#clip-content")).toBeEditable();
+      await expect(page.locator(".header-chips .chip--public")).toBeVisible();
+
+      const visitor = await browser.newContext();
+      const visitorPage = await visitor.newPage();
+      await visitorPage.goto(`/${slug}`);
+      await expect(visitorPage.getByText(/view-only/i)).toBeVisible();
+      await expect(visitorPage.locator("#clip-content")).toBeDisabled();
+      await expect(visitorPage.locator("#settings-root")).toHaveCount(0);
+
+      const put = await visitorPage.request.put(`/api/v1/clips/${slug}`, {
+        data: { content: "hacker edit" },
+      });
+      expect(put.status()).toBe(403);
+
+      const still = await page.request.get(`/api/v1/clips/${slug}`);
+      expect((await still.json()).content).toBe("owner content");
+
+      await visitor.close();
     });
 
     test("copy link button is present", async ({ page }) => {
@@ -372,7 +503,7 @@ test.describe("Webklip E2E", () => {
       const slug = uniqueSlug("burn-owner");
       await ownerPage.goto("/");
       await ownerPage.fill('input[name="slug"]', slug);
-      await ownerPage.getByRole("button", { name: "Create clip" }).click();
+      await ownerPage.getByRole("button", { name: /Create a? clip/i }).click();
       await expect(ownerPage).toHaveURL(new RegExp(`/${slug}$`));
       await ownerPage.locator("#clip-content").fill("burn me");
 

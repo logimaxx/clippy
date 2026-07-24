@@ -1,5 +1,6 @@
 /** @jsxImportSource hono/jsx */
 import { Layout } from "./Layout";
+import { ThemeToggle } from "./ThemeToggle";
 import { SettingsPanel, filesPanelMeta } from "./partials/Settings";
 import { FileAttachment } from "./partials/FileAttachment";
 import {
@@ -10,8 +11,10 @@ import {
   EditorNavIcon,
   FilesNavIcon,
   SettingsNavIcon,
+  CloseIcon,
 } from "./partials/ClipIcons";
 import { asset } from "../lib/assets";
+import { siteHost } from "../lib/constants";
 import { clipAnalyticsPath } from "../lib/umami";
 import type { Clip, ClipVersion } from "../db/schema";
 import { getClipFiles } from "../store/clips";
@@ -24,11 +27,14 @@ interface ClipPageProps {
   language: string | null;
   maxViews: number | null;
   hasPin: boolean;
+  hasOwnerPassword?: boolean;
+  isOwner?: boolean;
   webhookUrl: string | null;
   devices: number;
   clip: Clip;
   versions: ClipVersion[];
   encrypted: boolean;
+  visibility: "private" | "public";
   readOnly?: boolean;
   burned?: boolean;
 }
@@ -41,19 +47,30 @@ export function ClipPage({
   language,
   maxViews,
   hasPin,
+  hasOwnerPassword = false,
+  isOwner = false,
   webhookUrl,
   devices,
   clip,
   versions,
   encrypted,
+  visibility,
   readOnly = false,
   burned = false,
 }: ClipPageProps) {
   const files = getClipFiles(clip);
   const deviceLabel = `${devices} device${devices === 1 ? "" : "s"}`;
+  const isPublic = visibility === "public";
+  const host = siteHost();
+  const clipPathLabel = `${host}/${slug}`;
 
   return (
-    <Layout title={`Webklip — ${slug}`} analyticsPath={clipAnalyticsPath(slug)}>
+    <Layout
+      title={`Webklip — ${slug}`}
+      analyticsPath={clipAnalyticsPath(slug)}
+      themeToggle="none"
+      robots={isPublic ? undefined : "noindex, nofollow"}
+    >
       <div class="app" data-view="editor">
         <header class="header">
           <a href="/" class="logo" aria-label="Webklip home">
@@ -65,7 +82,7 @@ export function ClipPage({
 
           <div class="url-bar" role="group" aria-label="Clip URL">
             <span class="url-bar__path">
-              webklip.app/<strong>{slug}</strong>
+              {host}/<strong>{slug}</strong>
             </span>
           </div>
 
@@ -74,10 +91,17 @@ export function ClipPage({
               <span class="pulse" aria-hidden="true"></span>
               <span id="device-count-desktop">{deviceLabel}</span>
             </span>
+            {isPublic && <span class="chip chip--public">Public</span>}
             {encrypted && <span class="chip chip--secure">E2E</span>}
+            {!isOwner && hasOwnerPassword && (
+              <a href={`/${slug}/claim`} class="chip chip--owner-claim">
+                Recover ownership
+              </a>
+            )}
           </div>
 
           <div class="header-actions">
+            <ThemeToggle />
             <div class="share-menu" id="share-menu">
               <button
                 type="button"
@@ -132,19 +156,34 @@ export function ClipPage({
               This clip was deleted after you opened it. Copy anything you need now.
             </div>
           )}
-          <SettingsPanel
-            slug={slug}
-            expiresAt={expiresAt}
-            burnOnRead={burnOnRead}
-            language={language}
-            maxViews={maxViews}
-            hasPin={hasPin}
-            webhookUrl={webhookUrl}
-            encrypted={encrypted}
-            devices={devices}
-            versions={versions}
-            files={files}
-          />
+          {readOnly && !burned && isPublic && (
+            <div class="burn-banner" role="status">
+              This public clip is view-only.
+              {hasOwnerPassword ? (
+                <>
+                  {" "}
+                  <a href={`/${slug}/claim`}>Recover ownership</a> to edit.
+                </>
+              ) : null}
+            </div>
+          )}
+          {!readOnly && (
+            <SettingsPanel
+              slug={slug}
+              expiresAt={expiresAt}
+              burnOnRead={burnOnRead}
+              language={language}
+              maxViews={maxViews}
+              hasPin={hasPin}
+              hasOwnerPassword={hasOwnerPassword}
+              webhookUrl={webhookUrl}
+              encrypted={encrypted}
+              visibility={visibility}
+              devices={devices}
+              versions={versions}
+              files={files}
+            />
+          )}
 
           <div class="main-grid">
             <section class="editor-panel" aria-label="Clip content">
@@ -200,19 +239,21 @@ export function ClipPage({
                 </span>
               </div>
               <div class="files-panel__body">
-                <form class="upload-form" data-upload-url={`/${slug}/upload`}>
-                  <label class="drop-zone" id="drop-zone">
-                    Drop files here or tap to browse
-                    <input
-                      type="file"
-                      name="file"
-                      class="file-input"
-                      accept="image/*,.pdf,.txt,.zip,.json,.md"
-                      multiple
-                    />
-                  </label>
-                  <span id="upload-status" class="upload-status"></span>
-                </form>
+                {!readOnly && (
+                  <form class="upload-form" data-upload-url={`/${slug}/upload`}>
+                    <label class="drop-zone" id="drop-zone">
+                      Drop files here or tap to browse
+                      <input
+                        type="file"
+                        name="file"
+                        class="file-input"
+                        accept="image/*,.pdf,.txt,.zip,.json,.md"
+                        multiple
+                      />
+                    </label>
+                    <span id="upload-status" class="upload-status"></span>
+                  </form>
+                )}
                 <div class="file-list" id="clip-files-list">
                   {files.length > 0 ? (
                     files.map((file) => (
@@ -223,11 +264,12 @@ export function ClipPage({
                         filename={file.filename}
                         mimeType={file.mimeType}
                         size={file.size}
+                        readOnly={readOnly}
                       />
                     ))
                   ) : (
                     <div id="clip-files-empty" class="empty-state">
-                      No files attached yet.
+                      {readOnly ? "No files attached." : "No files attached yet."}
                     </div>
                   )}
                 </div>
@@ -250,14 +292,56 @@ export function ClipPage({
             <FilesNavIcon />
             Files
           </button>
-          <button type="button" class="bottom-nav__item" data-open-sheet="settings">
-            <SettingsNavIcon />
-            Settings
-          </button>
+          {!readOnly && (
+            <button type="button" class="bottom-nav__item" data-open-sheet="settings">
+              <SettingsNavIcon />
+              Settings
+            </button>
+          )}
         </nav>
+
+        <div class="modal-backdrop" id="qr-modal-backdrop" hidden data-qr-modal>
+          <div
+            class="modal qr-modal"
+            id="qr-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="qr-modal-title"
+            hidden
+          >
+            <div class="modal__header">
+              <h2 class="modal__title" id="qr-modal-title">
+                Scan to open
+              </h2>
+              <button
+                type="button"
+                class="btn btn--ghost btn--icon"
+                data-close-qr-modal
+                aria-label="Close"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+            <div class="modal__body">
+              <div class="qr-box">
+                <img
+                  id="qr-modal-img"
+                  src={`/${slug}/qr`}
+                  alt={`QR code for ${clipPathLabel}`}
+                  width="222"
+                  height="222"
+                />
+              </div>
+              <p class="qr-modal__hint">
+                {host}/<strong>{slug}</strong>
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
       <script src={asset("clip-mobile.js")} defer></script>
+      {!readOnly && <script src={asset("clip-settings.js")} defer></script>}
       <script src={asset("clip-editor.js")} defer></script>
       <script src={asset("e2e.js")} defer></script>
       {!readOnly && <script src={asset("clip-sync.js")} defer></script>}

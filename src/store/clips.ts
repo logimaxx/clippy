@@ -1,6 +1,6 @@
-import { eq, lt, and, isNotNull } from "drizzle-orm";
+import { eq, lt, and, isNotNull, isNull, or, gt, desc } from "drizzle-orm";
 import { db } from "../db/client";
-import { clips, type Clip, type NewClip } from "../db/schema";
+import { clips, type Clip, type NewClip, type ClipVisibility } from "../db/schema";
 import { DEFAULT_TTL } from "../lib/constants";
 import { fireWebhook } from "../lib/webhook";
 import { getFilesDir } from "../lib/cleanup";
@@ -21,35 +21,47 @@ export async function getClip(slug: string): Promise<Clip | null> {
   return clip;
 }
 
+/** Always load from DB and refresh the memory cache (bypass stale cache). */
+export async function getClipFresh(slug: string): Promise<Clip | null> {
+  const rows = await db.select().from(clips).where(eq(clips.slug, slug)).limit(1);
+  const clip = rows[0] ?? null;
+  if (clip) memory.setCached(clip);
+  else memory.deleteCached(slug);
+  return clip;
+}
+
 export async function createClip(
   slug: string,
   opts: Partial<NewClip> = {}
 ): Promise<Clip> {
   const now = Math.floor(Date.now() / 1000);
-  const burnOnRead = opts.burnOnRead ?? true;
+  const normalized = normalizeNewClipPublic(opts, now);
+  const burnOnRead = normalized.burnOnRead ?? true;
   const expiresAt =
-    opts.expiresAt !== undefined
-      ? opts.expiresAt
+    normalized.expiresAt !== undefined
+      ? normalized.expiresAt
       : burnOnRead
         ? null
         : now + DEFAULT_TTL;
 
   const clip: NewClip = {
     slug,
-    content: opts.content ?? "",
-    contentType: opts.contentType ?? "text",
+    content: normalized.content ?? "",
+    contentType: normalized.contentType ?? "text",
     expiresAt,
     burnOnRead,
     viewCount: 0,
-    language: opts.language ?? null,
-    metadata: opts.metadata ?? null,
-    filePath: opts.filePath ?? null,
-    maxViews: opts.maxViews ?? null,
-    pinHash: opts.pinHash ?? null,
-    webhookUrl: opts.webhookUrl ?? null,
-    encrypted: opts.encrypted ?? false,
-    ownerId: opts.ownerId ?? null,
-    teamId: opts.teamId ?? null,
+    language: normalized.language ?? null,
+    metadata: normalized.metadata ?? null,
+    filePath: normalized.filePath ?? null,
+    maxViews: normalized.maxViews ?? null,
+    pinHash: normalized.pinHash ?? null,
+    ownerPasswordHash: normalized.ownerPasswordHash ?? null,
+    webhookUrl: normalized.webhookUrl ?? null,
+    encrypted: normalized.encrypted ?? false,
+    visibility: normalized.visibility ?? "private",
+    ownerId: normalized.ownerId ?? null,
+    teamId: normalized.teamId ?? null,
   };
 
   await db.insert(clips).values(clip);
@@ -99,22 +111,134 @@ export async function updateContent(slug: string, content: string) {
 }
 
 export interface ClipSettingsUpdate {
-  expiresAt?: number;
+  expiresAt?: number | null;
   burnOnRead?: boolean;
   language?: string | null;
   maxViews?: number | null;
   pinHash?: string | null;
+  ownerPasswordHash?: string | null;
   webhookUrl?: string | null;
   encrypted?: boolean;
+  visibility?: ClipVisibility;
   ownerId?: string | null;
   teamId?: string | null;
 }
 
+/** Logged-in account or owner password can recover access if the owner cookie is lost. */
+export function hasOwnerRecovery(clip: Pick<Clip, "ownerId" | "ownerPasswordHash">): boolean {
+  return !!clip.ownerId || !!clip.ownerPasswordHash;
+}
+
+/** Shape required for a clip to stay on Explore (no burn / PIN / E2E). */
+export function publicListingUpdates(
+  clip: Pick<Clip, "expiresAt">,
+  now = Math.floor(Date.now() / 1000)
+): ClipSettingsUpdate {
+  const expiresAt =
+    clip.expiresAt !== null && clip.expiresAt > now
+      ? clip.expiresAt
+      : now + DEFAULT_TTL;
+
+  return {
+    visibility: "public",
+    burnOnRead: false,
+    maxViews: null,
+    pinHash: null,
+    encrypted: false,
+    expiresAt,
+  };
+}
+
+export function isListablePublic(clip: Clip, now = Math.floor(Date.now() / 1000)): boolean {
+  return (
+    clip.visibility === "public" &&
+    !clip.burnOnRead &&
+    !clip.pinHash &&
+    !clip.encrypted &&
+    (clip.expiresAt === null || clip.expiresAt > now)
+  );
+}
+
+/**
+ * Enforce: public clips cannot use burn-after-read, PIN, or E2E.
+ * - Publishing clears those and sets a TTL if needed.
+ * - Enabling burn / PIN / E2E on a public clip demotes it to private.
+ */
+export function applyVisibilityConstraints(
+  clip: Clip,
+  updates: ClipSettingsUpdate,
+  now = Math.floor(Date.now() / 1000)
+): ClipSettingsUpdate {
+  const next: ClipSettingsUpdate = { ...updates };
+
+  if (next.visibility === "public") {
+    const mergedExpires =
+      next.expiresAt !== undefined ? next.expiresAt : clip.expiresAt;
+    return {
+      ...next,
+      ...publicListingUpdates({ expiresAt: mergedExpires ?? null }, now),
+    };
+  }
+
+  const visibility = next.visibility ?? clip.visibility;
+  const burnOnRead = next.burnOnRead ?? clip.burnOnRead;
+  const pinHash = next.pinHash !== undefined ? next.pinHash : clip.pinHash;
+  const encrypted = next.encrypted ?? clip.encrypted;
+
+  if (visibility === "public" && (burnOnRead || !!pinHash || encrypted)) {
+    next.visibility = "private";
+  }
+
+  return next;
+}
+
+function normalizeNewClipPublic(
+  opts: Partial<NewClip>,
+  now: number
+): Partial<NewClip> {
+  if ((opts.visibility ?? "private") !== "public") return opts;
+
+  const listing = publicListingUpdates(
+    { expiresAt: opts.expiresAt ?? null },
+    now
+  );
+  return {
+    ...opts,
+    visibility: "public",
+    burnOnRead: false,
+    maxViews: null,
+    pinHash: null,
+    encrypted: false,
+    expiresAt: listing.expiresAt ?? now + DEFAULT_TTL,
+  };
+}
+
 export async function updateSettings(slug: string, settings: ClipSettingsUpdate) {
-  await db.update(clips).set(settings).where(eq(clips.slug, slug));
+  const current = await getClip(slug);
+  if (!current) return null;
+
+  const constrained = applyVisibilityConstraints(current, settings);
+  await db.update(clips).set(constrained).where(eq(clips.slug, slug));
   memory.deleteCached(slug);
-  const clip = await getClip(slug);
-  return clip;
+  return getClip(slug);
+}
+
+export async function listPublicClips(limit = 50): Promise<Clip[]> {
+  const now = Math.floor(Date.now() / 1000);
+  return db
+    .select()
+    .from(clips)
+    .where(
+      and(
+        eq(clips.visibility, "public"),
+        eq(clips.burnOnRead, false),
+        eq(clips.encrypted, false),
+        isNull(clips.pinHash),
+        or(isNull(clips.expiresAt), gt(clips.expiresAt, now))
+      )
+    )
+    .orderBy(desc(clips.createdAt))
+    .limit(limit);
 }
 
 export async function recordView(slug: string): Promise<Clip | null> {

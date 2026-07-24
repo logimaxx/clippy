@@ -2,6 +2,7 @@
 import type { Child } from "hono/jsx";
 import { asset } from "../lib/assets";
 import { getUmamiConfig } from "../lib/umami";
+import { THEME_INIT_SCRIPT, ThemeToggle } from "./ThemeToggle";
 
 interface LayoutProps {
   title: string;
@@ -10,6 +11,10 @@ interface LayoutProps {
   ogDescription?: string;
   /** Sanitized Umami path — clip slugs are never sent to analytics */
   analyticsPath?: "/clip" | "/clip/vanity";
+  /** Use "none" when the page embeds ThemeToggle in its own top bar. */
+  themeToggle?: "floating" | "none";
+  /** robots meta; private clips should stay noindex */
+  robots?: string;
   children: Child;
 }
 
@@ -19,6 +24,8 @@ export function Layout({
   ogTitle,
   ogDescription,
   analyticsPath,
+  themeToggle = "floating",
+  robots,
   children,
 }: LayoutProps) {
   const socialTitle = ogTitle ?? title;
@@ -31,8 +38,10 @@ export function Layout({
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#0c1222" />
-        <meta name="color-scheme" content="dark" />
+        <meta name="color-scheme" content="dark light" />
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <meta name="description" content={description} />
+        {robots && <meta name="robots" content={robots} />}
         <meta property="og:type" content="website" />
         <meta property="og:title" content={socialTitle} />
         <meta property="og:description" content={socialDescription} />
@@ -56,6 +65,7 @@ export function Layout({
         <script src={asset("app.js")} defer></script>
       </head>
       <body data-analytics-path={umami ? analyticsPath : undefined}>
+        {themeToggle === "floating" && <ThemeToggle floating />}
         <div id="toast-host" class="toast-host" aria-live="polite" aria-atomic="true"></div>
         {children}
       </body>

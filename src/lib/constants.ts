@@ -86,6 +86,9 @@ export function clipFromReadAccess(value: string): {
   return { burnOnRead: false, maxViews: null };
 }
 
+export const CLIP_VISIBILITY = ["private", "public"] as const;
+export type ClipVisibilitySetting = (typeof CLIP_VISIBILITY)[number];
+
 export const clipSettingsSchema = z.object({
   ttl: z
     .union([z.literal(EXPIRES_BURN), z.coerce.number().int().positive().max(2592000)])
@@ -102,20 +105,48 @@ export const clipSettingsSchema = z.object({
     .union([z.literal("on"), z.literal("true"), z.literal("1"), z.boolean()])
     .optional()
     .transform((v) => v === true || v === "on" || v === "true" || v === "1"),
-  webhook: z.string().max(2048).optional(),
-  encrypted: z
-    .union([z.literal("on"), z.literal("off"), z.literal("true"), z.literal("1"), z.boolean()])
+  ownerPassword: z.string().max(128).optional(),
+  clearOwnerPassword: z
+    .union([z.literal("on"), z.literal("true"), z.literal("1"), z.boolean()])
     .optional()
     .transform((v) => v === true || v === "on" || v === "true" || v === "1"),
+  webhook: z.string().max(2048).optional(),
+  encrypted: z.preprocess((v) => {
+    if (v === undefined || v === null || v === "") return undefined;
+    const values = Array.isArray(v) ? v : [v];
+    return values.includes("on") || values.includes(true) || values.includes("true") || values.includes("1");
+  }, z.boolean().optional()),
+  visibility: z
+    .preprocess((v) => {
+      if (v === undefined || v === null || v === "") return undefined;
+      const values = Array.isArray(v) ? v : [v];
+      if (values.includes("public") || values.includes("on") || values.includes(true)) {
+        return "public";
+      }
+      return "private";
+    }, z.enum(["private", "public"]).optional()),
 });
 
 export function settingsToastMessage(
   body: Record<string, unknown>,
   parsed: z.infer<typeof clipSettingsSchema>,
-  clip: { webhookUrl: string | null; encrypted: boolean }
+  clip: { webhookUrl: string | null; encrypted: boolean; visibility: string },
+  opts: { wasPublic?: boolean } = {}
 ): string {
+  const demotedFromExplore =
+    opts.wasPublic && clip.visibility !== "public";
+
+  if (parsed.visibility !== undefined) {
+    return parsed.visibility === "public"
+      ? "Published on public space"
+      : "Unpublished from public space";
+  }
   if (parsed.ttl !== undefined) {
-    if (parsed.ttl === EXPIRES_BURN) return "Burn after read enabled";
+    if (parsed.ttl === EXPIRES_BURN) {
+      return demotedFromExplore
+        ? "Burn after read enabled - removed from Explore"
+        : "Burn after read enabled";
+    }
     const opt = TTL_OPTIONS.find((o) => o.value === parsed.ttl);
     return opt ? `Expires in ${opt.label}` : "Expiry updated";
   }
@@ -126,14 +157,25 @@ export function settingsToastMessage(
     return `Syntax: ${label}`;
   }
   if (parsed.clearPin) return "PIN removed";
-  if (parsed.pin && parsed.pin.length > 0) return "PIN saved";
+  if (parsed.pin && parsed.pin.length > 0) {
+    return demotedFromExplore
+      ? "PIN saved - removed from Explore"
+      : "PIN saved";
+  }
+  if (parsed.clearOwnerPassword) return "Owner password removed";
+  if (parsed.ownerPassword && parsed.ownerPassword.length > 0) {
+    return "Owner password saved";
+  }
   if (parsed.webhook !== undefined) {
     return clip.webhookUrl ? "Webhook saved" : "Webhook cleared";
   }
   if ("encrypted" in body) {
-    return clip.encrypted
-      ? "End-to-end encryption enabled"
-      : "Encryption disabled";
+    if (clip.encrypted) {
+      return demotedFromExplore
+        ? "Encryption enabled - removed from Explore"
+        : "End-to-end encryption enabled";
+    }
+    return "Encryption disabled";
   }
   if (parsed.readAccess !== undefined) {
     const opt = READ_ACCESS_OPTIONS.find((o) => o.value === parsed.readAccess);
@@ -163,6 +205,7 @@ export const RESERVED_SLUGS = new Set([
   "security",
   "docs",
   "demo",
+  "explore",
   "favicon.ico",
   "robots.txt",
   "sitemap.xml",
@@ -184,6 +227,7 @@ export const RESERVED_CLIP_SUFFIXES = new Set([
   "upload",
   "qr",
   "unlock",
+  "claim",
   "new-clip",
 ]);
 
@@ -221,4 +265,18 @@ export function ttlLabel(seconds: number): string {
 export function remainingSeconds(expiresAt: number | null): number | null {
   if (expiresAt === null) return null;
   return Math.max(0, expiresAt - Math.floor(Date.now() / 1000));
+}
+
+/** Public site origin from SITE_URL (no trailing slash). */
+export function siteUrl(): string {
+  return (process.env.SITE_URL ?? "https://webklip.com").trim().replace(/\/$/, "");
+}
+
+/** Hostname(+port) for UI labels — derived from SITE_URL. */
+export function siteHost(): string {
+  try {
+    return new URL(siteUrl()).host;
+  } catch {
+    return "webklip.com";
+  }
 }

@@ -35,14 +35,28 @@ export async function canReadClip(
 
 export async function canWriteClip(
   clip: Clip,
-  userId: string | null
+  userId: string | null,
+  /** True when the request carries a valid owner cookie for this clip. */
+  hasOwnerCookie = false
 ): Promise<boolean> {
-  if (clip.ownerId && userId === clip.ownerId) return true;
+  const isAccountOwner = !!(clip.ownerId && userId === clip.ownerId);
+  const isOwner = isAccountOwner || hasOwnerCookie;
+
   if (clip.teamId && userId) {
     const role = await getMemberRole(clip.teamId, userId);
     if (role && WRITE_ROLES.includes(role)) return true;
   }
+
+  // Public clips are viewable by anyone, editable only by the owner.
+  if (clip.visibility === "public") {
+    return isOwner;
+  }
+
+  if (isOwner) return true;
+
+  // Private anonymous clips stay collaborative (link = write access).
   if (!clip.ownerId && !clip.teamId) return true;
+
   return false;
 }
 

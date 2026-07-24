@@ -12,13 +12,25 @@ import {
   createClip,
   recordView,
 } from "../store/clips";
+import { isClipOwner, setOwnerCookie } from "../lib/owner";
+import { resolveAuth } from "../lib/session";
+import { canWriteClip } from "../lib/teams";
 
 const CLIP_LIMIT = Number(process.env.RATE_LIMIT_CLIPS_PER_HOUR ?? 30);
 const API_LIMIT = Number(process.env.RATE_LIMIT_API_PER_HOUR ?? 200);
 
 const clipsApi = new Hono();
 
+clipsApi.get("/api/health", (c) =>
+  c.json({ status: "ok", version: "0.3.0" })
+);
+
 clipsApi.use("/api/*", async (c, next) => {
+  // Health is polled by dev live-reload and load balancers; never rate-limit it.
+  if (c.req.path === "/api/health") {
+    await next();
+    return;
+  }
   const ip = getClientIp(c.req.raw.headers);
   const { allowed, remaining } = rateLimit(
     `api:${ip}`,
@@ -29,10 +41,6 @@ clipsApi.use("/api/*", async (c, next) => {
   if (!allowed) return c.json({ error: "Rate limit exceeded" }, 429);
   await next();
 });
-
-clipsApi.get("/api/health", (c) =>
-  c.json({ status: "ok", version: "0.3.0" })
-);
 
 async function requirePin(
   c: { req: { header: (n: string) => string | undefined; query: (n: string) => string | undefined } },
@@ -88,6 +96,7 @@ clipsApi.get("/api/v1/clips/:slug", async (c) => {
     maxViews: clip.maxViews,
     viewCount: viewed.viewCount,
     webhookUrl: clip.webhookUrl,
+    visibility: clip.visibility,
   });
 });
 
@@ -96,8 +105,10 @@ const createSchema = z.object({
   burnOnRead: z.boolean().optional(),
   maxViews: z.number().int().min(0).max(1000).optional(),
   pin: z.string().max(128).optional(),
+  ownerPassword: z.string().min(8).max(128).optional(),
   webhook: z.string().url().max(2048).optional().or(z.literal("")),
   ttl: z.number().int().positive().optional(),
+  visibility: z.enum(["private", "public"]).optional(),
 });
 
 clipsApi.post("/api/v1/clips/:slug", async (c) => {
@@ -132,23 +143,41 @@ clipsApi.post("/api/v1/clips/:slug", async (c) => {
 
   const burnOnRead =
     opts.burnOnRead ?? (opts.ttl !== undefined ? false : undefined);
+  const visibility = opts.visibility ?? "private";
+  const ownerPasswordHash = opts.ownerPassword
+    ? await hashPin(opts.ownerPassword)
+    : null;
+
+  if (visibility === "public" && !ownerPasswordHash) {
+    return c.json(
+      { error: "Public clips require ownerPassword (min 8 characters)" },
+      400
+    );
+  }
 
   const clip = await createClip(slug, {
     content: opts.content ?? "",
     burnOnRead,
     maxViews: opts.maxViews === 0 ? null : opts.maxViews,
     pinHash: opts.pin ? await hashPin(opts.pin) : null,
+    ownerPasswordHash,
     webhookUrl: opts.webhook || null,
     expiresAt: opts.ttl ? now + opts.ttl : undefined,
+    visibility,
   });
+
+  setOwnerCookie(c, slug);
 
   return c.json(
     {
       slug: clip.slug,
       content: clip.content,
       maxViews: clip.maxViews,
+      burnOnRead: clip.burnOnRead,
       webhookUrl: clip.webhookUrl,
       pinSet: !!clip.pinHash,
+      ownerPasswordSet: !!clip.ownerPasswordHash,
+      visibility: clip.visibility,
     },
     201
   );
@@ -159,8 +188,16 @@ clipsApi.put("/api/v1/clips/:slug", async (c) => {
   if (!isValidSlug(slug)) return c.json({ error: "Invalid slug" }, 400);
 
   const clip = await getClip(slug);
-  if (clip && !(await requirePin(c, clip.pinHash))) {
+  if (!clip) return c.json({ error: "Not found" }, 404);
+
+  if (!(await requirePin(c, clip.pinHash))) {
     return c.json({ error: "PIN required", pinRequired: true }, 401);
+  }
+
+  const authUser = await resolveAuth(c);
+  const owner = isClipOwner(c, slug, authUser?.id ?? null, clip.ownerId);
+  if (!(await canWriteClip(clip, authUser?.id ?? null, owner))) {
+    return c.json({ error: "Forbidden" }, 403);
   }
 
   const contentType = c.req.header("content-type") ?? "";
@@ -173,7 +210,6 @@ clipsApi.put("/api/v1/clips/:slug", async (c) => {
     content = clipContentSchema.parse({ content: await c.req.text() }).content;
   }
 
-  await ensureClip(slug);
   await updateContent(slug, content);
   return c.json({ slug, content });
 });
@@ -183,8 +219,16 @@ clipsApi.delete("/api/v1/clips/:slug", async (c) => {
   if (!isValidSlug(slug)) return c.json({ error: "Invalid slug" }, 400);
 
   const clip = await getClip(slug);
-  if (clip && !(await requirePin(c, clip.pinHash))) {
+  if (!clip) return c.json({ error: "Not found" }, 404);
+
+  if (!(await requirePin(c, clip.pinHash))) {
     return c.json({ error: "PIN required", pinRequired: true }, 401);
+  }
+
+  const authUser = await resolveAuth(c);
+  const owner = isClipOwner(c, slug, authUser?.id ?? null, clip.ownerId);
+  if (!(await canWriteClip(clip, authUser?.id ?? null, owner))) {
+    return c.json({ error: "Forbidden" }, 403);
   }
 
   await deleteClip(slug);

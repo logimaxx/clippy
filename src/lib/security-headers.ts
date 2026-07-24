@@ -1,9 +1,13 @@
+import { createHash } from "node:crypto";
+import { THEME_INIT_SCRIPT } from "./theme-init";
 import { umamiScriptOrigin } from "./umami";
 
-// Inline script hash reported by browser CSP on production (not from app source).
-const KNOWN_INLINE_SCRIPT_HASHES = [
-  "'sha256-ieoeWczDHkReVBsRBqaal5AFMlBtNjMzgwKvLqi/tSU='",
-];
+function sha256ScriptHash(source: string): string {
+  return `'sha256-${createHash("sha256").update(source, "utf8").digest("base64")}'`;
+}
+
+// Theme bootstrap in Layout / static layout.html (must stay in sync with THEME_INIT_SCRIPT).
+const KNOWN_INLINE_SCRIPT_HASHES = [sha256ScriptHash(THEME_INIT_SCRIPT)];
 
 // Extra hashes from browser CSP reports (comma-separated sha256-... values).
 function extraScriptHashes(): string[] {
@@ -39,17 +43,24 @@ export function validateProductionSecrets(): void {
 }
 
 function isDevelopment(): boolean {
-  return process.env.NODE_ENV !== "production";
+  // scripts/dev.ts sets WEBKLIP_DEV=1 even when .env has NODE_ENV=production.
+  return process.env.WEBKLIP_DEV === "1" || process.env.NODE_ENV !== "production";
 }
 
 export function securityHeaders(): Record<string, string> {
   const umamiOrigin = umamiScriptOrigin();
   const scriptParts = ["'self'"];
   if (umamiOrigin) scriptParts.push(umamiOrigin);
-  scriptParts.push(...KNOWN_INLINE_SCRIPT_HASHES);
-  scriptParts.push(...extraScriptHashes());
-  // Allow arbitrary inline scripts only in development (htmx swaps, ad-hoc debugging).
-  if (isDevelopment()) scriptParts.push("'unsafe-inline'");
+
+  if (isDevelopment()) {
+    // Hashes disable 'unsafe-inline' in CSP3 — omit them in dev so live-reload
+    // and other inline snippets can run under WEBKLIP_DEV.
+    scriptParts.push("'unsafe-inline'");
+  } else {
+    scriptParts.push(...KNOWN_INLINE_SCRIPT_HASHES);
+    scriptParts.push(...extraScriptHashes());
+  }
+
   const scriptSrc = scriptParts.join(" ");
   const connectSrc = umamiOrigin
     ? `'self' wss: ws: ${umamiOrigin}`

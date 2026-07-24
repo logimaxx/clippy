@@ -18,8 +18,10 @@ interface SettingsProps {
   language: string | null;
   maxViews: number | null;
   hasPin: boolean;
+  hasOwnerPassword: boolean;
   webhookUrl: string | null;
   encrypted: boolean;
+  visibility: "private" | "public";
   devices: number;
   versions: ClipVersion[];
   files?: ClipFileMeta[];
@@ -72,7 +74,9 @@ function SettingsPrimaryFields({
   burnOnRead,
   language,
   hasPin,
+  hasOwnerPassword,
   encrypted,
+  visibility,
   idPrefix = "",
   mobile = false,
 }: {
@@ -81,7 +85,9 @@ function SettingsPrimaryFields({
   burnOnRead: boolean;
   language: string | null;
   hasPin: boolean;
+  hasOwnerPassword: boolean;
   encrypted: boolean;
+  visibility: "private" | "public";
   idPrefix?: string;
   mobile?: boolean;
 }) {
@@ -89,14 +95,63 @@ function SettingsPrimaryFields({
   const ttlId = `${idPrefix}ttl`;
   const languageId = `${idPrefix}language`;
   const pinId = `${idPrefix}pin`;
+  const isPublic = visibility === "public";
 
   return (
     <>
       <div class="field">
+        <span class="field__label">
+          {mobile ? "List on Explore" : "Public"}
+          {!mobile && (
+            <SettingHint text="Lists this clip on Explore. You will set an owner password so you can recover access later. Visitors cannot use burn, PIN, or E2E." />
+          )}
+        </span>
+        <div class="settings-e2e-row">
+          <label class="toggle">
+            {isPublic ? (
+              <input
+                type="checkbox"
+                checked
+                data-public-toggle
+                data-slug={slug}
+                data-has-owner-password={hasOwnerPassword ? "true" : "false"}
+                hx-post={`/${slug}/settings`}
+                hx-vals='{"visibility":"private"}'
+                hx-target="#settings-root"
+                hx-swap="outerHTML"
+                hx-trigger="change"
+              />
+            ) : (
+              <input
+                type="checkbox"
+                data-public-toggle
+                data-slug={slug}
+                data-has-owner-password={hasOwnerPassword ? "true" : "false"}
+              />
+            )}
+            <span class="toggle__track" aria-hidden="true"></span>
+            <span>
+              {mobile
+                ? "Show this clip on Explore"
+                : isPublic
+                  ? "On"
+                  : "Off"}
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
         <SettingsLabel forId={ttlId}>
           <span>Expires</span>
           {!mobile && (
-            <SettingHint text="Burn after read deletes on the first real visit (not link previews). API reads also count." />
+            <SettingHint
+              text={
+                isPublic
+                  ? "Burn after read isn’t allowed for public clips — choosing it removes the clip from Explore."
+                  : "Burn after read deletes on the first real visit (not link previews). API reads also count."
+              }
+            />
           )}
         </SettingsLabel>
         <select
@@ -206,16 +261,15 @@ function SettingsPrimaryFields({
       <div class="field">
         <span class="field__label">
           {mobile ? "End-to-end encryption" : "E2E encryption"}
+          <SettingHint text="Encrypts in your browser before upload — the server only stores ciphertext. The key stays in the URL fragment (#key=…) and never reaches us. Share the full link (including #key=) so others can decrypt." />
         </span>
         <div class="settings-e2e-row">
           <label class="toggle">
-            <input type="hidden" name="encrypted" value="off" />
             <input
               type="checkbox"
-              name="encrypted"
-              value="on"
               checked={encrypted}
               hx-post={`/${slug}/settings`}
+              hx-vals={encrypted ? '{"encrypted":"off"}' : '{"encrypted":"on"}'}
               hx-target="#settings-root"
               hx-swap="outerHTML"
               hx-trigger="change"
@@ -236,7 +290,7 @@ function SettingsPrimaryFields({
               id="e2e-generate-key"
               title="Generate & copy secure link"
             >
-              Key
+              Get Key
             </button>
           )}
         </div>
@@ -277,8 +331,10 @@ export function SettingsPanel({
   burnOnRead,
   language,
   hasPin,
+  hasOwnerPassword,
   webhookUrl,
   encrypted,
+  visibility,
   devices,
   versions,
   files = [],
@@ -297,7 +353,9 @@ export function SettingsPanel({
                 burnOnRead={burnOnRead}
                 language={language}
                 hasPin={hasPin}
+                hasOwnerPassword={hasOwnerPassword}
                 encrypted={encrypted}
+                visibility={visibility}
               />
             </fieldset>
           </div>
@@ -315,6 +373,7 @@ export function SettingsPanel({
             <span class="pulse" aria-hidden="true"></span>
             Synced · <span id="device-count">{deviceLabel}</span>
           </span>
+          {visibility === "public" && <span class="chip chip--public">Public</span>}
           {encrypted && <span class="chip chip--secure">E2E on</span>}
           {!burnOnRead && expiresAt !== null && (
             <span
@@ -365,12 +424,35 @@ export function SettingsPanel({
                 burnOnRead={burnOnRead}
                 language={language}
                 hasPin={hasPin}
+                hasOwnerPassword={hasOwnerPassword}
                 encrypted={encrypted}
+                visibility={visibility}
                 idPrefix="m-"
                 mobile
               />
             </div>
           </fieldset>
+          <div class="sheet__section">
+            <h3 class="sheet__section-title">Ownership</h3>
+            <p class="field-hint">
+              {hasOwnerPassword
+                ? "Owner password is set. Use it to recover edit access on a new device."
+                : "An owner password is set when you list the clip on Explore."}{" "}
+              <a href={`/${slug}/claim`}>Recover ownership</a>
+            </p>
+            {hasOwnerPassword && visibility !== "public" && (
+              <button
+                type="button"
+                class="btn btn--ghost btn--sm"
+                hx-post={`/${slug}/settings`}
+                hx-vals='{"clearOwnerPassword":"on"}'
+                hx-target="#settings-root"
+                hx-swap="outerHTML"
+              >
+                Remove owner password
+              </button>
+            )}
+          </div>
           <div class="sheet__section">
             <h3 class="sheet__section-title">Integrations</h3>
             <div class="field">
@@ -461,6 +543,53 @@ export function SettingsPanel({
             ) : (
               <div class="empty-state">No files attached yet.</div>
             )}
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="public-publish-modal"
+        class="confirm-modal"
+        hidden
+        data-public-modal
+        data-slug={slug}
+        data-has-owner-password={hasOwnerPassword ? "true" : "false"}
+      >
+        <div class="confirm-modal__backdrop" data-public-modal-cancel></div>
+        <div
+          class="confirm-modal__panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="public-publish-title"
+        >
+          <h2 class="confirm-modal__title" id="public-publish-title">
+            List on Explore
+          </h2>
+          <p class="confirm-modal__body">
+            {hasOwnerPassword
+              ? "Confirm your owner password to publish this clip. Cancel leaves Public off."
+              : "Choose an owner password (min 8 characters) so you can recover edit access later. Cancel leaves Public off."}
+          </p>
+          <label class="field__label" for="public-owner-password">
+            Owner password
+          </label>
+          <input
+            type="password"
+            id="public-owner-password"
+            class="slug-input confirm-modal__input"
+            autocomplete="new-password"
+            minlength={8}
+            maxlength={128}
+            placeholder={hasOwnerPassword ? "Owner password" : "Min 8 characters"}
+          />
+          <p class="pin-error confirm-modal__error" id="public-owner-error" hidden></p>
+          <div class="confirm-modal__actions">
+            <button type="button" class="btn btn--ghost" data-public-modal-cancel>
+              Cancel
+            </button>
+            <button type="button" class="btn btn--primary" data-public-modal-confirm>
+              Publish
+            </button>
           </div>
         </div>
       </div>

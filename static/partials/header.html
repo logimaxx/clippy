@@ -1,18 +1,32 @@
 <header class="site-header">
-  <a href="/" class="logo">webklip</a>
-  <button
-    type="button"
-    class="site-nav-toggle"
-    aria-expanded="false"
-    aria-controls="site-nav"
-    aria-label="Open menu"
-  >
-    <span class="site-nav-toggle-icon" aria-hidden="true"></span>
-  </button>
+  <div class="site-header-inner">
+    <a href="/" class="logo">webklip</a>
+    <div class="site-header-end">
+      <nav id="site-nav" class="site-nav" aria-label="Main">
+        <a href="/explore">Explore public Klips</a>
+        <a href="/#how-it-works">How it works</a>
+        <a href="/#features">Features</a>
+        <a href="/security">Security</a>
+      </nav>
+      <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch to light theme">
+        <svg class="theme-toggle-icon theme-toggle-icon--sun" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="12" r="4" />
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+        </svg>
+        <svg class="theme-toggle-icon theme-toggle-icon--moon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="site-nav-toggle"
+        aria-expanded="false"
+        aria-controls="site-nav"
+        aria-label="Open menu"
+      >
+        <span class="site-nav-toggle-icon" aria-hidden="true"></span>
+      </button>
+    </div>
+  </div>
   <div class="site-nav-backdrop" aria-hidden="true"></div>
-  <nav id="site-nav" class="site-nav" aria-label="Main">
-    <a href="/#how-it-works">How it works</a>
-    <a href="/#features">Features</a>
-    <a href="/security">Security</a>
-  </nav>
 </header>

@@ -5,6 +5,7 @@ import { runMigrations } from "./db/client";
 import { startCleanupJob } from "./lib/cleanup";
 import { startStatsSnapshotJob } from "./lib/stats-snapshot";
 import { getAdminPath, isAdminEnabled } from "./lib/admin";
+import { injectLiveReloadHtml, liveReloadPort } from "./lib/dev-live-reload";
 import { pages } from "./routes/pages";
 import { staticPages } from "./routes/static";
 import { seedDemoClip } from "./lib/demo-clip";
@@ -18,6 +19,9 @@ import { scheduleVersionSave } from "./store/versions";
 import { validateProductionSecrets, securityHeaders } from "./lib/security-headers";
 import { clipContentSchema } from "./lib/constants";
 import { isUnlockedFromRequest } from "./lib/pin";
+import { isClipOwnerFromRequest } from "./lib/owner";
+import { getSessionUserIdFromRequest } from "./lib/session";
+import { canWriteClip } from "./lib/teams";
 import * as rooms from "./ws/rooms";
 import {
   ensureClip,
@@ -77,9 +81,22 @@ app.use("/assets/*", serveStatic({ root: "./dist" }));
 app.use("*", async (c, next) => {
   await next();
   const ct = c.res.headers.get("content-type") ?? "";
-  if (ct.includes("text/html")) {
-    c.res.headers.set("Cache-Control", "no-cache");
-  }
+  if (!ct.includes("text/html")) return;
+
+  c.res.headers.set("Cache-Control", "no-cache");
+
+  const lrPort = liveReloadPort();
+  if (!lrPort) return;
+
+  const status = c.res.status;
+  const statusText = c.res.statusText;
+  const headers = new Headers(c.res.headers);
+  const html = await c.res.text();
+  c.res = new Response(injectLiveReloadHtml(html, lrPort), {
+    status,
+    statusText,
+    headers,
+  });
 });
 
 app.route("/", auth);
@@ -93,18 +110,23 @@ app.route("/", qr);
 app.route("/", staticPages);
 app.route("/", pages);
 
-const server = Bun.serve({
+const server = Bun.serve<WsData>({
   port,
   async fetch(req, server) {
     const url = new URL(req.url);
 
     if (url.pathname.startsWith("/ws/")) {
       const slug = url.pathname.slice(4);
-      const clip = await getClip(slug);
-      if (clip?.pinHash && !isUnlockedFromRequest(req, slug)) {
+      const clip = (await getClip(slug)) ?? (await ensureClip(slug));
+      if (clip.pinHash && !isUnlockedFromRequest(req, slug)) {
         return new Response("PIN required", { status: 401 });
       }
-      if (server.upgrade(req, { data: { slug } })) return undefined;
+      const userId = getSessionUserIdFromRequest(req);
+      const isOwner = isClipOwnerFromRequest(req, slug, userId, clip.ownerId);
+      const canWrite = await canWriteClip(clip, userId, isOwner);
+      if (server.upgrade(req, { data: { slug, canWrite } })) {
+        return undefined;
+      }
       return new Response("WebSocket upgrade failed", { status: 400 });
     }
 
@@ -112,15 +134,18 @@ const server = Bun.serve({
   },
   websocket: {
     open(ws) {
-      const { slug } = ws.data as WsData;
-      rooms.joinRoom(slug, ws);
-      rooms.broadcastStatus(slug);
+      rooms.joinRoom(ws.data.slug, ws);
+      rooms.broadcastStatus(ws.data.slug);
     },
     async message(ws, message) {
-      const { slug } = ws.data as WsData;
+      const { slug, canWrite } = ws.data;
       try {
         const data = JSON.parse(String(message));
         if (data.type === "update" && typeof data.content === "string") {
+          if (!canWrite) {
+            ws.send(JSON.stringify({ type: "error", message: "Read-only" }));
+            return;
+          }
           clipContentSchema.parse({ content: data.content });
           await ensureClip(slug);
           schedulePersist(slug, data.content);
@@ -134,9 +159,8 @@ const server = Bun.serve({
       }
     },
     close(ws) {
-      const { slug } = ws.data as WsData;
-      rooms.leaveRoom(slug, ws);
-      rooms.broadcastStatus(slug);
+      rooms.leaveRoom(ws.data.slug, ws);
+      rooms.broadcastStatus(ws.data.slug);
     },
   },
 });

@@ -11,7 +11,6 @@ import {
   isReservedSlug,
   clipFromExpiresMode,
   clipFromReadAccess,
-  expiresModeFromClip,
   settingsToastMessage,
 } from "../lib/constants";
 import { getClientIp } from "../lib/rate-limit";
@@ -27,7 +26,16 @@ import {
 } from "../lib/pin";
 import { resolveAuth } from "../lib/session";
 import { isLinkPreviewCrawler } from "../lib/crawler";
-import { isClipOwner, setOwnerCookie } from "../lib/owner";
+import {
+  isClipOwner,
+  setOwnerCookie,
+  checkOwnerClaimAttempts,
+  recordOwnerClaimFailure,
+  clearOwnerClaimAttempts,
+  remainingOwnerClaimAttempts,
+  verifyOwnerPassword,
+  OWNER_PASSWORD_MIN_LEN,
+} from "../lib/owner";
 import { getTeamBySlug, canReadClip, canWriteClip } from "../lib/teams";
 import {
   ensureClip,
@@ -36,14 +44,17 @@ import {
   updateContent,
   deleteClip,
   recordView,
+  listPublicClips,
+  getClipFiles,
 } from "../store/clips";
 import { listVersions, getVersion } from "../store/versions";
 import { ClipPage } from "../views/ClipPage";
 import { ClipLinkPreview } from "../views/ClipLinkPreview";
 import { ClipGone } from "../views/ClipGone";
 import { PinGate } from "../views/PinGate";
+import { OwnerClaim } from "../views/OwnerClaim";
+import { ExplorePage } from "../views/Explore";
 import { SettingsPanel } from "../views/partials/Settings";
-import { getClipFiles } from "../store/clips";
 import * as rooms from "../ws/rooms";
 import type { Clip } from "../db/schema";
 
@@ -57,16 +68,31 @@ function settingsPanelProps(slug: string, clip: Clip, versions: Awaited<ReturnTy
     language: clip.language,
     maxViews: clip.maxViews,
     hasPin: !!clip.pinHash,
+    hasOwnerPassword: !!clip.ownerPasswordHash,
     webhookUrl: clip.webhookUrl,
     encrypted: clip.encrypted,
+    visibility: clip.visibility === "public" ? ("public" as const) : ("private" as const),
     devices: 1,
     versions,
     files: getClipFiles(clip),
   };
 }
 
+function toastHeader(message: string) {
+  return JSON.stringify({ showToast: { message } }).replace(/[^\x20-\x7E]/g, "-");
+}
+
 function clipCountsAsRead(clip: Clip): boolean {
   return clip.burnOnRead || (clip.maxViews !== null && clip.maxViews > 0);
+}
+
+async function viewerCanWrite(
+  c: Context,
+  clip: Clip,
+  userId: string | null
+): Promise<boolean> {
+  const owner = isClipOwner(c, clip.slug, userId, clip.ownerId);
+  return canWriteClip(clip, userId, owner);
 }
 
 async function renderClipPage(c: Context, slug: string) {
@@ -92,8 +118,9 @@ async function renderClipPage(c: Context, slug: string) {
   if (crawler) return c.html(<ClipLinkPreview slug={slug} />);
 
   const owner = isClipOwner(c, slug, authUser?.id ?? null, clip.ownerId);
+  const canWrite = await canWriteClip(clip, authUser?.id ?? null, owner);
   let content = clip.content;
-  let readOnly = false;
+  let readOnly = !canWrite;
   let burned = false;
 
   if (!owner && clipCountsAsRead(clip)) {
@@ -117,8 +144,11 @@ async function renderClipPage(c: Context, slug: string) {
       language={clip.language}
       maxViews={clip.maxViews}
       hasPin={!!clip.pinHash}
+      hasOwnerPassword={!!clip.ownerPasswordHash}
+      isOwner={owner}
       webhookUrl={clip.webhookUrl}
       encrypted={clip.encrypted}
+      visibility={clip.visibility === "public" ? "public" : "private"}
       devices={rooms.roomSize(slug)}
       clip={clip}
       versions={versions}
@@ -127,6 +157,11 @@ async function renderClipPage(c: Context, slug: string) {
     />
   );
 }
+
+pages.get("/explore", async (c) => {
+  const clips = await listPublicClips(50);
+  return c.html(<ExplorePage clips={clips} />);
+});
 
 pages.get("/demo", async (c) => renderClipPage(c, "demo"));
 
@@ -196,7 +231,7 @@ pages.post("/:slug/versions/:versionId/restore", async (c) => {
 
   const authUser = await resolveAuth(c);
   const clip = await getClip(slug);
-  if (!clip || !(await canWriteClip(clip, authUser?.id ?? null))) {
+  if (!clip || !(await viewerCanWrite(c, clip, authUser?.id ?? null))) {
     return c.text("Forbidden", 403);
   }
 
@@ -215,6 +250,90 @@ pages.post("/:slug/versions/:versionId/restore", async (c) => {
       data-encrypted={clip.encrypted ? "true" : "false"}
     >{version.content}</textarea>
   );
+});
+
+async function renderOwnerClaimGet(c: Context, slug: string) {
+  const clip = await getClip(slug);
+  if (!clip?.ownerPasswordHash) {
+    return c.html(
+      <OwnerClaim
+        slug={slug}
+        error="This clip has no owner password. Create one from Settings while you still have access."
+      />
+    );
+  }
+
+  const authUser = await resolveAuth(c);
+  if (isClipOwner(c, slug, authUser?.id ?? null, clip.ownerId)) {
+    return c.redirect(`/${slug}`, 302);
+  }
+
+  return c.html(<OwnerClaim slug={slug} />);
+}
+
+async function renderOwnerClaimPost(c: Context, slug: string) {
+  const clip = await getClip(slug);
+  if (!clip?.ownerPasswordHash) {
+    return c.html(
+      <OwnerClaim slug={slug} error="This clip has no owner password set." />,
+      400
+    );
+  }
+
+  const ip = getClientIp(c.req.raw.headers);
+  if (!checkOwnerClaimAttempts(ip, slug)) {
+    return c.html(
+      <OwnerClaim
+        slug={slug}
+        error="Too many attempts. Try again in 15 minutes."
+        remaining={0}
+      />,
+      429
+    );
+  }
+
+  const body = await c.req.parseBody();
+  const password = typeof body.ownerPassword === "string" ? body.ownerPassword : "";
+
+  if (!(await verifyOwnerPassword(password, clip.ownerPasswordHash))) {
+    recordOwnerClaimFailure(ip, slug);
+    return c.html(
+      <OwnerClaim
+        slug={slug}
+        error="Incorrect owner password"
+        remaining={remainingOwnerClaimAttempts(ip, slug)}
+      />,
+      401
+    );
+  }
+
+  clearOwnerClaimAttempts(ip, slug);
+  setOwnerCookie(c, slug);
+  return c.redirect(`/${slug}`, 302);
+}
+
+pages.get("/:slug/claim", async (c) => {
+  const slug = c.req.param("slug");
+  if (!isValidSlug(slug) || isReservedSlug(slug)) return c.notFound();
+  return renderOwnerClaimGet(c, slug);
+});
+
+pages.post("/:slug/claim", async (c) => {
+  const slug = c.req.param("slug");
+  if (!isValidSlug(slug) || isReservedSlug(slug)) return c.notFound();
+  return renderOwnerClaimPost(c, slug);
+});
+
+pages.get("/:team/:name/claim", async (c) => {
+  const slug = parseVanitySlug(c.req.param("team"), c.req.param("name"));
+  if (!slug) return c.notFound();
+  return renderOwnerClaimGet(c, slug);
+});
+
+pages.post("/:team/:name/claim", async (c) => {
+  const slug = parseVanitySlug(c.req.param("team"), c.req.param("name"));
+  if (!slug) return c.notFound();
+  return renderOwnerClaimPost(c, slug);
 });
 
 pages.get("/:team/:name", async (c) => {
@@ -273,7 +392,7 @@ pages.post("/:slug/settings", async (c) => {
   const clip = await getClip(slug);
   if (!clip) return c.text("Not found", 404);
 
-  if (!(await canWriteClip(clip, authUser?.id ?? null))) {
+  if (!(await viewerCanWrite(c, clip, authUser?.id ?? null))) {
     return c.text("Forbidden", 403);
   }
 
@@ -287,6 +406,75 @@ pages.post("/:slug/settings", async (c) => {
 
   const now = Math.floor(Date.now() / 1000);
   const updates: Parameters<typeof updateSettings>[1] = {};
+  const wasPublic = clip.visibility === "public";
+  const owner = isClipOwner(c, slug, authUser?.id ?? null, clip.ownerId);
+  const versions = await listVersions(slug);
+
+  const wantsOwnerPassword =
+    !!parsed.data.clearOwnerPassword ||
+    (!!parsed.data.ownerPassword && parsed.data.ownerPassword.length > 0);
+  // Unclaimed clips (no account, no password yet): first setter becomes owner.
+  const canManageOwnerPassword =
+    owner || (!clip.ownerPasswordHash && !clip.ownerId);
+
+  if (wantsOwnerPassword && !canManageOwnerPassword) {
+    c.header("HX-Trigger", toastHeader("Only the owner can change the owner password"));
+    return c.html(<SettingsPanel {...settingsPanelProps(slug, clip, versions)} />);
+  }
+
+  if (parsed.data.clearOwnerPassword) {
+    if (clip.visibility === "public" && !clip.ownerId) {
+      c.header(
+        "HX-Trigger",
+        toastHeader("Keep an owner password while the clip is public")
+      );
+      return c.html(<SettingsPanel {...settingsPanelProps(slug, clip, versions)} />);
+    }
+    updates.ownerPasswordHash = null;
+  } else if (
+    parsed.data.ownerPassword &&
+    parsed.data.ownerPassword.length > 0 &&
+    parsed.data.visibility !== "public"
+  ) {
+    // Standalone password updates (not the publish modal).
+    if (parsed.data.ownerPassword.length < OWNER_PASSWORD_MIN_LEN) {
+      c.header(
+        "HX-Trigger",
+        toastHeader(`Owner password must be at least ${OWNER_PASSWORD_MIN_LEN} characters`)
+      );
+      return c.html(<SettingsPanel {...settingsPanelProps(slug, clip, versions)} />);
+    }
+    updates.ownerPasswordHash = await hashPin(parsed.data.ownerPassword);
+    setOwnerCookie(c, slug);
+  }
+
+  if (parsed.data.visibility === "public") {
+    const password = parsed.data.ownerPassword ?? "";
+    if (password.length < OWNER_PASSWORD_MIN_LEN) {
+      c.header(
+        "HX-Trigger",
+        toastHeader(`Owner password must be at least ${OWNER_PASSWORD_MIN_LEN} characters`)
+      );
+      return c.html(<SettingsPanel {...settingsPanelProps(slug, clip, versions)} />);
+    }
+
+    if (clip.ownerPasswordHash) {
+      if (!(await verifyOwnerPassword(password, clip.ownerPasswordHash))) {
+        c.header("HX-Trigger", toastHeader("Incorrect owner password"));
+        return c.html(<SettingsPanel {...settingsPanelProps(slug, clip, versions)} />);
+      }
+    } else if (!canManageOwnerPassword) {
+      c.header("HX-Trigger", toastHeader("Only the owner can publish this clip"));
+      return c.html(<SettingsPanel {...settingsPanelProps(slug, clip, versions)} />);
+    } else {
+      updates.ownerPasswordHash = await hashPin(password);
+    }
+
+    setOwnerCookie(c, slug);
+    updates.visibility = "public";
+  } else if (parsed.data.visibility === "private") {
+    updates.visibility = "private";
+  }
 
   if (parsed.data.ttl !== undefined) {
     const mode = clipFromExpiresMode(String(parsed.data.ttl), now);
@@ -316,13 +504,13 @@ pages.post("/:slug/settings", async (c) => {
   const updated = await updateSettings(slug, updates);
   if (!updated) return c.text("Not found", 404);
 
-  const versions = await listVersions(slug);
   const message = settingsToastMessage(
     body as Record<string, unknown>,
     parsed.data,
-    updated
+    updated,
+    { wasPublic }
   );
-  c.header("HX-Trigger", JSON.stringify({ showToast: { message } }));
+  c.header("HX-Trigger", toastHeader(message));
   return c.html(<SettingsPanel {...settingsPanelProps(slug, updated, versions)} />);
 });
 
@@ -330,7 +518,7 @@ pages.post("/:slug/upload", async (c) => {
   const slug = c.req.param("slug");
   const authUser = await resolveAuth(c);
   const clip = await getClip(slug);
-  if (clip && !(await canWriteClip(clip, authUser?.id ?? null))) {
+  if (clip && !(await viewerCanWrite(c, clip, authUser?.id ?? null))) {
     return c.html('<span class="error">Forbidden</span>');
   }
   if (clip?.pinHash && !isUnlocked(c, slug)) {
@@ -345,7 +533,7 @@ pages.delete("/:slug/files/:fileId", async (c) => {
   const fileId = c.req.param("fileId");
   const authUser = await resolveAuth(c);
   const clip = await getClip(slug);
-  if (clip && !(await canWriteClip(clip, authUser?.id ?? null))) {
+  if (clip && !(await viewerCanWrite(c, clip, authUser?.id ?? null))) {
     return c.json({ ok: false, error: "Forbidden" }, 403);
   }
   if (clip?.pinHash && !isUnlocked(c, slug)) {
@@ -369,7 +557,7 @@ pages.delete("/:slug", async (c) => {
     return c.redirect("/", 302);
   }
 
-  if (!(await canWriteClip(clip, authUser?.id ?? null))) {
+  if (!(await viewerCanWrite(c, clip, authUser?.id ?? null))) {
     return c.text("Forbidden", 403);
   }
   if (clip.pinHash && !isUnlocked(c, slug)) {

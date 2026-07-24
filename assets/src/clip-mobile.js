@@ -58,19 +58,34 @@
     document.body.style.overflow = "hidden";
   }
 
+  function isQrModalOpen() {
+    const backdrop = getQrModal();
+    return Boolean(backdrop && !backdrop.hidden);
+  }
+
+  function syncBodyScrollLock() {
+    document.body.style.overflow =
+      openSheetName || isQrModalOpen() ? "hidden" : "";
+  }
+
   function closeSheets() {
     const backdrop = getBackdrop();
     const sheets = getSheets();
     if (!backdrop) return;
+    const wasOpen = Boolean(openSheetName);
     backdrop.classList.remove("is-open");
     Object.values(sheets).forEach((sheet) => sheet?.classList.remove("is-open"));
+    openSheetName = null;
+    if (!wasOpen) {
+      syncBodyScrollLock();
+      return;
+    }
     window.setTimeout(() => {
       backdrop.hidden = true;
       Object.values(sheets).forEach((sheet) => {
         if (sheet) sheet.hidden = true;
       });
-      document.body.style.overflow = "";
-      openSheetName = null;
+      syncBodyScrollLock();
     }, 280);
   }
 
@@ -80,6 +95,57 @@
     if (!editor || !counter) return;
     const len = editor.value.length;
     counter.textContent = `${len} char${len === 1 ? "" : "s"} · saved`;
+  }
+
+  function getQrModal() {
+    return document.querySelector("[data-qr-modal]");
+  }
+
+  function openQrModal(qrUrl) {
+    const backdrop = getQrModal();
+    const modal = document.getElementById("qr-modal");
+    const img = document.getElementById("qr-modal-img");
+    if (!backdrop || !modal) return;
+    if (qrUrl && img && img.getAttribute("src") !== qrUrl) {
+      img.setAttribute("src", qrUrl);
+    }
+    closeSheets();
+    backdrop.hidden = false;
+    modal.hidden = false;
+    requestAnimationFrame(() => {
+      backdrop.classList.add("is-open");
+    });
+    syncBodyScrollLock();
+  }
+
+  function closeQrModal() {
+    const backdrop = getQrModal();
+    const modal = document.getElementById("qr-modal");
+    if (!backdrop || !modal || backdrop.hidden) return;
+    backdrop.classList.remove("is-open");
+    window.setTimeout(() => {
+      backdrop.hidden = true;
+      modal.hidden = true;
+      syncBodyScrollLock();
+    }, 220);
+  }
+
+  function initQrModal() {
+    const backdrop = getQrModal();
+    if (!backdrop || backdrop.dataset.bound === "1") return;
+    backdrop.dataset.bound = "1";
+
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop) closeQrModal();
+    });
+
+    backdrop.querySelectorAll("[data-close-qr-modal]").forEach((btn) => {
+      btn.addEventListener("click", closeQrModal);
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeQrModal();
+    });
   }
 
   function initShareMenu() {
@@ -140,8 +206,7 @@
         }
         closeShareMenu();
       } else if (action === "qr") {
-        const qrUrl = item.dataset.qrUrl;
-        if (qrUrl) window.open(qrUrl, "_blank");
+        openQrModal(item.dataset.qrUrl);
         closeShareMenu();
       } else if (action === "native" && navigator.share) {
         try {
@@ -215,6 +280,7 @@
 
   function init() {
     bindSheetControls();
+    initQrModal();
     initShareMenu();
     initDropZone();
     syncFormFieldsets();

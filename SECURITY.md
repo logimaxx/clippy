@@ -79,7 +79,7 @@ When `UMAMI_WEBSITE_ID` is set, CSP also allows the Umami script origin for `scr
 
 - Per-IP rate limits on `/api/*` and clip creation
 - Content size cap (1 MB) on API PUT and WebSocket updates
-- File upload size limit (`MAX_FILE_SIZE_MB`)
+- File upload size limits (`MAX_FILE_SIZE_MB` per file, `MAX_TOTAL_FILES_MB` per clip)
 - Webhook URLs validated against private/loopback addresses before `fetch`
 
 ### Data lifecycle

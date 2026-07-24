@@ -15,21 +15,26 @@ import { marked } from "marked";
 
 const languageConf = new Compartment();
 const editableConf = new Compartment();
+const themeConf = new Compartment();
 
 const webklipHighlight = HighlightStyle.define([
-  { tag: tags.keyword, color: "#c792ea" },
-  { tag: [tags.string, tags.special(tags.string)], color: "#c3e88d" },
-  { tag: tags.comment, color: "#546e7a" },
-  { tag: tags.number, color: "#f78c6c" },
-  { tag: tags.tagName, color: "#89ddff" },
-  { tag: tags.attributeName, color: "#ffcb6b" },
-  { tag: tags.function(tags.variableName), color: "#82aaff" },
-  { tag: tags.definition(tags.variableName), color: "#82aaff" },
-  { tag: tags.heading, color: "#82aaff", fontWeight: "bold" },
+  { tag: tags.keyword, color: "var(--hl-keyword)" },
+  { tag: [tags.string, tags.special(tags.string)], color: "var(--hl-string)" },
+  { tag: tags.comment, color: "var(--hl-comment)" },
+  { tag: tags.number, color: "var(--hl-number)" },
+  { tag: tags.tagName, color: "var(--hl-tag)" },
+  { tag: tags.attributeName, color: "var(--hl-attr)" },
+  { tag: tags.function(tags.variableName), color: "var(--hl-function)" },
+  { tag: tags.definition(tags.variableName), color: "var(--hl-function)" },
+  { tag: tags.heading, color: "var(--hl-function)", fontWeight: "bold" },
   { tag: tags.strong, fontWeight: "bold" },
   { tag: tags.emphasis, fontStyle: "italic" },
-  { tag: tags.link, color: "#22d3ee", textDecoration: "underline" },
+  { tag: tags.link, color: "var(--accent)", textDecoration: "underline" },
 ]);
+
+function isLightTheme() {
+  return document.documentElement.dataset.theme === "light";
+}
 
 function languageExtension(lang) {
   switch (lang) {
@@ -87,16 +92,16 @@ function webklipTheme() {
         borderLeftColor: "var(--accent, #22d3ee)",
       },
       "&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection": {
-        backgroundColor: "rgba(34, 211, 238, 0.35) !important",
+        backgroundColor: "var(--hl-selection) !important",
       },
       ".cm-activeLineGutter": {
         backgroundColor: "transparent",
       },
       ".cm-activeLine": {
-        backgroundColor: "rgba(255, 255, 255, 0.03)",
+        backgroundColor: "var(--hl-active-line)",
       },
     },
-    { dark: true }
+    { dark: !isLightTheme() }
   );
 }
 
@@ -191,8 +196,7 @@ function webklipTheme() {
     wrap.classList.add("clip-editor--codemirror");
 
     const extensions = [
-      webklipTheme(),
-      syntaxHighlighting(webklipHighlight),
+      themeConf.of([webklipTheme(), syntaxHighlighting(webklipHighlight)]),
       bracketMatching(),
       history(),
       drawSelection(),
@@ -331,6 +335,12 @@ function webklipTheme() {
     document.getElementById("md-preview-toggle")?.addEventListener("click", togglePreview);
     document.addEventListener("change", onSettingsChange);
     document.body.addEventListener("htmx:afterSwap", onHtmxSwap);
+    document.addEventListener("webklip-theme-change", () => {
+      if (!view) return;
+      view.dispatch({
+        effects: themeConf.reconfigure([webklipTheme(), syntaxHighlighting(webklipHighlight)]),
+      });
+    });
 
     document.body.addEventListener("input", (e) => {
       if (e.target?.id === "clip-content") onTextareaInput();

@@ -30,10 +30,13 @@ for (const [pkg, file] of fontFiles) {
 }
 
 async function bundleJs(input: string, output: string, minify: boolean) {
+  // IIFE keeps top-level `var name` off `window.name` (browsers coerce that to a string),
+  // which otherwise breaks @lezer/highlight tag modifiers in CodeMirror language packs.
   const result = await Bun.build({
     entrypoints: [input],
     minify,
     target: "browser",
+    format: "iife",
     write: false,
   });
   if (!result.success) {
@@ -71,6 +74,7 @@ const jsFiles = [
   "clip-sync.js",
   "clip-editor.js",
   "clip-mobile.js",
+  "clip-settings.js",
   "app.js",
 ];
 
@@ -100,7 +104,9 @@ const cssBundle =
   "\n" +
   readFileSync(join(SRC, "app.css"), "utf-8") +
   "\n" +
-  readFileSync(join(SRC, "clip-ui.css"), "utf-8");
+  readFileSync(join(SRC, "clip-ui.css"), "utf-8") +
+  "\n" +
+  readFileSync(join(SRC, "theme-light.css"), "utf-8");
 writeFileSync(join(outDir, "app.css"), isDev ? cssBundle : cssBundle.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, " ").replace(/\s*([{}:;,])\s*/g, "$1").trim());
 
 // Service worker from template

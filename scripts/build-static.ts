@@ -303,13 +303,13 @@ writePage(
   "/",
   "index.html",
   renderPage(layout, header, footer, homeBody, ctx, {
-    title: "Webklip — Online Web Clipboard for Instant Text Sharing",
+    title: "Webklip — Temporary Workspace for Instant Text & File Sharing",
     description:
-      "Share text and files between devices with a free online clipboard. No sign-up, real-time sync, automatic deletion. Create a secure web clipboard in one click.",
+      "Stop sending yourself links through WhatsApp. Share text and files instantly between devices with a temporary private link. No account, real-time sync, automatic deletion.",
     canonical: "/",
-    ogTitle: "Webklip — The fastest way to share text and files between devices",
+    ogTitle: "Webklip — Stop sending yourself links through WhatsApp",
     ogDescription:
-      "Free online clipboard with real-time sync. No account required — your link is the key.",
+      "A disposable workspace for text, files, and code. Share instantly between devices, then let it expire.",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "WebApplication",
@@ -318,7 +318,7 @@ writePage(
       operatingSystem: "Any",
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
       description:
-        "A free online clipboard for instant text sharing and temporary file sharing between devices. No sign-up required.",
+        "A free temporary workspace for instant text and file sharing between devices. No sign-up required.",
     },
     jsonLdFile: "index.json",
   })
@@ -439,7 +439,7 @@ for (const page of docsPages) {
   );
 }
 
-const sitemapPaths = Object.keys(routes).sort((a, b) => {
+const sitemapPaths = [...Object.keys(routes), "/explore"].sort((a, b) => {
   if (a === "/") return -1;
   if (b === "/") return 1;
   return a.localeCompare(b);

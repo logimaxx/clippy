@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme-default="light">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#f8fafc" />
+  <meta name="color-scheme" content="dark light" />
+  <script>(function(){try{var t=localStorage.getItem("webklip-theme");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;}else{var d=document.documentElement.dataset.themeDefault;document.documentElement.dataset.theme=d==="light"?"light":"dark";}var th=document.documentElement.dataset.theme;var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",th==="light"?"#f8fafc":"#0c1222");}catch(e){}})();</script>
   <meta name="description" content="{{DESCRIPTION}}" />
   <title>{{TITLE}}</title>
   {{CANONICAL}}

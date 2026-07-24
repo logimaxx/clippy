@@ -8,6 +8,7 @@ interface FileAttachmentProps {
   mimeType: string;
   size: number;
   compact?: boolean;
+  readOnly?: boolean;
 }
 
 function formatSizeKb(size: number) {
@@ -24,6 +25,7 @@ export function FileAttachment({
   mimeType,
   size,
   compact = false,
+  readOnly = false,
 }: FileAttachmentProps) {
   const url = `/api/v1/files/${slug}/${fileId}`;
   const isImage = mimeType.startsWith("image/");
@@ -53,14 +55,16 @@ export function FileAttachment({
       >
         <DownloadIcon />
       </a>
-      <button
-        type="button"
-        class="btn btn--ghost btn--icon btn--sm file-delete-btn"
-        data-delete-url={`/${slug}/files/${fileId}`}
-        aria-label={`Remove ${filename}`}
-      >
-        ×
-      </button>
+      {!readOnly && (
+        <button
+          type="button"
+          class="btn btn--ghost btn--icon btn--sm file-delete-btn"
+          data-delete-url={`/${slug}/files/${fileId}`}
+          aria-label={`Remove ${filename}`}
+        >
+          ×
+        </button>
+      )}
     </div>
   );
 }

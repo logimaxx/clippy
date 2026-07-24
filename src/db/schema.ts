@@ -13,9 +13,11 @@ export const clips = sqliteTable(
     viewCount: integer("view_count").notNull().default(0),
     maxViews: integer("max_views"),
     pinHash: text("pin_hash"),
+    ownerPasswordHash: text("owner_password_hash"),
     webhookUrl: text("webhook_url"),
     language: text("language"),
     encrypted: integer("encrypted", { mode: "boolean" }).notNull().default(false),
+    visibility: text("visibility").notNull().default("private"),
     ownerId: text("owner_id"),
     teamId: text("team_id"),
     createdAt: integer("created_at")
@@ -26,8 +28,11 @@ export const clips = sqliteTable(
     index("idx_clips_expires").on(table.expiresAt),
     index("idx_clips_owner").on(table.ownerId),
     index("idx_clips_team").on(table.teamId),
+    index("idx_clips_visibility").on(table.visibility),
   ]
 );
+
+export type ClipVisibility = "private" | "public";
 
 export const clipVersions = sqliteTable(
   "clip_versions",

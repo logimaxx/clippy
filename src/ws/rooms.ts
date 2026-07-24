@@ -2,6 +2,7 @@ import type { ServerWebSocket } from "bun";
 
 export interface WsData {
   slug: string;
+  canWrite: boolean;
 }
 
 type RoomSocket = ServerWebSocket<WsData>;
