@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { isValidSlug, isReservedSlug, clipContentSchema } from "../lib/constants";
+import { isValidSlug, isReservedSlug, clipContentSchema, MAX_TTL } from "../lib/constants";
 import { getClientIp, rateLimit } from "../lib/rate-limit";
 import { verifyPin } from "../lib/pin";
 import { isLinkPreviewCrawler } from "../lib/crawler";
@@ -107,7 +107,7 @@ const createSchema = z.object({
   pin: z.string().max(128).optional(),
   ownerPassword: z.string().min(8).max(128).optional(),
   webhook: z.string().url().max(2048).optional().or(z.literal("")),
-  ttl: z.number().int().positive().optional(),
+  ttl: z.number().int().positive().max(MAX_TTL).optional(),
   visibility: z.enum(["private", "public"]).optional(),
 });
 

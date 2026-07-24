@@ -6,29 +6,44 @@ export const TTL_OPTIONS = [
   { value: 3600, label: "1 hour" },
   { value: 86400, label: "24 hours" },
   { value: 604800, label: "7 days" },
+  { value: 2592000, label: "30 days" },
+  { value: 7776000, label: "90 days" },
+  { value: 31536000, label: "1 year" },
 ] as const;
 
 export const EXPIRES_BURN = "burn" as const;
+export const EXPIRES_CUSTOM = "custom" as const;
 
-/** Single Expires control: burn-after-read (default) or timed TTL */
+/** Max timed TTL / custom expiry horizon (1 year). */
+export const MAX_TTL = 31536000;
+
+/** Single Expires control: timed TTL (default 15 min), custom datetime, or burn-after-read last */
 export const EXPIRES_OPTIONS = [
-  { value: EXPIRES_BURN, label: "Burn after read" },
   ...TTL_OPTIONS,
+  { value: EXPIRES_CUSTOM, label: "Custom…" },
+  { value: EXPIRES_BURN, label: "Burn after read" },
 ] as const;
 
 export type ExpiresOptionValue = (typeof EXPIRES_OPTIONS)[number]["value"];
 
-export const DEFAULT_TTL = 86400;
+export const DEFAULT_TTL = 900;
 
 export const MAX_FILES_PER_CLIP = 10;
 
+export function formatExpiresAt(expiresAt: number): string {
+  return new Date(expiresAt * 1000).toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+}
+
 export function expiresModeFromClip(burnOnRead: boolean, expiresAt: number | null): string {
   if (burnOnRead) return EXPIRES_BURN;
-  if (expiresAt === null) return String(TTL_OPTIONS[2].value);
+  if (expiresAt === null) return String(DEFAULT_TTL);
   const now = Math.floor(Date.now() / 1000);
   const remaining = expiresAt - now;
   const match = TTL_OPTIONS.find((o) => Math.abs(remaining - o.value) < 60);
-  return match ? String(match.value) : String(TTL_OPTIONS[2].value);
+  return match ? String(match.value) : EXPIRES_CUSTOM;
 }
 
 export function clipFromExpiresMode(
@@ -38,11 +53,14 @@ export function clipFromExpiresMode(
   if (value === EXPIRES_BURN) {
     return { burnOnRead: true, expiresAt: null, maxViews: null };
   }
+  if (value === EXPIRES_CUSTOM) {
+    return { burnOnRead: false, expiresAt: now + DEFAULT_TTL, maxViews: null };
+  }
   const ttl = Number(value);
-  if (Number.isInteger(ttl) && ttl > 0) {
+  if (Number.isInteger(ttl) && ttl > 0 && ttl <= MAX_TTL) {
     return { burnOnRead: false, expiresAt: now + ttl, maxViews: null };
   }
-  return { burnOnRead: true, expiresAt: null, maxViews: null };
+  return { burnOnRead: false, expiresAt: now + DEFAULT_TTL, maxViews: null };
 }
 
 /** @deprecated Advanced read limits — not shown in main UI */
@@ -91,8 +109,10 @@ export type ClipVisibilitySetting = (typeof CLIP_VISIBILITY)[number];
 
 export const clipSettingsSchema = z.object({
   ttl: z
-    .union([z.literal(EXPIRES_BURN), z.coerce.number().int().positive().max(2592000)])
+    .union([z.literal(EXPIRES_BURN), z.coerce.number().int().positive().max(MAX_TTL)])
     .optional(),
+  /** Absolute unix expiry from the custom datetime modal. */
+  expiresAt: z.coerce.number().int().positive().optional(),
   burn: z
     .union([z.literal("on"), z.literal("off"), z.literal("true"), z.literal("1"), z.boolean()])
     .optional()
@@ -140,6 +160,9 @@ export function settingsToastMessage(
     return parsed.visibility === "public"
       ? "Published on public space"
       : "Unpublished from public space";
+  }
+  if (parsed.expiresAt !== undefined) {
+    return `Expires ${formatExpiresAt(parsed.expiresAt)}`;
   }
   if (parsed.ttl !== undefined) {
     if (parsed.ttl === EXPIRES_BURN) {
@@ -259,7 +282,8 @@ export function ttlLabel(seconds: number): string {
   if (opt) return opt.label;
   if (seconds < 3600) return `${Math.round(seconds / 60)} min`;
   if (seconds < 86400) return `${Math.round(seconds / 3600)} hours`;
-  return `${Math.round(seconds / 86400)} days`;
+  if (seconds < 31536000) return `${Math.round(seconds / 86400)} days`;
+  return `${Math.round(seconds / 31536000)} year${seconds >= 63072000 ? "s" : ""}`;
 }
 
 export function remainingSeconds(expiresAt: number | null): number | null {

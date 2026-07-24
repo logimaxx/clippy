@@ -10,7 +10,7 @@ This is a sample clip so you can see how it works before creating your own.
 Try editing this text — if you open this page on another device, changes sync instantly.
 
 Features to explore in Settings:
-• Set a TTL (15 min to 7 days)
+• Set a TTL (15 min to 1 year, or a custom date)
 • Add a PIN for sensitive content
 • Enable burn-after-read or end-to-end encryption
 • Attach files and images

@@ -36,7 +36,7 @@ export async function createClip(
 ): Promise<Clip> {
   const now = Math.floor(Date.now() / 1000);
   const normalized = normalizeNewClipPublic(opts, now);
-  const burnOnRead = normalized.burnOnRead ?? true;
+  const burnOnRead = normalized.burnOnRead ?? false;
   const expiresAt =
     normalized.expiresAt !== undefined
       ? normalized.expiresAt

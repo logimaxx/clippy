@@ -9,7 +9,7 @@ export const clips = sqliteTable(
     filePath: text("file_path"),
     metadata: text("metadata"),
     expiresAt: integer("expires_at"),
-    burnOnRead: integer("burn_on_read", { mode: "boolean" }).notNull().default(true),
+    burnOnRead: integer("burn_on_read", { mode: "boolean" }).notNull().default(false),
     viewCount: integer("view_count").notNull().default(0),
     maxViews: integer("max_views"),
     pinHash: text("pin_hash"),

@@ -987,11 +987,15 @@
           <div class="field">
             <label class="field__label" for="expires-d">Expires</label>
             <select id="expires-d">
-              <option value="burn">Burn after read</option>
-              <option value="900">15 min</option>
+              <option value="900" selected>15 min</option>
               <option value="3600">1 hour</option>
-              <option value="86400" selected>24 hours</option>
+              <option value="86400">24 hours</option>
               <option value="604800">7 days</option>
+              <option value="2592000">30 days</option>
+              <option value="7776000">90 days</option>
+              <option value="31536000">1 year</option>
+              <option value="custom">Custom…</option>
+              <option value="burn">Burn after read</option>
             </select>
           </div>
           <div class="field">
@@ -1135,11 +1139,15 @@ async function fetchClip(slug) {
           <div class="field">
             <label class="field__label" for="expires-m">Expires</label>
             <select id="expires-m">
-              <option value="burn">Burn after read</option>
-              <option value="900">15 min</option>
+              <option value="900" selected>15 min</option>
               <option value="3600">1 hour</option>
-              <option value="86400" selected>24 hours</option>
+              <option value="86400">24 hours</option>
               <option value="604800">7 days</option>
+              <option value="2592000">30 days</option>
+              <option value="7776000">90 days</option>
+              <option value="31536000">1 year</option>
+              <option value="custom">Custom…</option>
+              <option value="burn">Burn after read</option>
             </select>
           </div>
           <div class="field">

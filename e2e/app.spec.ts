@@ -162,6 +162,16 @@ test.describe("Webklip E2E", () => {
       await expect(page.locator("#device-count-desktop")).toContainText(/device/i);
     });
 
+    test("first direct visit to a new slug is editable (not burned)", async ({ page }) => {
+      const slug = uniqueSlug("firsthit");
+      await page.goto(`/${slug}`);
+      await expect(page.locator(".burn-banner")).toHaveCount(0);
+      await expect(page.locator("#clip-content")).toBeEditable();
+      await expect(page.locator("#settings-root")).toBeVisible();
+      await page.locator("#clip-content").fill("first visit edit");
+      await expect(page.locator("#clip-content")).toHaveValue("first visit edit");
+    });
+
     test("demo clip loads", async ({ page }) => {
       await page.goto("/demo");
       await expect(page.locator("#clip-content")).toBeVisible();
@@ -199,12 +209,31 @@ test.describe("Webklip E2E", () => {
       await expect(page.locator(".toast")).toContainText("15 min");
     });
 
-    test("burn after read is the default expires option", async ({ page }) => {
-      const slug = uniqueSlug("burn");
+    test("15 minutes is the default expires option", async ({ page }) => {
+      const slug = uniqueSlug("ttldef");
       await createClipViaApi(page.request, slug);
       await page.goto(`/${slug}`);
 
-      await expect(page.locator("#ttl")).toHaveValue("burn");
+      await expect(page.locator("#ttl")).toHaveValue("900");
+    });
+
+    test("custom expiry can be set from the modal", async ({ page }) => {
+      const slug = uniqueSlug("ttlcustom");
+      await createClipViaApi(page.request, slug, "", { burnOnRead: false, ttl: 3600 });
+      await page.goto(`/${slug}`);
+
+      await page.selectOption("#ttl", "custom");
+      const modal = page.locator("#custom-expires-modal");
+      await expect(modal).toBeVisible();
+
+      const when = new Date(Date.now() + 2 * 60 * 60 * 1000);
+      const pad = (n: number) => String(n).padStart(2, "0");
+      const local = `${when.getFullYear()}-${pad(when.getMonth() + 1)}-${pad(when.getDate())}T${pad(when.getHours())}:${pad(when.getMinutes())}`;
+      await modal.locator("#custom-expires-at").fill(local);
+      await modal.getByRole("button", { name: "Save" }).click();
+
+      await expect(page.locator(".toast")).toContainText(/Expires/i);
+      await expect(page.locator("#ttl")).toHaveValue("custom");
     });
 
     test("can switch expires to burn after read", async ({ page }) => {

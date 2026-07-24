@@ -12,6 +12,7 @@ import {
   clipFromExpiresMode,
   clipFromReadAccess,
   settingsToastMessage,
+  MAX_TTL,
 } from "../lib/constants";
 import { getClientIp } from "../lib/rate-limit";
 import {
@@ -105,7 +106,9 @@ async function renderClipPage(c: Context, slug: string) {
   const clip = await ensureClip(slug, {
     ownerId: authUser?.id ?? null,
   });
-  if (!hadClip) setOwnerCookie(c, slug);
+  // Creator is owner on this request; Set-Cookie is not visible to getCookie yet.
+  const createdNow = !hadClip;
+  if (createdNow) setOwnerCookie(c, slug);
 
   if (!(await canReadClip(clip, authUser?.id ?? null))) {
     return c.text("Forbidden", 403);
@@ -123,7 +126,8 @@ async function renderClipPage(c: Context, slug: string) {
     return c.html(<ClipLinkPreview slug={slug} />);
   }
 
-  const owner = isClipOwner(c, slug, authUser?.id ?? null, clip.ownerId);
+  const owner =
+    createdNow || isClipOwner(c, slug, authUser?.id ?? null, clip.ownerId);
   const canWrite = await canWriteClip(clip, authUser?.id ?? null, owner);
   let content = clip.content;
   let readOnly = !canWrite;
@@ -216,6 +220,11 @@ pages.get("/:slug/countdown", async (c) => {
   if (!clip?.expiresAt) return c.text("—");
   const rem = remainingSeconds(clip.expiresAt);
   if (rem === null || rem <= 0) return c.text("expired");
+  if (rem >= 86400) {
+    const days = Math.floor(rem / 86400);
+    const hours = Math.floor((rem % 86400) / 3600);
+    return c.text(hours > 0 ? `${days}d ${hours}h` : `${days}d`);
+  }
   if (rem >= 3600)
     return c.text(`${Math.floor(rem / 3600)}h ${Math.floor((rem % 3600) / 60)}m`);
   if (rem >= 60) return c.text(`${Math.floor(rem / 60)}m ${rem % 60}s`);
@@ -482,7 +491,20 @@ pages.post("/:slug/settings", async (c) => {
     updates.visibility = "private";
   }
 
-  if (parsed.data.ttl !== undefined) {
+  if (parsed.data.expiresAt !== undefined) {
+    const expiresAt = parsed.data.expiresAt;
+    if (expiresAt <= now) {
+      c.header("HX-Trigger", toastHeader("Expiry must be in the future"));
+      return c.html(<SettingsPanel {...settingsPanelProps(slug, clip, versions)} />);
+    }
+    if (expiresAt > now + MAX_TTL) {
+      c.header("HX-Trigger", toastHeader("Expiry cannot be more than 1 year away"));
+      return c.html(<SettingsPanel {...settingsPanelProps(slug, clip, versions)} />);
+    }
+    updates.burnOnRead = false;
+    updates.expiresAt = expiresAt;
+    updates.maxViews = null;
+  } else if (parsed.data.ttl !== undefined) {
     const mode = clipFromExpiresMode(String(parsed.data.ttl), now);
     updates.burnOnRead = mode.burnOnRead;
     updates.expiresAt = mode.expiresAt;

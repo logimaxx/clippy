@@ -1,8 +1,10 @@
 /** @jsxImportSource hono/jsx */
 import {
   EXPIRES_OPTIONS,
+  EXPIRES_CUSTOM,
   remainingSeconds,
   expiresModeFromClip,
+  formatExpiresAt,
 } from "../../lib/constants";
 import { SettingHint } from "./SettingHint";
 import { VersionsPanel } from "./Versions";
@@ -157,16 +159,26 @@ function SettingsPrimaryFields({
         <select
           id={ttlId}
           name="ttl"
+          data-expires-select
+          data-slug={slug}
+          data-expires-at={expiresAt ?? ""}
           hx-post={`/${slug}/settings`}
           hx-target="#settings-root"
           hx-swap="outerHTML"
           hx-trigger="change"
         >
-          {EXPIRES_OPTIONS.map((opt) => (
-            <option value={opt.value} selected={String(opt.value) === currentExpires}>
-              {opt.label}
-            </option>
-          ))}
+          {EXPIRES_OPTIONS.map((opt) => {
+            const selected = String(opt.value) === currentExpires;
+            const label =
+              opt.value === EXPIRES_CUSTOM && currentExpires === EXPIRES_CUSTOM && expiresAt
+                ? `Custom · ${formatExpiresAt(expiresAt)}`
+                : opt.label;
+            return (
+              <option value={opt.value} selected={selected}>
+                {label}
+              </option>
+            );
+          })}
         </select>
       </div>
 
@@ -589,6 +601,47 @@ export function SettingsPanel({
             </button>
             <button type="button" class="btn btn--primary" data-public-modal-confirm>
               Publish
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="custom-expires-modal"
+        class="confirm-modal"
+        hidden
+        data-expires-modal
+        data-slug={slug}
+        data-expires-at={expiresAt ?? ""}
+      >
+        <div class="confirm-modal__backdrop" data-expires-modal-cancel></div>
+        <div
+          class="confirm-modal__panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="custom-expires-title"
+        >
+          <h2 class="confirm-modal__title" id="custom-expires-title">
+            Custom expiry
+          </h2>
+          <p class="confirm-modal__body">
+            Choose when this clip should be deleted. Maximum is 1 year from now.
+          </p>
+          <label class="field__label" for="custom-expires-at">
+            Expires at
+          </label>
+          <input
+            type="datetime-local"
+            id="custom-expires-at"
+            class="slug-input confirm-modal__input"
+          />
+          <p class="pin-error confirm-modal__error" id="custom-expires-error" hidden></p>
+          <div class="confirm-modal__actions">
+            <button type="button" class="btn btn--ghost" data-expires-modal-cancel>
+              Cancel
+            </button>
+            <button type="button" class="btn btn--primary" data-expires-modal-confirm>
+              Save
             </button>
           </div>
         </div>

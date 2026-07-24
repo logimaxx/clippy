@@ -53,8 +53,8 @@
   "webhook": "https://example.com/hook"
 }</code></pre>
 <ul>
-  <li><code>burnOnRead</code> — defaults to <code>true</code>. Set <code>false</code> or provide <code>ttl</code> for a persistent clip.</li>
-  <li><code>ttl</code> — seconds until expiry (e.g. <code>3600</code> = 1 hour).</li>
+  <li><code>burnOnRead</code> — defaults to <code>false</code>. Set <code>true</code> for burn-after-read (no timed expiry).</li>
+  <li><code>ttl</code> — seconds until expiry (default <code>900</code> = 15 min; max 1 year).</li>
   <li><code>maxViews</code> — delete after N API reads (<code>0</code> = unlimited).</li>
   <li><code>pin</code> — lock the clip; stored as a bcrypt hash.</li>
   <li><code>webhook</code> — URL notified on read, burn, or expiry (see <a href="/docs/webhooks">Webhooks</a>).</li>
