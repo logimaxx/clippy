@@ -1,6 +1,12 @@
 import { gte, desc } from "drizzle-orm";
 import { db } from "../db/client";
 import { clips, statsSnapshots } from "../db/schema";
+import {
+  emptyApiUsage,
+  peekApiUsage,
+  takeApiUsageSnapshot,
+  type ApiUsageStats,
+} from "../lib/api-usage";
 
 export interface ClipStatsBreakdown {
   burnOnRead: { true: number; false: number };
@@ -19,7 +25,16 @@ export interface ClipStats {
   createdLast24h: number;
   createdLast7d: number;
   breakdown: ClipStatsBreakdown;
+  apiUsage: ApiUsageStats;
+  apiRequestsLast24h: number;
   recordedAt: number;
+}
+
+export interface StatsHistoryPoint {
+  recordedAt: number;
+  totalActive: number;
+  breakdown: ClipStatsBreakdown;
+  apiUsage: ApiUsageStats;
 }
 
 type ClipRow = {
@@ -36,6 +51,12 @@ type ClipRow = {
   createdAt: number;
 };
 
+type SnapshotPayloadV2 = {
+  v: 2;
+  clips: ClipStatsBreakdown;
+  apiUsage: ApiUsageStats;
+};
+
 function emptyBreakdown(): ClipStatsBreakdown {
   return {
     burnOnRead: { true: 0, false: 0 },
@@ -48,6 +69,41 @@ function emptyBreakdown(): ClipStatsBreakdown {
     ownership: { anonymous: 0, authenticated: 0 },
     team: { none: 0, set: 0 },
   };
+}
+
+function serializeSnapshotPayload(
+  breakdown: ClipStatsBreakdown,
+  apiUsage: ApiUsageStats
+): string {
+  const payload: SnapshotPayloadV2 = { v: 2, clips: breakdown, apiUsage };
+  return JSON.stringify(payload);
+}
+
+function parseSnapshotPayload(raw: string): {
+  breakdown: ClipStatsBreakdown;
+  apiUsage: ApiUsageStats;
+} {
+  try {
+    const parsed = JSON.parse(raw) as SnapshotPayloadV2 | ClipStatsBreakdown;
+    if (
+      parsed &&
+      typeof parsed === "object" &&
+      "v" in parsed &&
+      parsed.v === 2 &&
+      parsed.clips
+    ) {
+      return {
+        breakdown: parsed.clips,
+        apiUsage: parsed.apiUsage ?? emptyApiUsage(),
+      };
+    }
+    return {
+      breakdown: parsed as ClipStatsBreakdown,
+      apiUsage: emptyApiUsage(),
+    };
+  } catch {
+    return { breakdown: emptyBreakdown(), apiUsage: emptyApiUsage() };
+  }
 }
 
 function hasAttachments(row: Pick<ClipRow, "filePath" | "metadata">): boolean {
@@ -102,6 +158,20 @@ function accumulateBreakdown(rows: ClipRow[]): ClipStatsBreakdown {
   return breakdown;
 }
 
+async function sumApiRequestsSince(sinceSeconds: number): Promise<number> {
+  const since = Math.floor(Date.now() / 1000) - sinceSeconds;
+  const rows = await db
+    .select({ breakdown: statsSnapshots.breakdown })
+    .from(statsSnapshots)
+    .where(gte(statsSnapshots.recordedAt, since));
+
+  let total = 0;
+  for (const row of rows) {
+    total += parseSnapshotPayload(row.breakdown).apiUsage.total;
+  }
+  return total;
+}
+
 export async function computeClipStats(): Promise<ClipStats> {
   const now = Math.floor(Date.now() / 1000);
   const rows = await db
@@ -128,28 +198,32 @@ export async function computeClipStats(): Promise<ClipStats> {
     if (age <= 604_800) createdLast7d += 1;
   }
 
+  const apiUsage = peekApiUsage();
+  const apiRequestsLast24h = (await sumApiRequestsSince(86_400)) + apiUsage.total;
+
   return {
     total: rows.length,
     createdLast24h,
     createdLast7d,
     breakdown: accumulateBreakdown(rows),
+    apiUsage,
+    apiRequestsLast24h,
     recordedAt: now,
   };
 }
 
 export async function recordStatsSnapshot(): Promise<ClipStats> {
   const stats = await computeClipStats();
+  const apiUsage = takeApiUsageSnapshot();
   await db.insert(statsSnapshots).values({
     recordedAt: stats.recordedAt,
     totalActive: stats.total,
-    breakdown: JSON.stringify(stats.breakdown),
+    breakdown: serializeSnapshotPayload(stats.breakdown, apiUsage),
   });
-  return stats;
+  return { ...stats, apiUsage };
 }
 
-export async function getStatsHistory(sinceSeconds: number): Promise<
-  { recordedAt: number; totalActive: number; breakdown: ClipStatsBreakdown }[]
-> {
+export async function getStatsHistory(sinceSeconds: number): Promise<StatsHistoryPoint[]> {
   const since = Math.floor(Date.now() / 1000) - sinceSeconds;
   const rows = await db
     .select()
@@ -157,11 +231,15 @@ export async function getStatsHistory(sinceSeconds: number): Promise<
     .where(gte(statsSnapshots.recordedAt, since))
     .orderBy(statsSnapshots.recordedAt);
 
-  return rows.map((row) => ({
-    recordedAt: row.recordedAt,
-    totalActive: row.totalActive,
-    breakdown: JSON.parse(row.breakdown) as ClipStatsBreakdown,
-  }));
+  return rows.map((row) => {
+    const { breakdown, apiUsage } = parseSnapshotPayload(row.breakdown);
+    return {
+      recordedAt: row.recordedAt,
+      totalActive: row.totalActive,
+      breakdown,
+      apiUsage,
+    };
+  });
 }
 
 export async function getLatestSnapshotTime(): Promise<number | null> {

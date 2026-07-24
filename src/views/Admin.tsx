@@ -1,16 +1,11 @@
 /** @jsxImportSource hono/jsx */
 import { Layout } from "./Layout";
-import type { ClipStats, ClipStatsBreakdown } from "../store/stats";
-
-interface HistoryPoint {
-  recordedAt: number;
-  totalActive: number;
-  breakdown: ClipStatsBreakdown;
-}
+import type { ClipStats, StatsHistoryPoint } from "../store/stats";
+import type { ApiUsageStats } from "../lib/api-usage";
 
 interface AdminPageProps {
   stats: ClipStats;
-  history: HistoryPoint[];
+  history: StatsHistoryPoint[];
   adminPath: string;
 }
 
@@ -51,7 +46,13 @@ function BreakdownTable({
   );
 }
 
-function StatsChart({ points }: { points: { t: number; v: number }[] }) {
+function StatsChart({
+  points,
+  label,
+}: {
+  points: { t: number; v: number }[];
+  label: string;
+}) {
   if (points.length < 2) {
     return <p class="muted">Not enough data yet — snapshots are recorded hourly.</p>;
   }
@@ -84,7 +85,7 @@ function StatsChart({ points }: { points: { t: number; v: number }[] }) {
       class="stats-chart"
       viewBox={`0 0 ${w} ${h}`}
       role="img"
-      aria-label="Active clips over time"
+      aria-label={label}
     >
       {gridY.map((line) => (
         <g>
@@ -111,11 +112,42 @@ function StatsChart({ points }: { points: { t: number; v: number }[] }) {
   );
 }
 
+function apiUsageRows(api: ApiUsageStats) {
+  return {
+    resource: [
+      { label: "Clips", value: api.byResource.clips },
+      { label: "Files", value: api.byResource.files },
+      { label: "Auth", value: api.byResource.auth },
+      { label: "Other", value: api.byResource.other },
+    ],
+    auth: [
+      { label: "Anonymous", value: api.byAuth.anonymous },
+      { label: "API key", value: api.byAuth.api_key },
+      { label: "Session", value: api.byAuth.session },
+    ],
+    method: [
+      { label: "GET", value: api.byMethod.GET },
+      { label: "POST", value: api.byMethod.POST },
+      { label: "PUT", value: api.byMethod.PUT },
+      { label: "DELETE", value: api.byMethod.DELETE },
+      { label: "Other", value: api.byMethod.other },
+    ],
+  };
+}
+
 export function AdminPage({ stats, history, adminPath }: AdminPageProps) {
   const b = stats.breakdown;
-  const chartPoints = history.map((point) => ({
+  const api = stats.apiUsage;
+  const apiRows = apiUsageRows(api);
+
+  const clipChartPoints = history.map((point) => ({
     t: point.recordedAt,
     v: point.totalActive,
+  }));
+
+  const apiChartPoints = history.map((point) => ({
+    t: point.recordedAt,
+    v: point.apiUsage.total,
   }));
 
   const contentTypeRows = Object.entries(b.contentType)
@@ -143,10 +175,35 @@ export function AdminPage({ stats, history, adminPath }: AdminPageProps) {
           </div>
         </section>
 
+        <section class="admin-hero">
+          <div class="admin-stat-card admin-stat-card-primary">
+            <span class="admin-stat-label">API requests (24h)</span>
+            <span class="admin-stat-value">{stats.apiRequestsLast24h}</span>
+          </div>
+          <div class="admin-stat-card">
+            <span class="admin-stat-label">API requests (current period)</span>
+            <span class="admin-stat-value">{api.total}</span>
+          </div>
+          <div class="admin-stat-card">
+            <span class="admin-stat-label">Rate limited (current)</span>
+            <span class="admin-stat-value">{api.rateLimited}</span>
+          </div>
+        </section>
+
         <section class="admin-section">
           <h2>Active clips over time</h2>
-          <StatsChart points={chartPoints} />
+          <StatsChart points={clipChartPoints} label="Active clips over time" />
         </section>
+
+        <section class="admin-section">
+          <h2>API requests per snapshot</h2>
+          <p class="muted">Requests counted in each hourly snapshot window (excludes /api/health).</p>
+          <StatsChart points={apiChartPoints} label="API requests per snapshot" />
+        </section>
+
+        <BreakdownTable title="API resource (current period)" rows={apiRows.resource} />
+        <BreakdownTable title="API auth (current period)" rows={apiRows.auth} />
+        <BreakdownTable title="API method (current period)" rows={apiRows.method} />
 
         <BreakdownTable
           title="Read behavior"
@@ -166,7 +223,7 @@ export function AdminPage({ stats, history, adminPath }: AdminPageProps) {
         />
 
         <BreakdownTable
-          title="Lifetime"
+          title="Expiry"
           rows={[
             { label: "No expiry", value: b.ttl.none },
             { label: "TTL set", value: b.ttl.set },

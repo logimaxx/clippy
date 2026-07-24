@@ -23,6 +23,7 @@ import { isUnlockedFromRequest } from "./lib/pin";
 import { isClipOwnerFromRequest } from "./lib/owner";
 import { getSessionUserIdFromRequest } from "./lib/session";
 import { canWriteClip } from "./lib/teams";
+import { recordApiUsage } from "./lib/api-usage";
 import * as rooms from "./ws/rooms";
 import {
   ensureClip,
@@ -63,6 +64,13 @@ app.use("/api/*", async (c, next) => {
     return c.body(null, 204);
   }
   await next();
+  recordApiUsage({
+    path: c.req.path,
+    method: c.req.method,
+    status: c.res.status,
+    authorization: c.req.header("authorization"),
+    cookie: c.req.header("cookie"),
+  });
 });
 
 app.use("/assets/*", async (c, next) => {
