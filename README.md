@@ -89,6 +89,8 @@ Open http://localhost:3000
 
 See [SECURITY.md](SECURITY.md) for the full deployment checklist, threat model, and responsible disclosure process.
 
+To move an existing Docker deployment (volumes + `.env`) to another host, see [docs/MIGRATION.md](docs/MIGRATION.md).
+
 Quick checklist:
 
 - Generate a strong `SESSION_SECRET` (`openssl rand -base64 32`)
