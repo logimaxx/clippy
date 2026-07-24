@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { getUmamiConfig, umamiScriptTag } from "../lib/umami";
 import { listPublicClips } from "../store/clips";
 import { renderExplorePreviewHtml } from "../lib/explore-preview";
+import { siteUrl } from "../lib/constants";
 
 const PAGES_DIR = join(process.cwd(), "dist", "pages");
 const EXPLORE_PREVIEW_MARKER = "<!--EXPLORE_PREVIEW-->";
@@ -43,27 +44,52 @@ async function injectExplorePreview(html: string): Promise<string> {
   return html.replace(EXPLORE_PREVIEW_MARKER, renderExplorePreviewHtml(clips));
 }
 
-const staticPages = new Hono();
+function escapeXml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
-staticPages.get("/sitemap.xml", (c) => {
-  const staticPath = join(PAGES_DIR, "sitemap.xml");
-  if (existsSync(staticPath)) {
-    return c.body(readFileSync(staticPath, "utf-8"), 200, {
-      "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=3600",
-    });
+function loadStaticSitemapPaths(): string[] {
+  const pathsFile = join(PAGES_DIR, "sitemap-paths.json");
+  if (existsSync(pathsFile)) {
+    return JSON.parse(readFileSync(pathsFile, "utf-8")) as string[];
   }
+  return ["/", "/explore"];
+}
 
-  const base = new URL(c.req.url).origin;
-  const paths = existsSync(join(PAGES_DIR, "sitemap-paths.json"))
-    ? (JSON.parse(readFileSync(join(PAGES_DIR, "sitemap-paths.json"), "utf-8")) as string[])
-    : ["/"];
-  const urls = paths.map((path) => `  <url><loc>${base}${path}</loc></url>`).join("\n");
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+function buildSitemapXml(base: string, paths: string[]): string {
+  const urls = paths
+    .map((path) => {
+      const loc = path === "/" ? `${base}/` : `${base}${path}`;
+      return `  <url><loc>${escapeXml(loc)}</loc></url>`;
+    })
+    .join("\n");
+  return `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls}
 </urlset>`;
-  return c.body(xml, 200, { "Content-Type": "application/xml; charset=utf-8" });
+}
+
+const staticPages = new Hono();
+
+staticPages.get("/sitemap.xml", async (c) => {
+  const base = siteUrl() || new URL(c.req.url).origin;
+  const paths = loadStaticSitemapPaths();
+  const publicClips = await listPublicClips(500);
+  const clipPaths = publicClips.map((clip) => `/${clip.slug}`);
+  const allPaths = [...new Set([...paths, ...clipPaths])].sort((a, b) => {
+    if (a === "/") return -1;
+    if (b === "/") return 1;
+    return a.localeCompare(b);
+  });
+  const xml = buildSitemapXml(base.replace(/\/$/, ""), allPaths);
+  return c.body(xml, 200, {
+    "Content-Type": "application/xml; charset=utf-8",
+    "Cache-Control": "public, max-age=3600",
+  });
 });
 
 staticPages.get("/structured-data/:file", (c) => {
@@ -87,11 +113,11 @@ staticPages.get("/robots.txt", (c) => {
     });
   }
 
-  const base = new URL(c.req.url).origin;
+  const base = siteUrl() || new URL(c.req.url).origin;
   return c.text(`User-agent: *
 Allow: /
 
-Sitemap: ${base}/sitemap.xml
+Sitemap: ${base.replace(/\/$/, "")}/sitemap.xml
 `);
 });
 

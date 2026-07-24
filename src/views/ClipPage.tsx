@@ -15,7 +15,7 @@ import {
 } from "./partials/ClipIcons";
 import { asset } from "../lib/assets";
 import { siteHost } from "../lib/constants";
-import { clipAnalyticsPath } from "../lib/umami";
+import { clipSeoMeta } from "../lib/clip-seo";
 import type { Clip, ClipVersion } from "../db/schema";
 import { getClipFiles } from "../store/clips";
 
@@ -63,11 +63,14 @@ export function ClipPage({
   const isPublic = visibility === "public";
   const host = siteHost();
   const clipPathLabel = `${host}/${slug}`;
+  const seo = isPublic ? clipSeoMeta(slug, content) : null;
 
   return (
     <Layout
-      title={`Webklip — ${slug}`}
-      analyticsPath={clipAnalyticsPath(slug)}
+      title={seo?.title ?? `Webklip — ${slug}`}
+      description={seo?.description}
+      ogTitle={seo?.ogTitle}
+      ogDescription={seo?.ogDescription}
       themeToggle="none"
       robots={isPublic ? undefined : "noindex, nofollow"}
     >
@@ -75,7 +78,7 @@ export function ClipPage({
         <header class="header">
           <a href="/" class="logo" aria-label="Webklip home">
             <span class="logo-mark" aria-hidden="true">
-              C
+              W
             </span>
             webklip
           </a>

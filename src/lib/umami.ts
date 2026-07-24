@@ -35,19 +35,9 @@ export function umamiScriptOrigin(): string | null {
   return new URL(config.scriptUrl).origin;
 }
 
-export interface UmamiScriptOptions {
-  /** Default true — set false when sending sanitized paths from app.js */
-  autoTrack?: boolean;
-}
-
-export function clipAnalyticsPath(slug: string): "/clip" | "/clip/vanity" {
-  return slug.includes("/") ? "/clip/vanity" : "/clip";
-}
-
-export function umamiScriptTag(options: UmamiScriptOptions = {}): string | null {
+/** Script tag for public site pages only — not used on clipboard app views. */
+export function umamiScriptTag(): string | null {
   const config = getUmamiConfig();
   if (!config) return null;
-  const autoTrack = options.autoTrack !== false;
-  const autoTrackAttr = autoTrack ? "" : ' data-auto-track="false"';
-  return `<script defer src="${config.scriptUrl}" data-website-id="${config.websiteId}"${autoTrackAttr}></script>`;
+  return `<script defer src="${config.scriptUrl}" data-website-id="${config.websiteId}"></script>`;
 }

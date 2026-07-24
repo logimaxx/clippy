@@ -15,6 +15,7 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "bun run src/db/migrate.ts",
     "cli": "bun run src/cli.ts",
+    "seed:public": "bun run scripts/seed-public-clips.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },

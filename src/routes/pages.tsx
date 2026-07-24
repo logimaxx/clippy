@@ -46,6 +46,7 @@ import {
   recordView,
   listPublicClips,
   getClipFiles,
+  isListablePublic,
 } from "../store/clips";
 import { listVersions, getVersion } from "../store/versions";
 import { ClipPage } from "../views/ClipPage";
@@ -115,7 +116,12 @@ async function renderClipPage(c: Context, slug: string) {
     return c.html(<PinGate slug={slug} />);
   }
 
-  if (crawler) return c.html(<ClipLinkPreview slug={slug} />);
+  if (crawler) {
+    if (isListablePublic(clip) && clip.content.trim()) {
+      return c.html(<ClipLinkPreview slug={slug} content={clip.content} />);
+    }
+    return c.html(<ClipLinkPreview slug={slug} />);
+  }
 
   const owner = isClipOwner(c, slug, authUser?.id ?? null, clip.ownerId);
   const canWrite = await canWriteClip(clip, authUser?.id ?? null, owner);

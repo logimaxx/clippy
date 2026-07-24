@@ -9,6 +9,7 @@ import { injectLiveReloadHtml, liveReloadPort } from "./lib/dev-live-reload";
 import { pages } from "./routes/pages";
 import { staticPages } from "./routes/static";
 import { seedDemoClip } from "./lib/demo-clip";
+import { seedPublicClips } from "./lib/seed-public-clips";
 import { clipsApi } from "./routes/clips";
 import { filesApi } from "./routes/files";
 import { qr } from "./routes/qr";
@@ -38,6 +39,7 @@ runMigrations();
 startCleanupJob();
 startStatsSnapshotJob();
 seedDemoClip().catch((err) => console.error("Demo clip seed failed:", err));
+seedPublicClips().catch((err) => console.error("Public clips seed failed:", err));
 
 const manifest = loadAssetManifest();
 

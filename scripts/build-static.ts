@@ -33,9 +33,7 @@ interface BuildContext {
   trustAnalytics: string;
   resourceLinks: string;
   umami: {
-    cookiesNote: string;
-    analyticsLi: string;
-    notDoLi: string;
+    analyticsSection: string;
     cookieConsent: string;
   };
 }
@@ -126,28 +124,34 @@ function buildContext(): BuildContext {
     assetBase: loadManifest(),
     contactEmail: process.env.CONTACT_EMAIL ?? "contact@logimaxx.ro",
     year: String(new Date().getFullYear()),
-    legalUpdated: "July 7, 2026",
+    legalUpdated: "July 24, 2026",
     umamiScript: umami?.script ?? "",
     footerTracking: umami
-      ? " Privacy-friendly analytics."
+      ? " Privacy-friendly site analytics."
       : " No tracking.",
     trustAnalytics: umami
-      ? "Privacy-friendly analytics only — no cross-site trackers"
+      ? "Privacy-friendly site analytics only — no app usage tracking"
       : "No analytics trackers",
     resourceLinks,
     umami: {
-      cookiesNote: umami
-        ? " Umami analytics does not use cookies."
-        : " No analytics or advertising cookies.",
-      analyticsLi: umami
-        ? `<li><strong>Website analytics</strong> — aggregated page views via <a href="https://umami.is" rel="noopener noreferrer">Umami</a>. Clip opens are counted under generic paths (for example <code>/clip</code>); we do not record which clip was opened. No personal profiles, no cross-site tracking, no ad cookies.</li>`
-        : "",
-      notDoLi: umami
-        ? "<li>We do not use Google Analytics or other invasive analytics platforms.</li>"
-        : "<li>We do not run third-party advertising or analytics trackers.</li>",
+      analyticsSection: umami
+        ? `<p>
+      We use <a href="https://umami.is" rel="noopener noreferrer">Umami</a> to measure
+      visits to our public website (marketing pages, docs, and similar). Umami is
+      privacy-friendly: it does not use cookies for analytics, does not build personal
+      profiles, and does not do cross-site advertising tracking.
+    </p>
+    <p>
+      We do <strong>not</strong> use Umami (or any other analytics tool) to track usage
+      of the clipboard app itself — for example, we do not record which clips you open,
+      what you paste, or how you use editor features.
+    </p>`
+        : `<p>
+      We do not run analytics or advertising trackers on Webklip.
+    </p>`,
       cookieConsent: umami
-        ? " Umami collects anonymous page-view statistics without cookies."
-        : " No cookie consent banner is required because we do not use non-essential cookies.",
+        ? " We do not use non-essential analytics cookies; Umami measures anonymous site visits without analytics cookies."
+        : " We do not use non-essential cookies, so no cookie consent banner is shown.",
     },
   };
 }
@@ -331,14 +335,15 @@ const legalPages = [
     file: "privacy.html",
     src: "privacy.html",
     title: "Privacy Policy — Webklip",
-    description: "How Webklip collects, uses, and deletes your data.",
+    description:
+      "How Webklip handles clip content, accounts, cookies, retention, and optional site analytics.",
   },
   {
     path: "/terms",
     file: "terms.html",
     src: "terms.html",
-    title: "Terms of Service — Webklip",
-    description: "Terms governing use of the Webklip web clipboard service.",
+    title: "Terms and Conditions — Webklip",
+    description: "Terms and conditions governing use of the Webklip web clipboard service.",
   },
   {
     path: "/security",
@@ -355,9 +360,7 @@ for (const page of legalPages) {
   body = replaceVars(body, {
     CONTACT_EMAIL: ctx.contactEmail,
     LEGAL_UPDATED: ctx.legalUpdated,
-    COOKIES_ANALYTICS_NOTE: ctx.umami.cookiesNote,
-    UMAMI_ANALYTICS_LI: ctx.umami.analyticsLi,
-    UMAMI_NOT_DO_LI: ctx.umami.notDoLi,
+    UMAMI_ANALYTICS_SECTION: ctx.umami.analyticsSection,
     COOKIE_CONSENT_NOTE: ctx.umami.cookieConsent,
   });
   writePage(

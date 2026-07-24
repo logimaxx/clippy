@@ -1,6 +1,5 @@
 /** @jsxImportSource hono/jsx */
 import { Layout } from "./Layout";
-import { clipAnalyticsPath } from "../lib/umami";
 
 interface OwnerClaimProps {
   slug: string;
@@ -10,10 +9,7 @@ interface OwnerClaimProps {
 
 export function OwnerClaim({ slug, error, remaining }: OwnerClaimProps) {
   return (
-    <Layout
-      title={`Webklip - ${slug} (recover)`}
-      analyticsPath={clipAnalyticsPath(slug)}
-    >
+    <Layout title={`Webklip - ${slug} (recover)`}>
       <main class="home pin-gate">
         <h1>Recover ownership</h1>
         <p class="tagline">

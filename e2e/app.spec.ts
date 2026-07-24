@@ -98,6 +98,40 @@ test.describe("Webklip E2E", () => {
       expect(await robots.text()).toMatch(/Sitemap|User-agent/i);
     });
 
+    test("sitemap lists public clips", async ({ request }) => {
+      const slug = uniqueSlug("seo-map");
+      await createClipViaApi(request, slug, "Index me please for sitemap coverage", {
+        visibility: "public",
+        burnOnRead: false,
+        ttl: 3600,
+        ownerPassword: "ownerpass1",
+      });
+
+      const sitemap = await request.get("/sitemap.xml");
+      expect(sitemap.ok()).toBeTruthy();
+      expect(await sitemap.text()).toContain(`/${slug}`);
+    });
+
+    test("search crawlers see public clip content", async ({ request }) => {
+      const slug = uniqueSlug("seo-bot");
+      const body = "Unique SEO phrase xyzzy-public-clip-body";
+      await createClipViaApi(request, slug, body, {
+        visibility: "public",
+        burnOnRead: false,
+        ttl: 3600,
+        ownerPassword: "ownerpass1",
+      });
+
+      const preview = await request.get(`/${slug}`, {
+        headers: { "User-Agent": "Mozilla/5.0 (compatible; Googlebot/2.1)" },
+      });
+      expect(preview.ok()).toBeTruthy();
+      const html = await preview.text();
+      expect(html).toContain(body);
+      expect(html).toContain('name="description"');
+      expect(html).not.toContain('content="noindex');
+    });
+
     test("landing page loads", async ({ page }) => {
       await page.goto("/online-clipboard");
       await expect(page.getByRole("heading", { level: 1 })).toContainText(
@@ -491,6 +525,7 @@ test.describe("Webklip E2E", () => {
       const html = await preview.text();
       expect(html).not.toContain("top secret");
       expect(html).toContain("og:title");
+      expect(html).toContain("noindex");
 
       const api = await request.get(`/api/v1/clips/${slug}`);
       expect(api.ok()).toBeTruthy();

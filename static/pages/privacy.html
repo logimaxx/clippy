@@ -5,55 +5,176 @@
 
     <h2>Overview</h2>
     <p>
-      Webklip is an ephemeral web clipboard. We store the content you paste,
-      optional file attachments, and settings you configure (TTL, PIN, and other clip options)
-      only for as long as your clip exists.
+      Webklip is an ephemeral web clipboard operated by
+      <a href="https://logimaxx.ro/" rel="noopener noreferrer">LogiMaxx Systems</a>
+      (&ldquo;we&rdquo;, &ldquo;us&rdquo;). We do not sell your data, build advertising profiles,
+      or use clip content for marketing.
+    </p>
+    <p>
+      The public service is designed for anonymous clip sharing — no sign-up is required.
+      Registered user accounts are not currently a public feature. If we offer accounts later,
+      we will update this policy before that becomes available.
     </p>
 
-    <h2>Data we collect</h2>
-    <ul>
-      <li><strong>Clip content</strong> — text, files, and metadata you upload or type into a clip.</li>
-      <li><strong>IP addresses</strong> — used for rate limiting and PIN brute-force protection. Not stored long-term in a user profile.</li>
-      <li><strong>Cookies</strong> — functional cookies: PIN unlock tokens (httpOnly, 24 hours).{{COOKIES_ANALYTICS_NOTE}}</li>
-      {{UMAMI_ANALYTICS_LI}}
-    </ul>
-
-    <h2>What we do not do</h2>
-    <ul>
-      <li>We do not sell your data.</li>
-      <li>We do not run third-party advertising trackers.</li>
-      {{UMAMI_NOT_DO_LI}}
-      <li>We do not build persistent profiles for anonymous clip users.</li>
-    </ul>
-
-    <h2>Retention</h2>
+    <h2>Who is responsible</h2>
     <p>
-      Clips expire based on the TTL you set (default 24 hours). A background cleanup job
-      permanently deletes expired clips and orphan files. Burn-on-read and view limits can
-      delete clips sooner when those limits are reached.
-    </p>
-
-    <h2>End-to-end encryption</h2>
-    <p>
-      When you enable E2E encryption, content is encrypted in your browser before it reaches our
-      servers. We store ciphertext only. The decryption key stays in the URL fragment
-      (<code>#key=...</code>) and is never sent to the server.
-    </p>
-
-    <h2>Your rights</h2>
-    <p>
-      You can delete a clip at any time from the clip page or by letting it expire. For privacy questions, email
+      The data controller for the public Webklip service is LogiMaxx Systems.
+      Privacy requests:
       <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a>.
+    </p>
+    <p>
+      If you self-host Webklip, the operator of that instance is the controller for data
+      processed on that instance. This policy describes the public service at webklip.com
+      and the default product behavior.
+    </p>
+
+    <h2>What we process</h2>
+
+    <h3>Clips</h3>
+    <p>When you create or view a clip, we may process:</p>
+    <ul>
+      <li>
+        <strong>Clip content</strong> — text and uploaded files, plus metadata such as
+        filename, MIME type, size, language, visibility, and view counts
+      </li>
+      <li>
+        <strong>Optional security settings</strong> — PIN and owner-password hashes
+        (bcrypt; we never store these in plaintext), and optional webhook URLs you configure
+      </li>
+      <li>
+        <strong>Version history</strong> — prior clip content saved while editing, deleted
+        with the clip
+      </li>
+      <li>
+        <strong>Technical signals</strong> — IP address used only in memory for rate limits
+        and lockouts after failed PIN or owner-password attempts (not stored as a profile)
+      </li>
+    </ul>
+    <p>
+      By default, clip content is stored so the service can serve it. If you enable
+      end-to-end encryption, the browser encrypts content before upload and we store
+      ciphertext only; we cannot read that content.
+    </p>
+
+    <h3>Webhooks</h3>
+    <p>
+      If you set a webhook on a clip, we send event notifications to the URL you provide
+      (for example read, burned, or expired). Payloads include the clip slug, event type,
+      timestamps, and view-related fields — not clip content. You are responsible for the
+      destination you configure.
+    </p>
+
+    <h3>Browser storage on your device</h3>
+    <p>
+      The app may store UI preferences locally in your browser (for example theme and layout),
+      using <code>localStorage</code>. That data stays on your device and is not sent to us
+      as a user profile.
+    </p>
+
+    <h3>Aggregate operations data</h3>
+    <p>
+      We may keep aggregate operational statistics (for example counts of active clips) that
+      do not identify individuals.
+    </p>
+
+    <h2>Why we process data (legal bases)</h2>
+    <ul>
+      <li>
+        <strong>Contract / service delivery</strong> — to create, serve, sync, and expire clips
+        you create or access
+      </li>
+      <li>
+        <strong>Legitimate interests</strong> — security (rate limiting, abuse prevention),
+        service reliability, and understanding aggregate traffic to public marketing pages
+      </li>
+      <li>
+        <strong>Legal obligation</strong> — when we must retain or disclose information to
+        comply with applicable law
+      </li>
+    </ul>
+
+    <h2>How long we keep clip content</h2>
+    <ul>
+      <li>Default lifetime is short (typically 24 hours), or burn-after-read when enabled</li>
+      <li>Configurable TTL options range from 15 minutes to 7 days</li>
+      <li>Optional view limits can end access earlier</li>
+      <li>Expired and deleted clips, related versions, and orphaned files are removed by cleanup jobs</li>
+    </ul>
+    <p>
+      Residual copies may exist briefly in caches or database journals until cleanup completes.
+      See our <a href="/security">Security</a> page for the threat model and encryption options.
     </p>
 
     <h2>Cookies</h2>
+    <p>We use essential cookies required for the product to work:</p>
+    <ul>
+      <li>
+        <strong>PIN unlock cookies</strong> — after a correct PIN, grants access to that clip
+        for about 24 hours
+      </li>
+      <li>
+        <strong>Owner cookies</strong> — after proving clip ownership, remembers owner access
+        for about 30 days
+      </li>
+    </ul>
     <p>
-      We use essential cookies: PIN unlock tokens (httpOnly, 24 hours).{{COOKIE_CONSENT_NOTE}}
+      These cookies are httpOnly where applicable, use <code>SameSite=Lax</code>, and are
+      marked Secure on HTTPS.{{COOKIE_CONSENT_NOTE}}
+    </p>
+
+    <h2>Analytics</h2>
+    {{UMAMI_ANALYTICS_SECTION}}
+
+    <h2>Sharing and processors</h2>
+    <p>
+      We do not sell personal data. We may use infrastructure and tooling needed to run the
+      service (for example hosting, and Umami when analytics is enabled). Those providers
+      process data only to provide their service to us.
+    </p>
+    <p>
+      We may disclose information if required by law, or to protect the service, users, or
+      others from abuse or security threats.
+    </p>
+
+    <h2>Your rights (EEA / UK and similar)</h2>
+    <p>Depending on your location, you may have rights to:</p>
+    <ul>
+      <li>Access personal data we hold about you</li>
+      <li>Request deletion or correction where applicable</li>
+      <li>Object to or restrict certain processing based on legitimate interests</li>
+      <li>Lodge a complaint with your local supervisory authority</li>
+    </ul>
+    <p>
+      To exercise these rights for the public Webklip service, email
+      <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a>.
+      Clip content shared via link is available to anyone with that link until the clip
+      expires or is deleted; use PIN protection or end-to-end encryption for sensitive material.
+    </p>
+
+    <h2>Children</h2>
+    <p>
+      Webklip is not directed at children under 16. If you believe we have collected personal
+      data from a child, contact us and we will delete it.
+    </p>
+
+    <h2>International transfers</h2>
+    <p>
+      Depending on where the service and any analytics tooling are hosted, data may be
+      processed in the European Union or another country. Where required, we use appropriate
+      safeguards for cross-border transfers.
     </p>
 
     <h2>Changes</h2>
     <p>
-      We may update this policy. Material changes will be reflected on this page with an updated date.
+      We may update this policy as the product changes. The &ldquo;Last updated&rdquo; date
+      at the top will change when we do. Continued use after an update means you accept the
+      revised policy.
+    </p>
+
+    <h2>Contact</h2>
+    <p>
+      Privacy questions and data requests:
+      <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a>.
     </p>
   </article>
 </main>

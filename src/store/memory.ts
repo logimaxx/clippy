@@ -25,6 +25,9 @@ export function deleteCached(slug: string) {
   }
 }
 
+/** setTimeout uses a 32-bit signed delay; longer TTLs must be chunked. */
+const MAX_TIMEOUT_MS = 2_147_483_647;
+
 function scheduleExpiry(slug: string, expiresAt: number | null) {
   const existing = timers.get(slug);
   if (existing) clearTimeout(existing);
@@ -40,9 +43,16 @@ function scheduleExpiry(slug: string, expiresAt: number | null) {
   timers.set(
     slug,
     setTimeout(() => {
-      cache.delete(slug);
       timers.delete(slug);
-    }, delay)
+      const cached = cache.get(slug);
+      if (!cached) return;
+      // Chunked wait for TTLs beyond MAX_TIMEOUT_MS; re-check real expiry.
+      if (cached.expiresAt !== null && cached.expiresAt * 1000 > Date.now()) {
+        scheduleExpiry(slug, cached.expiresAt);
+        return;
+      }
+      cache.delete(slug);
+    }, Math.min(delay, MAX_TIMEOUT_MS))
   );
 }
 

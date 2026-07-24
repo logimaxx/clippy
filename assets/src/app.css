@@ -436,6 +436,30 @@ a {
   max-width: 640px;
 }
 
+.clip-crawler {
+  max-width: 48rem;
+}
+
+.clip-crawler-article {
+  margin: 1.5rem 0 0;
+  text-align: left;
+}
+
+.clip-crawler-content {
+  margin: 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-sunken);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
 .explore-kicker {
   margin: 0 0 0.75rem;
   font-size: 0.95rem;
@@ -1294,6 +1318,7 @@ a {
 .landing-section {
   max-width: 1100px;
   margin: 0 auto;
+  margin-bottom: 2rem;
   padding: 3rem 1.5rem;
   border-top: 1px solid var(--border);
 }
