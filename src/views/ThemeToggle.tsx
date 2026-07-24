@@ -1,3 +1,4 @@
+/** @jsxImportSource hono/jsx */
 export { THEME_INIT_SCRIPT } from "../lib/theme-init";
 
 export function ThemeToggle({ floating = false }: { floating?: boolean } = {}) {
