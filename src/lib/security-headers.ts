@@ -7,7 +7,11 @@ function sha256ScriptHash(source: string): string {
 }
 
 // Theme bootstrap in Layout / static layout.html (must stay in sync with THEME_INIT_SCRIPT).
-const KNOWN_INLINE_SCRIPT_HASHES = [sha256ScriptHash(THEME_INIT_SCRIPT)];
+// Plus the production CSP-reported hash (not present in app HTML source).
+const KNOWN_INLINE_SCRIPT_HASHES = [
+  sha256ScriptHash(THEME_INIT_SCRIPT),
+  "'sha256-ieoeWczDHkReVBsRBqaal5AFMlBtNjMzgwKvLqi/tSU='",
+];
 
 // Extra hashes from browser CSP reports (comma-separated sha256-... values).
 function extraScriptHashes(): string[] {

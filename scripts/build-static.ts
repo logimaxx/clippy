@@ -26,6 +26,7 @@ interface LandingPage {
 }
 
 interface BuildContext {
+  siteUrl: string;
   assetBase: string;
   contactEmail: string;
   year: string;
@@ -38,6 +39,17 @@ interface BuildContext {
     analyticsSection: string;
     cookieConsent: string;
   };
+}
+
+/** Public site origin from SITE_URL (no trailing slash). */
+function siteOrigin(): string {
+  return (process.env.SITE_URL ?? "https://webklip.com").trim().replace(/\/$/, "");
+}
+
+/** Absolute URL for a site path (canonical, sitemap, JSON-LD). */
+function absoluteUrl(origin: string, path: string): string {
+  if (!path || path === "/") return `${origin}/`;
+  return `${origin}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 function loadManifest(): string {
@@ -122,6 +134,7 @@ function buildContext(): BuildContext {
     .join("\n    ");
 
   return {
+    siteUrl: siteOrigin(),
     assetBase: loadManifest(),
     contactEmail: process.env.CONTACT_EMAIL ?? "contact@logimaxx.ro",
     year: String(new Date().getFullYear()),
@@ -175,11 +188,15 @@ function renderPage(
   }
 ): string {
   const canonical = meta.canonical
-    ? `<link rel="canonical" href="${meta.canonical}" />`
+    ? `<link rel="canonical" href="${absoluteUrl(ctx.siteUrl, meta.canonical)}" />`
     : "";
   let jsonLd = "";
   if (meta.jsonLd && meta.jsonLdFile) {
-    jsonLd = writeJsonLd(meta.jsonLdFile, meta.jsonLd);
+    const data = { ...meta.jsonLd };
+    if (typeof data.url === "string") {
+      data.url = absoluteUrl(ctx.siteUrl, data.url);
+    }
+    jsonLd = writeJsonLd(meta.jsonLdFile, data);
   }
 
   const footerHtml = replaceVars(footer, {
@@ -508,9 +525,8 @@ const sitemapPaths = [...Object.keys(routes), "/klipwall"].sort((a, b) => {
 });
 writeFileSync(join(OUT, "sitemap-paths.json"), JSON.stringify(sitemapPaths, null, 2));
 
-const siteUrl = (process.env.SITE_URL ?? "https://webklip.com").trim().replace(/\/$/, "");
-writeFileSync(join(OUT, "sitemap.xml"), buildSitemap(siteUrl, sitemapPaths));
-writeFileSync(join(OUT, "robots.txt"), buildRobots(siteUrl));
+writeFileSync(join(OUT, "sitemap.xml"), buildSitemap(ctx.siteUrl, sitemapPaths));
+writeFileSync(join(OUT, "robots.txt"), buildRobots(ctx.siteUrl));
 
 writeFileSync(join(OUT, "routes.json"), JSON.stringify(routes, null, 2));
 
