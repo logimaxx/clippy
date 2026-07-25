@@ -33,7 +33,7 @@ const webklipHighlight = HighlightStyle.define([
 ]);
 
 function isLightTheme() {
-  return document.documentElement.dataset.theme === "light";
+  return document.documentElement.dataset.theme !== "dark";
 }
 
 function languageExtension(lang) {
@@ -296,15 +296,23 @@ function webklipTheme() {
       textarea = getTextarea();
       if (!wrap || !textarea) return;
 
-      const langSelect = document.querySelector(
-        '#settings-root select[name="language"]:not(:disabled)'
-      );
+      const langSelect =
+        document.querySelector(
+          "#settings-form-desktop:not([inert]) select[name='language']"
+        ) ||
+        document.querySelector(
+          "#settings-form-mobile:not([inert]) select[name='language']"
+        );
       if (langSelect instanceof HTMLSelectElement) {
         wrap.dataset.language = langSelect.value;
       }
-      const enc = document.querySelector(
-        '#settings-root input[name="encrypted"][type="checkbox"]:not(:disabled)'
-      );
+      const enc =
+        document.querySelector(
+          "#settings-form-desktop:not([inert]) input[name='encrypted'][type='checkbox']"
+        ) ||
+        document.querySelector(
+          "#settings-form-mobile:not([inert]) input[name='encrypted'][type='checkbox']"
+        );
       if (enc instanceof HTMLInputElement) {
         const flag = enc.checked ? "true" : "false";
         wrap.dataset.encrypted = flag;

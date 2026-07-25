@@ -40,7 +40,7 @@ async function createClipViaApi(
 }
 
 async function openMoreSettings(page: Page) {
-  await page.getByRole("button", { name: "More" }).click();
+  await page.getByRole("button", { name: "All settings" }).click();
   await expect(page.locator("#sheet-settings.is-open")).toBeVisible();
 }
 

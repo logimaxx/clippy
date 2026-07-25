@@ -28,12 +28,12 @@ export function Layout({
   const socialDescription = ogDescription ?? description;
 
   return (
-    <html lang="en">
+    <html lang="en" data-theme="light" data-theme-default="light">
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#071216" />
-        <meta name="color-scheme" content="dark light" />
+        <meta name="theme-color" content="#f0f7f5" />
+        <meta name="color-scheme" content="light dark" />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <meta name="description" content={description} />
         {robots && <meta name="robots" content={robots} />}

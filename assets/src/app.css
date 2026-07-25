@@ -1,43 +1,62 @@
 :root {
-  --bg-base: #071216;
-  --bg-elevated: #122028;
-  --bg-sunken: #04090c;
-  --bg-overlay: rgba(4, 9, 12, 0.78);
+  color-scheme: light;
 
-  --border-subtle: #24343c;
-  --border-default: #35505a;
-  --border-strong: #4d6b76;
+  --bg-base: #eef5f3;
+  --bg-elevated: #ffffff;
+  --bg-sunken: #dde8e5;
+  --bg-overlay: rgba(7, 18, 22, 0.48);
 
-  --text-primary: #f4faf8;
-  --text-secondary: #c5d4d0;
-  --text-tertiary: #8aa39c;
+  --border-subtle: #c5d6d1;
+  --border-default: #8eaaa3;
+  --border-strong: #5f7f77;
 
-  --accent: #2ec4b6;
-  --accent-muted: rgba(46, 196, 182, 0.16);
-  --accent-hover: #5eead4;
-  --accent-text: #042f2c;
-  --spark: #ff8a5c;
-  --spark-muted: rgba(255, 138, 92, 0.16);
+  --text-primary: #0a1a18;
+  --text-secondary: #1f3531;
+  --text-tertiary: #3d5651;
 
-  --success: #4ade80;
-  --success-muted: rgba(74, 222, 128, 0.14);
-  --warning: #fbbf24;
-  --warning-muted: rgba(251, 191, 36, 0.14);
-  --danger: #f87171;
-  --danger-muted: rgba(248, 113, 113, 0.14);
+  --accent: #0f766e;
+  --accent-muted: rgba(15, 118, 110, 0.12);
+  --accent-hover: #0d9488;
+  --accent-text: #ffffff;
+  --spark: #ea580c;
+  --spark-muted: rgba(234, 88, 12, 0.12);
+
+  --success: #15803d;
+  --success-muted: rgba(21, 128, 61, 0.12);
+  --warning: #b45309;
+  --warning-muted: rgba(180, 83, 9, 0.12);
+  --danger: #b91c1c;
+  --danger-muted: rgba(185, 28, 28, 0.12);
 
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 14px;
   --radius-full: 999px;
 
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.55);
+  --shadow-sm: 0 1px 2px rgba(7, 18, 22, 0.08);
+  --shadow-md: 0 8px 24px rgba(7, 18, 22, 0.12);
+  --shadow-lg: 0 20px 48px rgba(7, 18, 22, 0.16);
+
+  --hl-keyword: #9d174d;
+  --hl-string: #166534;
+  --hl-comment: #475569;
+  --hl-number: #1d4ed8;
+  --hl-tag: #0e7490;
+  --hl-attr: #6b21a8;
+  --hl-function: #be185d;
+  --hl-selection: rgba(15, 118, 110, 0.28);
+  --hl-active-line: rgba(7, 18, 22, 0.06);
 
   --font-display: "Space Grotesk", "Manrope", system-ui, sans-serif;
   --font-ui: "Manrope", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --header-h: 56px;
+  --toolbar-h: 52px;
+  --bottom-nav-h: 64px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+
+  --transition: 160ms cubic-bezier(0.4, 0, 0.2, 1);
 
   /* Legacy aliases */
   --bg: var(--bg-base);
@@ -347,12 +366,13 @@ a {
   word-break: break-word;
 }
 
-.hl-keyword { color: var(--hl-keyword, #c792ea); }
-.hl-string { color: var(--hl-string, #c3e88d); }
-.hl-comment { color: var(--hl-comment, #94a3b8); }
-.hl-number { color: var(--hl-number, #f78c6c); }
-.hl-tag { color: var(--hl-tag, #89ddff); }
-.hl-attr { color: var(--hl-attr, #ffcb6b); }
+  .hl-keyword { color: var(--hl-keyword); }
+  .hl-string { color: var(--hl-string); }
+  .hl-comment { color: var(--hl-comment); }
+  .hl-number { color: var(--hl-number); }
+  .hl-tag { color: var(--hl-tag); }
+  .hl-attr { color: var(--hl-attr); }
+  .hl-function { color: var(--hl-function); }
 
 .qr-box {
   text-align: center;
@@ -804,9 +824,8 @@ a {
   z-index: -1;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 70% 45% at 50% -10%, rgba(46, 196, 182, 0.18), transparent 55%),
-    radial-gradient(ellipse 50% 40% at 100% 80%, rgba(255, 138, 92, 0.08), transparent 50%),
-    radial-gradient(ellipse 40% 35% at 0% 60%, rgba(46, 196, 182, 0.06), transparent 45%);
+    radial-gradient(ellipse 70% 45% at 50% -10%, rgba(15, 118, 110, 0.12), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 80%, rgba(234, 88, 12, 0.06), transparent 50%);
 }
 
 .home h1 {
@@ -865,13 +884,11 @@ a {
   min-height: 100vh;
   background-color: var(--bg-base);
   background-image:
-    radial-gradient(ellipse 90% 55% at 50% -18%, rgba(46, 196, 182, 0.16), transparent 58%),
-    radial-gradient(ellipse 45% 35% at 95% 35%, rgba(255, 138, 92, 0.07), transparent 55%),
-    radial-gradient(ellipse 40% 30% at 5% 70%, rgba(46, 196, 182, 0.05), transparent 50%),
-    linear-gradient(rgba(46, 196, 182, 0.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(46, 196, 182, 0.035) 1px, transparent 1px);
+    radial-gradient(ellipse 90% 60% at 50% -15%, rgba(15, 118, 110, 0.12), transparent 58%),
+    radial-gradient(ellipse 40% 30% at 100% 40%, rgba(234, 88, 12, 0.05), transparent 50%),
+    linear-gradient(rgba(15, 118, 110, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 118, 110, 0.04) 1px, transparent 1px);
   background-size:
-    auto,
     auto,
     auto,
     48px 48px,
@@ -1185,7 +1202,38 @@ a {
 }
 
 .landing-eyebrow {
-  display: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0 0 0.85rem;
+  padding: 0.28rem 0.7rem 0.28rem 0.55rem;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--border-default));
+  border-radius: var(--radius-full);
+  background: var(--accent-muted);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.landing-eyebrow::before {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--spark);
+  flex-shrink: 0;
+}
+
+.btn-spark {
+  background: transparent;
+}
+
+.btn-spark:hover {
+  border-color: var(--spark);
+  color: var(--spark);
+  background: var(--spark-muted);
 }
 
 .landing-subhead {
@@ -2118,18 +2166,18 @@ a {
 }
 
 .docs-method--post {
-  background: color-mix(in srgb, #4ade80 18%, transparent);
-  color: #4ade80;
+  background: color-mix(in srgb, var(--success) 18%, transparent);
+  color: var(--success);
 }
 
 .docs-method--put {
-  background: color-mix(in srgb, #fbbf24 18%, transparent);
-  color: #fbbf24;
+  background: color-mix(in srgb, var(--warning) 18%, transparent);
+  color: var(--warning);
 }
 
 .docs-method--delete {
-  background: color-mix(in srgb, #f87171 18%, transparent);
-  color: #f87171;
+  background: color-mix(in srgb, var(--danger) 18%, transparent);
+  color: var(--danger);
 }
 
 .docs-table {

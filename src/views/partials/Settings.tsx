@@ -376,7 +376,7 @@ export function SettingsPanel({
             class="btn btn--ghost btn--sm toolbar__more"
             data-open-sheet="settings"
           >
-            More
+            All settings
           </button>
         </div>
 

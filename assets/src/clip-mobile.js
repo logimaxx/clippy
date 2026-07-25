@@ -3,6 +3,7 @@
   if (!app) return;
 
   let openSheetName = null;
+  let sheetCloseToken = 0;
 
   function getBackdrop() {
     return document.querySelector("[data-sheet-backdrop]");
@@ -19,13 +20,26 @@
 
   const mobileQuery = window.matchMedia("(max-width: 767px)");
 
+  function setFormActive(el, active) {
+    if (!el) return;
+    // Prefer inert over fieldset.disabled: disabled fieldsets block clicks even
+    // when shown in the desktop "All settings" sheet, and interact poorly with
+    // display:contents in some browsers.
+    el.disabled = false;
+    if (active) el.removeAttribute("inert");
+    else el.setAttribute("inert", "");
+  }
+
   function syncFormFieldsets() {
     const desktop = document.getElementById("settings-form-desktop");
     const mobile = document.getElementById("settings-form-mobile");
     if (!desktop || !mobile) return;
     const isMobile = mobileQuery.matches;
-    desktop.disabled = isMobile;
-    mobile.disabled = !isMobile;
+    const sheetOpen = openSheetName === "settings";
+    // Desktop toolbar when wide + sheet closed; sheet/mobile form otherwise.
+    const useDesktop = !isMobile && !sheetOpen;
+    setFormActive(desktop, useDesktop);
+    setFormActive(mobile, !useDesktop);
   }
 
   function bindSelectPair(aId, bId) {
@@ -35,27 +49,36 @@
     a.dataset.syncBound = "1";
     b.dataset.syncBound = "1";
     a.addEventListener("change", () => {
-      if (!b.disabled) b.value = a.value;
+      if (!b.closest("[inert]")) b.value = a.value;
     });
     b.addEventListener("change", () => {
-      if (!a.disabled) a.value = b.value;
+      if (!a.closest("[inert]")) a.value = b.value;
     });
   }
 
   function openSheet(name) {
     const backdrop = getBackdrop();
     const sheets = getSheets();
-    closeSheets();
     const sheet = sheets[name];
     if (!sheet || !backdrop) return;
+
+    // Invalidate any pending close animation so it cannot hide this sheet.
+    sheetCloseToken += 1;
+    Object.entries(sheets).forEach(([key, el]) => {
+      if (!el || key === name) return;
+      el.classList.remove("is-open");
+      el.hidden = true;
+    });
+
     openSheetName = name;
     backdrop.hidden = false;
     sheet.hidden = false;
-    requestAnimationFrame(() => {
-      backdrop.classList.add("is-open");
-      sheet.classList.add("is-open");
-    });
-    document.body.style.overflow = "hidden";
+    // Apply is-open synchronously so HTMX re-opens after swap are visible
+    // immediately (rAF can lose the race with layout/CSS display:none rules).
+    backdrop.classList.add("is-open");
+    sheet.classList.add("is-open");
+    syncFormFieldsets();
+    syncBodyScrollLock();
   }
 
   function isQrModalOpen() {
@@ -82,14 +105,21 @@
     const sheets = getSheets();
     if (!backdrop) return;
     const wasOpen = Boolean(openSheetName);
+    const token = ++sheetCloseToken;
     backdrop.classList.remove("is-open");
     Object.values(sheets).forEach((sheet) => sheet?.classList.remove("is-open"));
     openSheetName = null;
+    syncFormFieldsets();
     if (!wasOpen) {
+      backdrop.hidden = true;
+      Object.values(sheets).forEach((sheet) => {
+        if (sheet) sheet.hidden = true;
+      });
       syncBodyScrollLock();
       return;
     }
     window.setTimeout(() => {
+      if (token !== sheetCloseToken) return;
       backdrop.hidden = true;
       Object.values(sheets).forEach((sheet) => {
         if (sheet) sheet.hidden = true;
@@ -464,9 +494,11 @@
   mobileQuery.addEventListener("change", syncFormFieldsets);
   init();
 
-  document.body.addEventListener("htmx:afterSwap", (e) => {
+  document.body.addEventListener("htmx:afterSettle", (e) => {
     if (e.detail.target?.id !== "settings-root") return;
     init();
+    // Re-open after settle: HTMX restores `class` from the response during
+    // settle, which would wipe is-open if we only ran on afterSwap.
     if (openSheetName) openSheet(openSheetName);
   });
 

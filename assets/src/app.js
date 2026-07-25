@@ -3,9 +3,9 @@
   const THEME_KEY = "webklip-theme";
 
   function getDefaultTheme() {
-    return document.documentElement.dataset.themeDefault === "light"
-      ? "light"
-      : "dark";
+    return document.documentElement.dataset.themeDefault === "dark"
+      ? "dark"
+      : "light";
   }
 
   function getStoredTheme() {
@@ -18,7 +18,7 @@
   }
 
   function getTheme() {
-    return document.documentElement.dataset.theme === "light" ? "light" : "dark";
+    return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
   }
 
   function updateThemeColor(theme) {

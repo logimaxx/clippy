@@ -7,7 +7,7 @@ export function ThemeToggle({ floating = false }: { floating?: boolean } = {}) {
       type="button"
       class={floating ? "theme-toggle theme-toggle--floating" : "theme-toggle"}
       id="theme-toggle"
-      aria-label="Switch to light theme"
+      aria-label="Switch to dark theme"
     >
       <svg class="theme-toggle-icon theme-toggle-icon--sun" viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="12" cy="12" r="4" />

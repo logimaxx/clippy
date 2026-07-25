@@ -1,58 +1,9 @@
 /*
   Design system: "Webklip Pulse"
-  — Teal-tinted neutrals + mint accent (accessible dark-first)
+  — Tokens live in app.css :root (bundled first); this file is clip chrome + UI.
   — 4px base grid, 8px rhythm for layout
-  — Space Grotesk (display) + Manrope (UI) + JetBrains Mono (editor)
   — Familiar VS Code / Linear density for power users
 */
-:root {
-  --bg-base: #071216;
-  --bg-elevated: #122028;
-  --bg-sunken: #04090c;
-  --bg-overlay: rgba(4, 9, 12, 0.78);
-
-  --border-subtle: #24343c;
-  --border-default: #35505a;
-  --border-strong: #4d6b76;
-
-  --text-primary: #f4faf8;
-  --text-secondary: #c5d4d0;
-  --text-tertiary: #8aa39c;
-
-  --accent: #2ec4b6;
-  --accent-muted: rgba(46, 196, 182, 0.16);
-  --accent-hover: #5eead4;
-  --accent-text: #042f2c;
-  --spark: #ff8a5c;
-  --spark-muted: rgba(255, 138, 92, 0.16);
-
-  --success: #4ade80;
-  --success-muted: rgba(74, 222, 128, 0.14);
-  --warning: #fbbf24;
-  --warning-muted: rgba(251, 191, 36, 0.14);
-  --danger: #f87171;
-  --danger-muted: rgba(248, 113, 113, 0.14);
-
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-full: 999px;
-
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
-  --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.55);
-
-  --font-display: "Space Grotesk", "Manrope", system-ui, sans-serif;
-  --font-ui: "Manrope", system-ui, -apple-system, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
-
-  --header-h: 56px;
-  --toolbar-h: 52px;
-  --bottom-nav-h: 64px;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-
-  --transition: 160ms cubic-bezier(0.4, 0, 0.2, 1);
-}
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -640,6 +591,7 @@ a.chip--owner-claim:hover {
 }
 
 .toggle {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
@@ -650,11 +602,15 @@ a.chip--owner-claim:hover {
 
 .toggle input[type="checkbox"] {
   position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
   opacity: 0;
-  width: 1px;
-  height: 1px;
+  width: 2.25rem;
+  height: 1.25rem;
   margin: 0;
-  pointer-events: none;
+  cursor: pointer;
 }
 
 .toggle__track {
@@ -664,7 +620,9 @@ a.chip--owner-claim:hover {
   background: var(--bg-sunken);
   border: 1px solid var(--border-default);
   position: relative;
+  flex-shrink: 0;
   transition: background var(--transition), border-color var(--transition);
+  pointer-events: none;
 }
 
 .toggle__track::after {
@@ -693,7 +651,7 @@ a.chip--owner-claim:hover {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
   font-weight: 500;
-  color: var(--warning);
+  color: var(--spark);
   min-height: 2rem;
   display: inline-flex;
   align-items: center;
@@ -729,6 +687,8 @@ a.chip--owner-claim:hover {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  box-sizing: border-box;
+  height: calc(1.875rem + 1rem + 1px);
   padding: 0.5rem 0.75rem;
   border-bottom: 1px solid var(--border-subtle);
   background: color-mix(in srgb, var(--bg-sunken) 50%, var(--bg-elevated));
@@ -1138,7 +1098,7 @@ a.chip--owner-claim:hover {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.4rem 0.75rem;
-  background: linear-gradient(90deg, var(--accent-muted), color-mix(in srgb, #818cf8 14%, transparent));
+  background: linear-gradient(90deg, var(--accent-muted), var(--spark-muted));
   border-bottom: 1px solid var(--border-subtle);
   font-size: 0.75rem;
   color: var(--text-secondary);
@@ -1236,7 +1196,17 @@ a.chip--owner-claim:hover {
   margin: 0;
   padding: 0;
   min-width: 0;
-  display: contents;
+}
+
+/* Participate in the toolbar flex row without display:contents (fieldset +
+   display:contents breaks interactivity in some browsers). */
+.settings-form-desktop {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem 0.75rem;
+  flex: 1;
+  min-width: 0;
 }
 
 .settings-label-with-hint {
