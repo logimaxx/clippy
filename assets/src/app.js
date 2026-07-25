@@ -322,4 +322,54 @@
       }
     });
   }
+
+  // Landing page file upload drop zones (multipart create-from-hero)
+  document.querySelectorAll(".landing-hero-upload").forEach((form) => {
+    const zone = form.querySelector(".landing-drop-zone");
+    const input = form.querySelector('input[type="file"]');
+    const names = form.querySelector(".landing-file-names");
+    if (!zone || !(input instanceof HTMLInputElement)) return;
+
+    function syncNames() {
+      if (!(names instanceof HTMLElement)) return;
+      const files = input.files ? Array.from(input.files) : [];
+      if (files.length === 0) {
+        names.hidden = true;
+        names.replaceChildren();
+        return;
+      }
+      names.hidden = false;
+      const label = document.createElement("span");
+      label.className = "landing-file-names__label";
+      label.textContent =
+        files.length === 1 ? "Selected file" : `${files.length} files selected`;
+      const list = document.createElement("span");
+      list.className = "landing-file-names__list";
+      list.textContent = files.map((f) => f.name).join(", ");
+      names.replaceChildren(label, list);
+    }
+
+    input.addEventListener("change", syncNames);
+
+    ["dragenter", "dragover"].forEach((ev) => {
+      zone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        zone.classList.add("is-dragover");
+      });
+    });
+    ["dragleave", "drop"].forEach((ev) => {
+      zone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        zone.classList.remove("is-dragover");
+      });
+    });
+    zone.addEventListener("drop", (e) => {
+      const dt = e.dataTransfer;
+      if (!dt?.files?.length) return;
+      const transfer = new DataTransfer();
+      Array.from(dt.files).forEach((f) => transfer.items.add(f));
+      input.files = transfer.files;
+      syncNames();
+    });
+  });
 })();

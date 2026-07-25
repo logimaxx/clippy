@@ -21,6 +21,8 @@ interface LandingPage {
   benefits: string[];
   useCases: string[];
   relatedSlugs: string[];
+  /** Hero CTA: paste textarea (default) or file upload drop zone */
+  heroVariant?: "paste" | "file";
 }
 
 interface BuildContext {
@@ -203,6 +205,64 @@ function renderPage(
   });
 }
 
+function buildLandingSlugBar(): string {
+  return `<div class="landing-hero-paste-bar">
+  <input
+    type="text"
+    name="slug"
+    placeholder="custom-name (optional)"
+    pattern="[a-zA-Z0-9_-]{3,64}"
+    class="slug-input"
+    autocomplete="off"
+    aria-label="Custom clip name (optional)"
+  />
+  <button type="submit" class="btn btn-primary btn-lg">Create a Clip</button>
+</div>`;
+}
+
+function buildLandingPasteForm(id: string): string {
+  return `<form action="/new" method="post" class="home-form landing-cta landing-hero-paste">
+  <label class="sr-only" for="${id}">Paste text to share</label>
+  <textarea
+    id="${id}"
+    name="content"
+    class="home-paste-input"
+    rows="9"
+    placeholder="Paste text here…"
+    spellcheck="false"
+  ></textarea>
+  ${buildLandingSlugBar()}
+</form>`;
+}
+
+function buildLandingFileForm(id: string): string {
+  return `<form action="/new" method="post" enctype="multipart/form-data" class="home-form landing-cta landing-hero-paste landing-hero-upload">
+  <label class="drop-zone landing-drop-zone" for="${id}-file">
+    <span class="landing-drop-zone-title">Drop files here or browse</span>
+    <span class="landing-drop-zone-hint">Images, PDFs, text, zip, JSON, Markdown</span>
+    <input
+      type="file"
+      id="${id}-file"
+      name="file"
+      class="file-input"
+      accept="image/*,.pdf,.txt,.zip,.json,.md"
+      multiple
+    />
+  </label>
+  <p class="landing-file-names" id="${id}-names" hidden></p>
+  <label class="sr-only" for="${id}">Optional note</label>
+  <textarea
+    id="${id}"
+    name="content"
+    class="home-paste-input home-paste-input--compact"
+    rows="4"
+    placeholder="Optional note to go with the file…"
+    spellcheck="false"
+  ></textarea>
+  ${buildLandingSlugBar()}
+</form>`;
+}
+
 function buildLandingBody(page: LandingPage, allPages: LandingPage[]): string {
   const related = page.relatedSlugs
     .map((slug) => allPages.find((p) => p.slug === slug))
@@ -215,13 +275,20 @@ function buildLandingBody(page: LandingPage, allPages: LandingPage[]): string {
     .map((r) => `<a href="/${r.slug}">${r.h1}</a>`)
     .concat('<a href="/">Webklip homepage</a>')
     .join("\n      ");
+  const formId = `landing-paste-${page.slug}`;
+  const heroForm =
+    page.heroVariant === "file"
+      ? buildLandingFileForm(formId)
+      : buildLandingPasteForm(formId);
+  const ctaText =
+    page.heroVariant === "file"
+      ? "Upload above, or create an empty clip to attach files later."
+      : "Paste above, or create an empty clip to start sharing.";
 
   return `<section class="seo-landing-hero">
   <h1>${page.h1}</h1>
   <p class="seo-landing-intro">${page.intro}</p>
-  <form action="/new" method="post" class="home-form landing-cta">
-    <button type="submit" class="btn btn-primary btn-lg">Create clip</button>
-  </form>
+  ${heroForm}
 </section>
 
 <section class="landing-section seo-landing-prose">
@@ -251,9 +318,9 @@ function buildLandingBody(page: LandingPage, allPages: LandingPage[]): string {
 
 <section class="landing-section seo-landing-cta">
   <h2>Ready to try it?</h2>
-  <p class="seo-landing-cta-text">Create a free clip in one click. No sign-up required.</p>
+  <p class="seo-landing-cta-text">${ctaText}</p>
   <form action="/new" method="post" class="home-form landing-cta">
-    <button type="submit" class="btn btn-primary btn-lg">Create clip</button>
+    <button type="submit" class="btn btn-primary btn-lg">Create a Clip</button>
   </form>
 </section>`;
 }

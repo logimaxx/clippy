@@ -80,24 +80,34 @@ export function renderAttachmentHtml(
   );
 }
 
-export async function handleUpload(c: Context, slug: string) {
-  const wantsJson = c.req.header("Accept")?.includes("application/json");
+export type AttachFileResult =
+  | {
+      ok: true;
+      file: ClipFileMeta;
+      fileCount: number;
+      fileUrl: string;
+      isImage: boolean;
+      wasEmpty: boolean;
+    }
+  | { ok: false; error: string };
 
-  const body = await c.req.parseBody();
-  const file = body.file;
-
-  if (!file || !(file instanceof File)) {
-    if (wantsJson) return c.json({ ok: false, error: "No file selected" }, 400);
-    return c.html('<span class="error">No file selected</span>');
-  }
-
+/** Attach one file to an existing (or newly ensured) clip. */
+export async function attachFileToClip(
+  slug: string,
+  file: File
+): Promise<AttachFileResult> {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const size = bytes.byteLength;
 
+  if (size === 0) {
+    return { ok: false, error: "Empty file" };
+  }
+
   if (size > MAX_FILE_SIZE) {
-    const message = `File too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB)`;
-    if (wantsJson) return c.json({ ok: false, error: message }, 400);
-    return c.html(`<span class="error">${message}</span>`);
+    return {
+      ok: false,
+      error: `File too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB)`,
+    };
   }
 
   return withUploadLock(slug, async () => {
@@ -107,18 +117,20 @@ export async function handleUpload(c: Context, slug: string) {
     const existing = clip ? getClipFiles(clip) : [];
 
     if (existing.length >= MAX_FILES_PER_CLIP) {
-      const message = `Maximum ${MAX_FILES_PER_CLIP} files per clip`;
-      if (wantsJson) return c.json({ ok: false, error: message }, 400);
-      return c.html(`<span class="error">${message}</span>`);
+      return {
+        ok: false,
+        error: `Maximum ${MAX_FILES_PER_CLIP} files per clip`,
+      };
     }
 
     // Disk is source of truth (metadata can be stale/racy under concurrency).
     const existingTotal = await getOnDiskAttachmentBytes(slug);
     if (existingTotal + size > MAX_TOTAL_FILES_SIZE) {
       const maxMb = MAX_TOTAL_FILES_SIZE / 1024 / 1024;
-      const message = `Total attachments too large (max ${maxMb}MB)`;
-      if (wantsJson) return c.json({ ok: false, error: message }, 400);
-      return c.html(`<span class="error">${message}</span>`);
+      return {
+        ok: false,
+        error: `Total attachments too large (max ${maxMb}MB)`,
+      };
     }
 
     const id = crypto.randomUUID();
@@ -155,39 +167,63 @@ export async function handleUpload(c: Context, slug: string) {
 
     memory.deleteCached(slug);
 
-    const statusHtml = `<span class="success">Uploaded <strong>${escapeHtml(file.name)}</strong></span>`;
-    const fileUrl = `/api/v1/files/${slug}/${id}`;
-    const isImage = isImageMime(mimeType);
-
-    if (wantsJson) {
-      return c.json({
-        ok: true,
-        slug,
-        fileId: id,
-        filename: file.name,
-        size,
-        mimeType,
-        isImage,
-        url: fileUrl,
-        fileCount: files.length,
-      });
-    }
-
-    if (c.req.header("HX-Request")) {
-      const attachmentHtml = renderAttachmentHtml(slug, newFile);
-      const emptyOob =
-        existing.length === 0
-          ? `<div id="clip-files-empty" hx-swap-oob="delete"></div>`
-          : "";
-      return c.html(
-        statusHtml +
-          emptyOob +
-          `<div hx-swap-oob="beforeend:#clip-files-list">${attachmentHtml}</div>`
-      );
-    }
-
-    return c.html(statusHtml);
+    return {
+      ok: true,
+      file: newFile,
+      fileCount: files.length,
+      fileUrl: `/api/v1/files/${slug}/${id}`,
+      isImage: isImageMime(mimeType),
+      wasEmpty: existing.length === 0,
+    };
   });
+}
+
+export async function handleUpload(c: Context, slug: string) {
+  const wantsJson = c.req.header("Accept")?.includes("application/json");
+
+  const body = await c.req.parseBody();
+  const file = body.file;
+
+  if (!file || !(file instanceof File)) {
+    if (wantsJson) return c.json({ ok: false, error: "No file selected" }, 400);
+    return c.html('<span class="error">No file selected</span>');
+  }
+
+  const result = await attachFileToClip(slug, file);
+  if (!result.ok) {
+    if (wantsJson) return c.json({ ok: false, error: result.error }, 400);
+    return c.html(`<span class="error">${escapeHtml(result.error)}</span>`);
+  }
+
+  const statusHtml = `<span class="success">Uploaded <strong>${escapeHtml(result.file.filename)}</strong></span>`;
+
+  if (wantsJson) {
+    return c.json({
+      ok: true,
+      slug,
+      fileId: result.file.fileId,
+      filename: result.file.filename,
+      size: result.file.size,
+      mimeType: result.file.mimeType,
+      isImage: result.isImage,
+      url: result.fileUrl,
+      fileCount: result.fileCount,
+    });
+  }
+
+  if (c.req.header("HX-Request")) {
+    const attachmentHtml = renderAttachmentHtml(slug, result.file);
+    const emptyOob = result.wasEmpty
+      ? `<div id="clip-files-empty" hx-swap-oob="delete"></div>`
+      : "";
+    return c.html(
+      statusHtml +
+        emptyOob +
+        `<div hx-swap-oob="beforeend:#clip-files-list">${attachmentHtml}</div>`
+    );
+  }
+
+  return c.html(statusHtml);
 }
 
 export async function handleDelete(c: Context, slug: string, fileId: string) {

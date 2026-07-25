@@ -7,8 +7,7 @@
     "intro": "Copy text on one device and paste it on another — without email, chat apps, or cloud storage accounts.",
     "paragraphs": [
       "An online clipboard is a web-based tool that stores text temporarily so you can access it from any browser. Webklip turns any URL into a shared clipboard: paste your content, send the link, and open it on your phone, laptop, or tablet.",
-      "Unlike system clipboards that only work on one machine, a web clipboard syncs in real time. Type on your desktop and see the same text appear on your phone seconds later. When you are done, the clip expires automatically — no leftover copies in your message history.",
-      "Webklip is free, requires no account, and works in any modern browser. It is the simplest way to share text online when you just need to move something between devices quickly."
+      "Unlike a system clipboard that only works on one machine, a web clipboard syncs in real time. Type on your desktop and see the same text appear on your phone seconds later — then let the clip expire so nothing lingers in a message history."
     ],
     "benefits": [
       "No sign-up — create a clip and share the link immediately",
@@ -34,13 +33,12 @@
     "h1": "Share Text Between Devices",
     "intro": "Stop emailing yourself. Copy between devices with a single link that syncs in real time.",
     "paragraphs": [
-      "Moving text between your phone and computer should take seconds, not minutes. Webklip lets you copy between devices by creating a temporary web page that acts as a shared clipboard. Paste on one device, open the link on another, and your content is there.",
-      "Real-time synchronization means you do not even need to refresh. Keep both devices open and watch text appear as you type. This makes Webklip ideal for quick transfers — a code snippet, a phone number, a paragraph you are editing — without installing anything.",
-      "Every clip expires on a schedule you control, from 15 minutes to 7 days. Your text does not sit in a chat thread or email inbox forever. It is a disposable clipboard built for the moment."
+      "Moving text between your phone and computer should take seconds. Create a temporary page that acts as a shared clipboard, paste on one device, open the link on another, and your content is there — no app install, no chat thread.",
+      "Keep both devices open and watch text appear as you type. Ideal for a verification code, a long URL, or a paragraph you are editing across screens."
     ],
     "benefits": [
-      "Instant text sharing with no app install",
-      "Real-time updates as you type on any device",
+      "Instant transfer with no app install",
+      "Live updates as you type on any device",
       "Configurable expiry from 15 minutes to 7 days",
       "Optional PIN or encryption for sensitive transfers"
     ],
@@ -61,10 +59,10 @@
     "description": "Share files online temporarily without permanent cloud links. Attach images and PDFs to clips that auto-expire.",
     "h1": "Temporary File Sharing",
     "intro": "Send a file for a few hours, not forever. Attach to a clip that deletes itself when done.",
+    "heroVariant": "file",
     "paragraphs": [
-      "Most file sharing tools create permanent links that linger in cloud storage for years. Webklip takes a different approach: attach files to a temporary clip that expires on a schedule. Share an image, PDF, or document with a single URL, and let it disappear when you no longer need it.",
-      "File attachments work alongside text content in the same clip. Paste a note, attach a screenshot, and send one link. Recipients open it in their browser — no account, no download folder full of old transfers.",
-      "Automatic cleanup removes expired clips and their files on a schedule. You do not need to remember to delete anything. Temporary file sharing should be temporary, and Webklip makes sure it stays that way."
+      "Most file sharing tools create permanent links that linger in cloud storage. Webklip attaches files to a temporary clip that expires on a schedule — share an image, PDF, or document with a single URL, then let it disappear.",
+      "Paste a note, attach a screenshot, and send one link. Recipients open it in their browser; expired clips and their files are cleaned up automatically."
     ],
     "benefits": [
       "Attach images, PDFs, and documents to any clip",
@@ -90,9 +88,8 @@
     "h1": "Secure Clipboard",
     "intro": "Share sensitive content with PIN locks and optional encryption — then let it disappear automatically.",
     "paragraphs": [
-      "A secure clipboard needs more than a random URL. Webklip lets you add a PIN so only people who know the code can read your content. PINs are never stored in plain text — they are hashed before saving.",
-      "For maximum privacy, enable end-to-end encryption. Your content is encrypted in the browser before it reaches the server. Only people with the decryption key in the URL can read it. The server stores ciphertext only.",
-      "Combine security with ephemerality: set a short TTL, enable burn-after-read, or cap the number of views. A secure clipboard should protect your data and then delete it when the job is done."
+      "A secure clipboard needs more than a random URL. Add a PIN so only people who know the code can read your content — PINs are hashed before saving, never stored in plain text.",
+      "Layer on short TTLs, burn-after-read, or view caps so secrets are protected and then deleted. For zero-knowledge storage, enable end-to-end encryption so the server never sees plaintext."
     ],
     "benefits": [
       "PIN protection — PINs are never stored in plain text",
@@ -118,9 +115,8 @@
     "h1": "Share Code Snippets",
     "intro": "Move code between workstations with a link that syncs in real time and expires when you are done.",
     "paragraphs": [
-      "Developers constantly need to share code snippets — between their own machines or with a colleague. Pasting into Slack or email leaves permanent copies and strips formatting. Webklip gives you a temporary page with syntax highlighting and real-time sync.",
-      "Set the language for proper highlighting, paste your snippet, and share the URL. Open it on another monitor, your laptop, or send it to a colleague. Changes sync instantly if you are pair-editing.",
-      "When the review is done, the clip expires — no snippet graveyard in your chat history."
+      "Pasting into Slack or email leaves permanent copies and strips formatting. Webklip gives you a temporary page with syntax highlighting and real-time sync — set the language, paste your snippet, and share the URL.",
+      "Open it on another monitor or send it to a colleague. Changes sync while you pair-edit; when the review is done, the clip expires instead of living forever in chat."
     ],
     "benefits": [
       "Syntax highlighting for dozens of languages",
@@ -146,9 +142,8 @@
     "h1": "Burn After Read Links",
     "intro": "Share a secret once. After it has been viewed, the clip deletes itself permanently.",
     "paragraphs": [
-      "Some information should only be seen once — a password, a recovery code, or a temporary credential. Burn after read links delete the clip automatically after a single view. The recipient gets the content, and it is gone.",
-      "Combine burn-on-read with PIN protection for an extra layer: even if someone guesses the URL, they still need the PIN. Set a short TTL as a backup so the clip expires even if nobody opens it.",
-      "Burn after read is built for one-time handoffs — share a secret, know it was consumed, and let Webklip handle cleanup."
+      "Some information should only be seen once — a password, a recovery code, or a temporary credential. Burn after read deletes the clip after a single view: the recipient gets the content, and it is gone.",
+      "Combine with PIN protection so a guessed URL is still locked, and set a short TTL as a backup if nobody opens it."
     ],
     "benefits": [
       "Automatic deletion after a single view",
@@ -174,9 +169,8 @@
     "h1": "End-to-End Encrypted Clipboard",
     "intro": "Encrypt your content in the browser before it leaves your device. Only people with the key can read it.",
     "paragraphs": [
-      "Standard clipboard sharing trusts the server with your content. Webklip's end-to-end encryption option encrypts text in your browser before sending it. The server stores ciphertext only — it cannot read your data even if compelled.",
-      "The decryption key lives in the URL fragment (the part after #), which browsers never send to the server. Share the full URL including the key, and recipients decrypt locally in their browser.",
-      "Combine encryption with automatic expiry and burn-on-read for a complete ephemeral secret-sharing workflow. Your content is encrypted in transit and at rest on the server, readable only by people you share the key with."
+      "Standard clipboard sharing trusts the server with your content. With end-to-end encryption, text is encrypted in your browser before upload — the server stores ciphertext only and cannot read your data even if compelled.",
+      "The decryption key lives in the URL fragment (after #), which browsers never send to the server. Share the full URL including the key; recipients decrypt locally in their browser."
     ],
     "benefits": [
       "Encryption happens in your browser before upload",

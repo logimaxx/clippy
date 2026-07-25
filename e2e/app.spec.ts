@@ -450,6 +450,37 @@ test.describe("Webklip E2E", () => {
         unlinkSync(filePath2);
       }
     });
+
+    test("creates clip with file from temporary-file-sharing landing", async ({
+      page,
+    }) => {
+      const slug = uniqueSlug("landfile");
+      const filePath = join(tmpdir(), `webklip-e2e-land-${Date.now()}.txt`);
+      const body = `landing upload ${Date.now()}`;
+      writeFileSync(filePath, body);
+
+      try {
+        await page.goto("/temporary-file-sharing");
+        await page
+          .locator(".landing-hero-upload input[type='file']")
+          .setInputFiles(filePath);
+        await expect(page.locator(".landing-file-names")).toContainText(
+          "webklip-e2e-land"
+        );
+        await page.fill('.landing-hero-upload input[name="slug"]', slug);
+        await page
+          .locator(".landing-hero-upload")
+          .getByRole("button", { name: /Create a? clip/i })
+          .click();
+        await expect(page).toHaveURL(new RegExp(`/${slug}$`));
+        await expect(page.locator(".file-attachment, .file-card")).toHaveCount(1);
+        await expect(page.locator(".file-attachment, .file-card")).toContainText(
+          "webklip-e2e-land"
+        );
+      } finally {
+        unlinkSync(filePath);
+      }
+    });
   });
 
   test.describe("PIN protection", () => {

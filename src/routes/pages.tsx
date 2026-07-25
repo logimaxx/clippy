@@ -14,6 +14,7 @@ import {
   settingsToastMessage,
   MAX_TTL,
   clipContentSchema,
+  MAX_FILES_PER_CLIP,
 } from "../lib/constants";
 import { getClientIp } from "../lib/rate-limit";
 import {
@@ -178,9 +179,15 @@ pages.get("/explore", (c) => c.redirect("/klipwall", 301));
 
 pages.get("/demo", async (c) => renderClipPage(c, "demo"));
 
+function collectUploadFiles(body: Record<string, unknown>): File[] {
+  const raw = body.file;
+  const list = Array.isArray(raw) ? raw : raw != null ? [raw] : [];
+  return list.filter((f): f is File => f instanceof File && f.size > 0);
+}
+
 pages.post("/new", async (c) => {
   const authUser = await resolveAuth(c);
-  const body = await c.req.parseBody();
+  const body = await c.req.parseBody({ all: true });
   const custom = typeof body.slug === "string" ? body.slug.trim() : "";
   const slug =
     custom && isValidSlug(custom) && !isReservedSlug(custom)
@@ -189,11 +196,21 @@ pages.post("/new", async (c) => {
   const rawContent = typeof body.content === "string" ? body.content : "";
   const parsed = clipContentSchema.safeParse({ content: rawContent });
   if (!parsed.success) return c.text("Content too large", 400);
+  const files = collectUploadFiles(body as Record<string, unknown>);
   await ensureClip(slug, {
     ownerId: authUser?.id ?? null,
     content: parsed.data.content,
   });
   setOwnerCookie(c, slug);
+
+  if (files.length > 0) {
+    const { attachFileToClip } = await import("./files");
+    for (const file of files.slice(0, MAX_FILES_PER_CLIP)) {
+      const result = await attachFileToClip(slug, file);
+      if (!result.ok) return c.text(result.error, 400);
+    }
+  }
+
   return c.redirect(`/${slug}`, 302);
 });
 
