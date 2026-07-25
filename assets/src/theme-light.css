@@ -1,23 +1,25 @@
 :root[data-theme="light"] {
   color-scheme: light;
 
-  --bg-base: #eef2f6;
+  --bg-base: #eef5f3;
   --bg-elevated: #ffffff;
-  --bg-sunken: #e2e8f0;
-  --bg-overlay: rgba(15, 23, 42, 0.5);
+  --bg-sunken: #dde8e5;
+  --bg-overlay: rgba(7, 18, 22, 0.48);
 
-  --border-subtle: #cbd5e1;
-  --border-default: #94a3b8;
-  --border-strong: #64748b;
+  --border-subtle: #c5d6d1;
+  --border-default: #8eaaa3;
+  --border-strong: #5f7f77;
 
-  --text-primary: #020617;
-  --text-secondary: #1e293b;
-  --text-tertiary: #334155;
+  --text-primary: #0a1a18;
+  --text-secondary: #1f3531;
+  --text-tertiary: #3d5651;
 
-  --accent: #0e7490;
-  --accent-muted: rgba(14, 116, 144, 0.12);
-  --accent-hover: #155e75;
+  --accent: #0f766e;
+  --accent-muted: rgba(15, 118, 110, 0.12);
+  --accent-hover: #0d9488;
   --accent-text: #ffffff;
+  --spark: #ea580c;
+  --spark-muted: rgba(234, 88, 12, 0.12);
 
   --success: #15803d;
   --success-muted: rgba(21, 128, 61, 0.12);
@@ -26,9 +28,9 @@
   --danger: #b91c1c;
   --danger-muted: rgba(185, 28, 28, 0.12);
 
-  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.08);
-  --shadow-md: 0 8px 24px rgba(15, 23, 42, 0.12);
-  --shadow-lg: 0 20px 48px rgba(15, 23, 42, 0.16);
+  --shadow-sm: 0 1px 2px rgba(7, 18, 22, 0.08);
+  --shadow-md: 0 8px 24px rgba(7, 18, 22, 0.12);
+  --shadow-lg: 0 20px 48px rgba(7, 18, 22, 0.16);
 
   --hl-keyword: #9d174d;
   --hl-string: #166534;
@@ -37,8 +39,8 @@
   --hl-tag: #166534;
   --hl-attr: #6b21a8;
   --hl-function: #6b21a8;
-  --hl-selection: rgba(14, 116, 144, 0.28);
-  --hl-active-line: rgba(15, 23, 42, 0.06);
+  --hl-selection: rgba(15, 118, 110, 0.28);
+  --hl-active-line: rgba(7, 18, 22, 0.06);
 }
 
 :root:not([data-theme="light"]) {
@@ -49,25 +51,25 @@
   --hl-tag: #89ddff;
   --hl-attr: #ffcb6b;
   --hl-function: #82aaff;
-  --hl-selection: rgba(34, 211, 238, 0.35);
+  --hl-selection: rgba(46, 196, 182, 0.35);
   --hl-active-line: rgba(255, 255, 255, 0.06);
 }
 
 :root[data-theme="light"] .landing-eyebrow {
-  background: rgba(14, 116, 144, 0.1);
-  border-color: rgba(14, 116, 144, 0.28);
+  background: rgba(15, 118, 110, 0.1);
+  border-color: rgba(15, 118, 110, 0.28);
 }
 
 :root[data-theme="light"] .compare-table tbody td:last-child {
-  background: rgba(14, 116, 144, 0.06);
+  background: rgba(15, 118, 110, 0.06);
 }
 
 :root[data-theme="light"] .trust-section {
-  background: linear-gradient(180deg, transparent, rgba(14, 116, 144, 0.05));
+  background: linear-gradient(180deg, transparent, rgba(15, 118, 110, 0.05));
 }
 
 :root[data-theme="light"] .toast {
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+  box-shadow: 0 10px 28px rgba(7, 18, 22, 0.14);
 }
 
 :root[data-theme="light"] .hl-keyword { color: var(--hl-keyword); }
@@ -138,12 +140,20 @@
 
 /* Public marketing pages — keep light, but with clearer separation */
 :root[data-theme="light"] body.with-chrome {
-  --bg-base: #f1f5f9;
+  --bg-base: #f0f7f5;
   --bg-elevated: #ffffff;
-  --bg-sunken: #e2e8f0;
-  background:
-    radial-gradient(ellipse 90% 60% at 50% -15%, rgba(14, 116, 144, 0.09), transparent),
-    var(--bg-base);
+  --bg-sunken: #dde8e5;
+  background-color: var(--bg-base);
+  background-image:
+    radial-gradient(ellipse 90% 60% at 50% -15%, rgba(15, 118, 110, 0.12), transparent 58%),
+    radial-gradient(ellipse 40% 30% at 100% 40%, rgba(234, 88, 12, 0.05), transparent 50%),
+    linear-gradient(rgba(15, 118, 110, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 118, 110, 0.04) 1px, transparent 1px);
+  background-size:
+    auto,
+    auto,
+    48px 48px,
+    48px 48px;
 }
 
 :root[data-theme="light"] body.with-chrome .site-header {
@@ -157,9 +167,17 @@
   color: var(--text-primary);
 }
 
+:root[data-theme="light"] body.with-chrome .landing-brand {
+  background: linear-gradient(120deg, var(--accent) 0%, var(--accent-hover) 50%, var(--spark) 120%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 :root[data-theme="light"] body.with-chrome .feature-highlight,
 :root[data-theme="light"] body.with-chrome .feature-card,
-:root[data-theme="light"] body.with-chrome .use-case-card {
+:root[data-theme="light"] body.with-chrome .use-case-card,
+:root[data-theme="light"] body.with-chrome .home-paste-input {
   box-shadow: var(--shadow-sm);
   border-color: var(--border-default);
 }
@@ -173,9 +191,15 @@
 }
 
 :root[data-theme="light"] body.with-chrome .compare-table thead th:last-child {
-  background: rgba(14, 116, 144, 0.08);
+  background: rgba(15, 118, 110, 0.08);
 }
 
 :root[data-theme="light"] body.with-chrome .site-footer {
   background: color-mix(in srgb, var(--bg-elevated) 65%, var(--bg-base));
+}
+
+:root[data-theme="light"] .home::before {
+  background:
+    radial-gradient(ellipse 70% 45% at 50% -10%, rgba(15, 118, 110, 0.12), transparent 55%),
+    radial-gradient(ellipse 50% 40% at 100% 80%, rgba(234, 88, 12, 0.06), transparent 50%);
 }

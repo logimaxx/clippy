@@ -22,10 +22,10 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
-/** Plain HTML fragment for the homepage Explore teaser (no Layout). */
+/** Plain HTML fragment for the homepage Klipwall teaser (no Layout). */
 export function renderExplorePreviewHtml(clips: Clip[]): string {
   if (clips.length === 0) {
-    return `<p class="explore-home-empty">No public clips yet. <a href="/explore">Open Explore</a> or turn on Public in a clip’s settings.</p>`;
+    return `<p class="explore-home-empty">No public clips yet. <a href="/klipwall">Open Klipwall</a> or turn on Public in a clip’s settings.</p>`;
   }
 
   const items = clips

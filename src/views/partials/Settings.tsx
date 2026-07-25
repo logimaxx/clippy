@@ -103,9 +103,9 @@ function SettingsPrimaryFields({
     <>
       <div class="field">
         <span class="field__label">
-          {mobile ? "List on Explore" : "Public"}
+          {mobile ? "List on Klipwall" : "Public"}
           {!mobile && (
-            <SettingHint text="Lists this clip on Explore. You will set an owner password so you can recover access later. Visitors cannot use burn, PIN, or E2E." />
+            <SettingHint text="Lists this clip on Klipwall. You will set an owner password so you can recover access later. Visitors cannot use burn, PIN, or E2E." />
           )}
         </span>
         <div class="settings-e2e-row">
@@ -134,7 +134,7 @@ function SettingsPrimaryFields({
             <span class="toggle__track" aria-hidden="true"></span>
             <span>
               {mobile
-                ? "Show this clip on Explore"
+                ? "Show this clip on Klipwall"
                 : isPublic
                   ? "On"
                   : "Off"}
@@ -150,7 +150,7 @@ function SettingsPrimaryFields({
             <SettingHint
               text={
                 isPublic
-                  ? "Burn after read isn’t allowed for public clips — choosing it removes the clip from Explore."
+                  ? "Burn after read isn’t allowed for public clips — choosing it removes the clip from Klipwall."
                   : "Burn after read deletes on the first real visit (not link previews). API reads also count."
               }
             />
@@ -449,7 +449,7 @@ export function SettingsPanel({
             <p class="field-hint">
               {hasOwnerPassword
                 ? "Owner password is set. Use it to recover edit access on a new device."
-                : "An owner password is set when you list the clip on Explore."}{" "}
+                : "An owner password is set when you list the clip on Klipwall."}{" "}
               <a href={`/${slug}/claim`}>Recover ownership</a>
             </p>
             {hasOwnerPassword && visibility !== "public" && (
@@ -587,7 +587,7 @@ export function SettingsPanel({
           aria-labelledby="public-publish-title"
         >
           <h2 class="confirm-modal__title" id="public-publish-title">
-            List on Explore
+            List on Klipwall
           </h2>
           <p class="confirm-modal__body">
             {hasOwnerPassword

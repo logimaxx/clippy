@@ -32,7 +32,7 @@ export function ClipLinkPreview({ slug, content }: ClipLinkPreviewProps) {
           <p class="hint">
             <a href={`/${slug}`}>Open interactive clip</a>
             {" · "}
-            <a href="/explore">Explore</a>
+            <a href="/klipwall">Klipwall</a>
           </p>
         </main>
       </Layout>

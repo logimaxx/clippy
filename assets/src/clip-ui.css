@@ -1,29 +1,30 @@
-  <style>
 /*
-  Design system: "Webklip Productivity"
-  — Radix Slate neutrals + Cyan accent (accessible dark-first)
+  Design system: "Webklip Pulse"
+  — Teal-tinted neutrals + mint accent (accessible dark-first)
   — 4px base grid, 8px rhythm for layout
-  — Inter (UI) + JetBrains Mono (editor)
+  — Space Grotesk (display) + Manrope (UI) + JetBrains Mono (editor)
   — Familiar VS Code / Linear density for power users
 */
 :root {
-  --bg-base: #0c1222;
-  --bg-elevated: #1a2438;
-  --bg-sunken: #060a14;
-  --bg-overlay: rgba(6, 10, 20, 0.78);
+  --bg-base: #071216;
+  --bg-elevated: #122028;
+  --bg-sunken: #04090c;
+  --bg-overlay: rgba(4, 9, 12, 0.78);
 
-  --border-subtle: #334155;
-  --border-default: #475569;
-  --border-strong: #64748b;
+  --border-subtle: #24343c;
+  --border-default: #35505a;
+  --border-strong: #4d6b76;
 
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
-  --text-tertiary: #94a3b8;
+  --text-primary: #f4faf8;
+  --text-secondary: #c5d4d0;
+  --text-tertiary: #8aa39c;
 
-  --accent: #22d3ee;
-  --accent-muted: rgba(34, 211, 238, 0.14);
-  --accent-hover: #67e8f9;
-  --accent-text: #042f2e;
+  --accent: #2ec4b6;
+  --accent-muted: rgba(46, 196, 182, 0.16);
+  --accent-hover: #5eead4;
+  --accent-text: #042f2c;
+  --spark: #ff8a5c;
+  --spark-muted: rgba(255, 138, 92, 0.16);
 
   --success: #4ade80;
   --success-muted: rgba(74, 222, 128, 0.14);
@@ -41,7 +42,8 @@
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.45);
   --shadow-lg: 0 20px 48px rgba(0, 0, 0, 0.55);
 
-  --font-ui: "Inter", system-ui, -apple-system, sans-serif;
+  --font-display: "Space Grotesk", "Manrope", system-ui, sans-serif;
+  --font-ui: "Manrope", system-ui, -apple-system, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
   --header-h: 56px;
@@ -92,9 +94,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.05rem;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.04em;
   color: var(--accent);
   text-decoration: none;
   flex-shrink: 0;
@@ -104,7 +107,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   width: 1.5rem;
   height: 1.5rem;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, var(--accent), #0ea5e9);
+  background: linear-gradient(135deg, var(--accent), var(--spark));
   display: grid;
   place-items: center;
   color: var(--accent-text);
@@ -1111,19 +1114,21 @@ a.chip--owner-claim:hover {
 .toast {
   padding: 0.55rem 1rem;
   border-radius: var(--radius-full);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-default);
+  background: color-mix(in srgb, var(--bg-elevated) 88%, var(--accent));
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border-default));
   box-shadow: var(--shadow-md);
   font-size: 0.8125rem;
   font-weight: 500;
   opacity: 0;
-  transform: translateY(-8px);
-  transition: opacity 200ms ease, transform 200ms ease;
+  transform: translateY(-12px) scale(0.96);
+  transition:
+    opacity 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.34s cubic-bezier(0.34, 1.4, 0.64, 1);
 }
 
 .toast.is-visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
 /* ── Demo banner ── */
@@ -1506,8 +1511,8 @@ body:has(.app) .toast {
   width: auto;
   padding: 0.55rem 1rem;
   border-radius: var(--radius-full);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-default);
+  background: color-mix(in srgb, var(--bg-elevated) 88%, var(--accent));
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, var(--border-default));
   box-shadow: var(--shadow-md);
   font-size: 0.8125rem;
   font-weight: 500;
@@ -1516,7 +1521,7 @@ body:has(.app) .toast {
 body:has(.app) .toast.toast-visible,
 body:has(.app) .toast.is-visible {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateY(0) scale(1);
 }
 
 .confirm-modal {

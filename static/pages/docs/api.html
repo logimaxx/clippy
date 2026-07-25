@@ -68,7 +68,7 @@ curl -s https://webklip.com/api/v1/clips/my-clip</code></pre>
   <li><code>maxViews</code> — delete after N API reads (<code>0</code> = unlimited).</li>
   <li><code>pin</code> — lock the clip; stored as a bcrypt hash.</li>
   <li><code>webhook</code> — URL notified on read, burn, or expiry (see <a href="/docs/webhooks">Webhooks</a>).</li>
-  <li><code>visibility</code> — <code>private</code> (default) or <code>public</code> (listed on Explore; requires <code>ownerPassword</code>).</li>
+  <li><code>visibility</code> — <code>private</code> (default) or <code>public</code> (listed on Klipwall; requires <code>ownerPassword</code>).</li>
   <li><code>ownerPassword</code> — recovers edit access on a new device (min 8 characters; required for public clips).</li>
 </ul>
 <p>Plain-text body is also accepted (<code>Content-Type: text/plain</code>) as the clip content.</p>

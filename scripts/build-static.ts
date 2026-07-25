@@ -308,11 +308,11 @@ writePage(
   renderPage(layout, header, footer, homeBody, ctx, {
     title: "Webklip — Temporary Workspace for Instant Text & File Sharing",
     description:
-      "Stop sending yourself links through WhatsApp. Share text and files instantly between devices with a temporary private link — plus a full REST API. No account, real-time sync, automatic deletion.",
+      "Stop sending yourself links through WhatsApp. Share text and files instantly between devices with a temporary private link. No account, real-time sync, automatic deletion.",
     canonical: "/",
     ogTitle: "Webklip — Stop sending yourself links through WhatsApp",
     ogDescription:
-      "A disposable workspace for text, files, and code with a real REST API. Share instantly between devices, then let it expire.",
+      "Share text and files instantly between devices with a temporary private link. No accounts. No conversations. No permanent storage.",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "WebApplication",
@@ -434,7 +434,7 @@ for (const page of docsPages) {
   );
 }
 
-const sitemapPaths = [...Object.keys(routes), "/explore"].sort((a, b) => {
+const sitemapPaths = [...Object.keys(routes), "/klipwall"].sort((a, b) => {
   if (a === "/") return -1;
   if (b === "/") return 1;
   return a.localeCompare(b);

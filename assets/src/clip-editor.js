@@ -77,7 +77,7 @@ function webklipTheme() {
       },
       ".cm-content": {
         padding: "1rem 1.1rem",
-        caretColor: "var(--accent, #22d3ee)",
+        caretColor: "var(--accent, #2ec4b6)",
       },
       ".cm-gutters": {
         backgroundColor: "transparent",
@@ -89,7 +89,7 @@ function webklipTheme() {
         minWidth: "2rem",
       },
       "&.cm-focused .cm-cursor": {
-        borderLeftColor: "var(--accent, #22d3ee)",
+        borderLeftColor: "var(--accent, #2ec4b6)",
       },
       "&.cm-focused .cm-selectionBackground, .cm-selectionBackground, ::selection": {
         backgroundColor: "var(--hl-selection) !important",

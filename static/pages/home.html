@@ -1,73 +1,67 @@
 <section class="landing-hero">
-  <p class="landing-eyebrow">Temporary workspace</p>
-  <h1>Stop sending yourself links through WhatsApp.</h1>
-  <p class="landing-subhead">
-    Share text and files instantly between any devices using a temporary private link.
-    No accounts. No conversations. No permanent storage.
-  </p>
-  <form action="/new" method="post" class="home-form landing-cta">
-    <input
-      type="text"
-      name="slug"
-      placeholder="custom-name (optional)"
-      pattern="[a-zA-Z0-9_-]{3,64}"
-      class="slug-input"
-    />
-    <button type="submit" class="btn btn-primary btn-lg">Create a Clip</button>
-  </form>
-  <p class="hint">
-    Or open any URL like <code>/my-clip</code> to start sharing.
-  </p>
-  <div class="landing-hero-actions">
-    <a href="/demo" class="btn btn-ghost">View Demo</a>
-    <a href="/docs/api" class="btn btn-ghost">REST API</a>
+  <div class="landing-hero-copy">
+    <p class="landing-brand">webklip</p>
+    <h1>Stop sending yourself links through WhatsApp.</h1>
+    <p class="landing-subhead">
+      Share text and files instantly between any devices using a temporary private link.
+      No accounts. No conversations. No permanent storage.
+    </p>
+    <p class="hint landing-hero-hint">
+      Or open any URL like <code>webklip.com/my-clip</code> to start sharing.
+    </p>
+    <div class="landing-hero-actions">
+      <a href="/demo" class="btn btn-ghost">View Demo</a>
+      <a href="#how-it-works" class="btn btn-ghost">See how it works</a>
+    </div>
   </div>
+  <form action="/new" method="post" class="home-form landing-cta landing-hero-paste">
+    <label class="sr-only" for="home-paste">Paste text to share</label>
+    <textarea
+      id="home-paste"
+      name="content"
+      class="home-paste-input"
+      rows="9"
+      placeholder="Paste text here…"
+      spellcheck="false"
+    ></textarea>
+    <div class="landing-hero-paste-bar">
+      <input
+        type="text"
+        name="slug"
+        placeholder="custom-name (optional)"
+        pattern="[a-zA-Z0-9_-]{3,64}"
+        class="slug-input"
+        autocomplete="off"
+        aria-label="Custom clip name (optional)"
+      />
+      <button type="submit" class="btn btn-primary btn-lg">Create a Clip</button>
+    </div>
+  </form>
 </section>
 
-<section class="landing-section feature-highlights-section">
+<section id="features" class="landing-section feature-highlights-section">
   <h2>Everything you need for quick, private sharing</h2>
   <div class="feature-highlights">
     <div class="feature-highlight">
       <span class="feature-highlight-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </span>
-      <strong>REST API</strong>
-      <span>Script clips from curl, CI, or any HTTP client</span>
+      <strong>Real-time sync</strong>
+      <span>Updates appear on every open device as you type or paste</span>
+    </div>
+    <div class="feature-highlight">
+      <span class="feature-highlight-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      </span>
+      <strong>No account required</strong>
+      <span>Your link is the key</span>
     </div>
     <div class="feature-highlight">
       <span class="feature-highlight-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3z"/></svg>
       </span>
-      <strong>QR Code</strong>
-      <span>Open on your phone in one scan</span>
-    </div>
-    <div class="feature-highlight">
-      <span class="feature-highlight-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6-6-6"/><path d="M12 19h8"/></svg>
-      </span>
-      <strong>Syntax highlighting</strong>
-      <span>Share code with proper formatting</span>
-    </div>
-    <div class="feature-highlight">
-      <span class="feature-highlight-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-      </span>
-      <strong>Markdown preview</strong>
-      <span>Write notes and see them rendered</span>
-    </div>
-    <div class="feature-highlight">
-      <span class="feature-highlight-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-      </span>
-      <strong>File upload</strong>
-      <span>Attach images, PDFs, and documents</span>
-    </div>
-    <div class="feature-highlight">
-      <span class="feature-highlight-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      </span>
-      <strong>Real-time collaboration</strong>
-      <span>Edits sync instantly across devices</span>
+      <strong>QR code</strong>
+      <span>Scan to open a clip on your phone</span>
     </div>
     <div class="feature-highlight">
       <span class="feature-highlight-icon" aria-hidden="true">
@@ -78,26 +72,32 @@
     </div>
     <div class="feature-highlight">
       <span class="feature-highlight-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </span>
+      <strong>PIN protection</strong>
+      <span>Lock sensitive clips; PINs are never stored in plain text</span>
+    </div>
+    <div class="feature-highlight">
+      <span class="feature-highlight-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
       </span>
       <strong>Burn after read</strong>
       <span>Delete automatically after one view</span>
     </div>
-  </div>
-</section>
-
-<section id="api" class="landing-section api-showcase-section">
-  <h2>A clipboard with a real REST API</h2>
-  <p class="api-showcase-intro">
-    Create, read, and delete clips over plain HTTP — no account required.
-    Pipe secrets into CI, or get a webhook when a clip is read or burned.
-  </p>
-  <pre class="landing-code" tabindex="0"><code>curl -X POST https://webklip.com/api/v1/clips/deploy-notes \
-  -H "Content-Type: application/json" \
-  -d '{"content":"rollback plan","ttl":3600,"burnOnRead":true}'</code></pre>
-  <div class="landing-hero-actions">
-    <a href="/docs/api" class="btn btn-primary">API reference</a>
-    <a href="/docs/webhooks" class="btn btn-ghost">Webhooks</a>
+    <div class="feature-highlight">
+      <span class="feature-highlight-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      </span>
+      <strong>File attachments</strong>
+      <span>Images, PDFs, and documents</span>
+    </div>
+    <div class="feature-highlight">
+      <span class="feature-highlight-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-6-6-6"/><path d="M12 19h8"/></svg>
+      </span>
+      <strong>Syntax highlighting &amp; Markdown</strong>
+      <span>For code and notes</span>
+    </div>
   </div>
 </section>
 
@@ -107,243 +107,79 @@
     <div class="step-flow-step">
       <span class="step-flow-num">1</span>
       <strong>Create a clip</strong>
-      <span class="step-flow-desc">One click — custom name or random URL.</span>
+      <span class="step-flow-desc">One click, custom name or random URL</span>
     </div>
     <span class="step-flow-arrow" aria-hidden="true">→</span>
     <div class="step-flow-step">
       <span class="step-flow-num">2</span>
       <strong>Paste or upload</strong>
-      <span class="step-flow-desc">Text and files sync in real time as you type.</span>
+      <span class="step-flow-desc">Text and files sync in real time</span>
     </div>
     <span class="step-flow-arrow" aria-hidden="true">→</span>
     <div class="step-flow-step">
       <span class="step-flow-num">3</span>
       <strong>Share the link</strong>
-      <span class="step-flow-desc">Send the URL — or scan the QR code.</span>
+      <span class="step-flow-desc">Send the URL or scan the QR code</span>
     </div>
     <span class="step-flow-arrow" aria-hidden="true">→</span>
     <div class="step-flow-step">
       <span class="step-flow-num">4</span>
       <strong>Auto-delete</strong>
-      <span class="step-flow-desc">Clips expire on schedule. Nothing left behind.</span>
+      <span class="step-flow-desc">Clips expire on schedule, nothing left behind</span>
     </div>
   </div>
 </section>
 
-<section id="why-not-whatsapp" class="landing-section compare-section">
-  <h2>Why not WhatsApp?</h2>
-  <p class="compare-intro">When you just need to move something between devices, chat apps add friction you do not need.</p>
-  <div class="compare-table-wrap">
-    <table class="compare-table">
-      <thead>
-        <tr>
-          <th scope="col">WhatsApp</th>
-          <th scope="col">Webklip</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>Permanent conversations</td>
-          <td>Temporary workspace</td>
-        </tr>
-        <tr>
-          <td>Compresses files</td>
-          <td>Original files</td>
-        </tr>
-        <tr>
-          <td>Hard to find later</td>
-          <td>One URL</td>
-        </tr>
-        <tr>
-          <td>Needs account</td>
-          <td>No account</td>
-        </tr>
-        <tr>
-          <td>Chat application</td>
-          <td>Built for sharing</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-  <p class="compare-footnote">Same idea applies to email, Telegram, Slack, and pastebin — Webklip is built for one job: share instantly, then delete.</p>
+<section id="why-not-whatsapp" class="landing-section compare-note-section">
+  <p class="compare-note">
+    Chat apps and email keep permanent copies, need an account, and bury files in conversation history.
+    A Webklip link does one job — share, then disappear.
+  </p>
 </section>
 
 <section id="use-cases" class="landing-section">
-  <h2>How people use Webklip</h2>
-  <div class="use-case-grid">
+  <h2>Who it's for</h2>
+  <div class="use-case-grid use-case-grid--compact">
     <div class="use-case-card">
       <h3>Developers</h3>
-      <p>Move snippets between machines — or push them via the REST API from scripts and tools.</p>
+      <p>Move snippets between machines with syntax highlighting, no Slack threads that never disappear.</p>
     </div>
     <div class="use-case-card">
-      <h3>IT support</h3>
+      <h3>IT &amp; support</h3>
       <p>Send one-time passwords or recovery codes with PIN protection and burn-after-read.</p>
     </div>
     <div class="use-case-card">
-      <h3>DevOps</h3>
-      <p>Post deploy notes from CI, get a webhook when they are read, then let the clip expire.</p>
+      <h3>Everyone else</h3>
+      <p>Move text or a photo between your phone and desktop in seconds.</p>
     </div>
-    <div class="use-case-card">
-      <h3>Students</h3>
-      <p>Copy lecture notes from laptop to phone with a QR scan — no email attachments.</p>
-    </div>
-    <div class="use-case-card">
-      <h3>Designers</h3>
-      <p>Send screenshots and mockups for a quick review without permanent cloud storage links.</p>
-    </div>
-    <div class="use-case-card">
-      <h3>Sales</h3>
-      <p>Share pricing sheets or proposals temporarily — gone after the deal closes.</p>
-    </div>
-    <div class="use-case-card">
-      <h3>Customer support</h3>
-      <p>Collect error messages or account details securely, then let the clip self-destruct.</p>
-    </div>
-    <div class="use-case-card">
-      <h3>Personal</h3>
-      <p>Move text between phone and desktop in seconds — copy once, open anywhere.</p>
-    </div>
-  </div>
-</section>
-
-<section id="what-is-webklip" class="landing-section">
-  <h2>What is Webklip?</h2>
-  <div class="seo-prose">
-    <p>
-      Webklip is a free <strong>temporary workspace</strong> for moving text and files between devices.
-      Create a private link, paste your content, and open it on any browser — phone, tablet, or desktop.
-    </p>
-    <p>
-      Real-time sync, a full <strong>REST API</strong>, optional PIN locks, end-to-end encryption, and automatic
-      expiry make it ideal for <strong>secure sharing</strong> that does not linger in chat history or email
-      inboxes. Share instantly, then let it disappear.
-    </p>
-  </div>
-</section>
-
-<section id="features" class="landing-section">
-  <h2>Features</h2>
-  <div class="feature-groups">
-    <div class="feature-group">
-      <h3 class="feature-group-title">Instant sharing</h3>
-      <div class="feature-grid">
-        <div class="feature-card">
-          <h4>Real-time sync</h4>
-          <p>Updates appear on every open device as you type or paste.</p>
-        </div>
-        <div class="feature-card">
-          <h4>No account required</h4>
-          <p>Start sharing immediately — your link is the key.</p>
-        </div>
-        <div class="feature-card">
-          <h4>QR code</h4>
-          <p>Scan to open a clip on your phone without typing a URL.</p>
-        </div>
-      </div>
-    </div>
-    <div class="feature-group">
-      <h3 class="feature-group-title">For developers</h3>
-      <div class="feature-grid">
-        <div class="feature-card">
-          <h4>REST API</h4>
-          <p>
-            Full clip CRUD over JSON — create, read, update, and delete with curl or any HTTP client.
-            <a href="/docs/api">API docs</a>
-          </p>
-        </div>
-        <div class="feature-card">
-          <h4>Webhooks</h4>
-          <p>
-            Get notified on read, burn, or expiry — wire clips into your own automation.
-            <a href="/docs/webhooks">Webhook docs</a>
-          </p>
-        </div>
-        <div class="feature-card">
-          <h4>Syntax highlighting</h4>
-          <p>Dozens of languages with proper code formatting.</p>
-        </div>
-        <div class="feature-card">
-          <h4>Markdown preview</h4>
-          <p>Write in Markdown and preview the rendered output.</p>
-        </div>
-      </div>
-    </div>
-    <div class="feature-group">
-      <h3 class="feature-group-title">Security</h3>
-      <div class="feature-grid">
-        <div class="feature-card">
-          <h4>PIN protection</h4>
-          <p>Lock sensitive clips with a PIN. PINs are never stored in plain text.</p>
-        </div>
-        <div class="feature-card">
-          <h4>End-to-end encryption</h4>
-          <p>Encrypt in the browser — only people with the key can read your content.</p>
-        </div>
-        <div class="feature-card">
-          <h4>Burn after read</h4>
-          <p>Delete a clip automatically after it has been viewed once.</p>
-        </div>
-      </div>
-    </div>
-    <div class="feature-group">
-      <h3 class="feature-group-title">Files</h3>
-      <div class="feature-grid">
-        <div class="feature-card">
-          <h4>Attachments</h4>
-          <p>Attach images, PDFs, and more with configurable size limits.</p>
-        </div>
-        <div class="feature-card">
-          <h4>Automatic cleanup</h4>
-          <p>Expired clips and orphan files are permanently deleted on a schedule.</p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="explore" class="landing-section explore-home-section">
-  <h2>See what’s public</h2>
-  <p class="explore-home-intro">
-    A few clips people chose to list on Explore — open any link, or browse the full list.
-  </p>
-  <div class="explore-home-preview">
-    <!--EXPLORE_PREVIEW-->
-  </div>
-  <div class="explore-home-actions">
-    <a href="/explore" class="btn btn-primary">Browse all on Explore</a>
   </div>
 </section>
 
 <section id="trust" class="landing-section trust-section">
   <h2>Built for privacy</h2>
-  <div class="feature-grid trust-features" aria-label="Privacy features">
-    <div class="feature-card">
-      <h3>PIN</h3>
-      <p>Optional lock on any clip</p>
-    </div>
-    <div class="feature-card">
-      <h3>Hash</h3>
-      <p>Never stored plain</p>
-    </div>
-    <div class="feature-card">
-      <h3>Encrypted</h3>
-      <p>Browser-side option</p>
-    </div>
-    <div class="feature-card">
-      <h3>Deleted</h3>
-      <p>Automatically on expiry</p>
-    </div>
-  </div>
   <ul class="trust-list">
     <li>No ads</li>
     <li>{{TRUST_ANALYTICS}}</li>
-    <li>Anonymous clips — no account needed to start sharing</li>
+    <li>Anonymous — no account needed</li>
     <li>Automatic deletion after expiry</li>
-    <li>Transparent security practices</li>
+    <li>Optional PIN or end-to-end encryption for sensitive content</li>
   </ul>
   <p class="trust-disclaimer">
-    Anyone with the link can access a clip unless you set a PIN or enable end-to-end encryption.
-    Use those options for sensitive data.
+    Anyone with the link can access a clip unless you set a PIN or enable end-to-end encryption —
+    use those options for sensitive data.
   </p>
-  <a href="/security" class="btn btn-primary">Read our security practices</a>
+  <a href="/security" class="btn btn-primary">Read our security practices →</a>
+</section>
+
+<section id="klipwall" class="landing-section explore-home-section">
+  <h2>See what’s public</h2>
+  <p class="explore-home-intro">
+    A few clips people chose to list on Klipwall.
+  </p>
+  <div class="explore-home-preview">
+    <!--EXPLORE_PREVIEW-->
+  </div>
+  <div class="explore-home-actions">
+    <a href="/klipwall" class="btn btn-primary">Browse all on Klipwall →</a>
+  </div>
 </section>

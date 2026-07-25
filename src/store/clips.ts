@@ -129,7 +129,7 @@ export function hasOwnerRecovery(clip: Pick<Clip, "ownerId" | "ownerPasswordHash
   return !!clip.ownerId || !!clip.ownerPasswordHash;
 }
 
-/** Shape required for a clip to stay on Explore (no burn / PIN / E2E). */
+/** Shape required for a clip to stay on Klipwall (no burn / PIN / E2E). */
 export function publicListingUpdates(
   clip: Pick<Clip, "expiresAt">,
   now = Math.floor(Date.now() / 1000)

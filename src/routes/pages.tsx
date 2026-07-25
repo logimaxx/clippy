@@ -13,6 +13,7 @@ import {
   clipFromReadAccess,
   settingsToastMessage,
   MAX_TTL,
+  clipContentSchema,
 } from "../lib/constants";
 import { getClientIp } from "../lib/rate-limit";
 import {
@@ -55,7 +56,7 @@ import { ClipLinkPreview } from "../views/ClipLinkPreview";
 import { ClipGone } from "../views/ClipGone";
 import { PinGate } from "../views/PinGate";
 import { OwnerClaim } from "../views/OwnerClaim";
-import { ExplorePage } from "../views/Explore";
+import { KlipwallPage } from "../views/Klipwall";
 import { SettingsPanel } from "../views/partials/Settings";
 import * as rooms from "../ws/rooms";
 import type { Clip } from "../db/schema";
@@ -168,10 +169,12 @@ async function renderClipPage(c: Context, slug: string) {
   );
 }
 
-pages.get("/explore", async (c) => {
+pages.get("/klipwall", async (c) => {
   const clips = await listPublicClips(50);
-  return c.html(<ExplorePage clips={clips} />);
+  return c.html(<KlipwallPage clips={clips} />);
 });
+
+pages.get("/explore", (c) => c.redirect("/klipwall", 301));
 
 pages.get("/demo", async (c) => renderClipPage(c, "demo"));
 
@@ -183,7 +186,13 @@ pages.post("/new", async (c) => {
     custom && isValidSlug(custom) && !isReservedSlug(custom)
       ? custom
       : generateSlug(10);
-  await ensureClip(slug, { ownerId: authUser?.id ?? null });
+  const rawContent = typeof body.content === "string" ? body.content : "";
+  const parsed = clipContentSchema.safeParse({ content: rawContent });
+  if (!parsed.success) return c.text("Content too large", 400);
+  await ensureClip(slug, {
+    ownerId: authUser?.id ?? null,
+    content: parsed.data.content,
+  });
   setOwnerCookie(c, slug);
   return c.redirect(`/${slug}`, 302);
 });

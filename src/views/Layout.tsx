@@ -32,7 +32,7 @@ export function Layout({
       <head>
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#0c1222" />
+        <meta name="theme-color" content="#071216" />
         <meta name="color-scheme" content="dark light" />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <meta name="description" content={description} />

@@ -1,4 +1,4 @@
-/** Curated public clips seeded for Explore + SEO. */
+/** Curated public clips seeded for Klipwall + SEO. */
 
 export interface PublicClipSeed {
   slug: string;

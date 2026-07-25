@@ -80,18 +80,18 @@ test.describe("Webklip E2E", () => {
       await expect(page.getByText("/api/v1/clips/:slug").first()).toBeVisible();
     });
 
-    test("explore page loads", async ({ page }) => {
-      await page.goto("/explore");
-      await expect(page.getByRole("heading", { name: "Explore" })).toBeVisible();
-      await expect(page).toHaveTitle(/Explore/i);
+    test("klipwall page loads", async ({ page }) => {
+      await page.goto("/klipwall");
+      await expect(page.getByRole("heading", { name: "Klipwall" })).toBeVisible();
+      await expect(page).toHaveTitle(/Klipwall/i);
     });
 
-    test("home shows Explore teaser", async ({ page }) => {
+    test("home shows Klipwall teaser", async ({ page }) => {
       await page.goto("/");
-      const section = page.locator("#explore");
+      const section = page.locator("#klipwall");
       await expect(section.getByRole("heading", { name: /public/i })).toBeVisible();
-      await expect(section.getByRole("link", { name: /Browse all on Explore/i })).toBeVisible();
-      await expect(page.locator(".site-footer a[href='/explore']")).toBeVisible();
+      await expect(section.getByRole("link", { name: /Browse all on Klipwall/i })).toBeVisible();
+      await expect(page.locator(".site-footer a[href='/klipwall']")).toBeVisible();
     });
 
     test("SEO endpoints respond", async ({ request }) => {
@@ -166,6 +166,17 @@ test.describe("Webklip E2E", () => {
       const slug = uniqueSlug("custom");
       await createClipViaUi(page, slug);
       await expect(page.locator("#device-count-desktop")).toContainText(/device/i);
+    });
+
+    test("creates clip from home with pasted content", async ({ page }) => {
+      const slug = uniqueSlug("paste");
+      const text = `Hero paste ${Date.now()}`;
+      await page.goto("/");
+      await page.locator("#home-paste").fill(text);
+      await page.fill('input[name="slug"]', slug);
+      await page.getByRole("button", { name: /Create a? clip/i }).click();
+      await expect(page).toHaveURL(new RegExp(`/${slug}$`));
+      await expect(page.locator("#clip-content")).toHaveValue(text);
     });
 
     test("first direct visit to a new slug is editable (not burned)", async ({ page }) => {
@@ -252,7 +263,7 @@ test.describe("Webklip E2E", () => {
       await expect(page.locator(".toast")).toContainText("Burn after read");
     });
 
-    test("can list a clip on Explore", async ({ page }) => {
+    test("can list a clip on Klipwall", async ({ page }) => {
       const slug = uniqueSlug("public");
       await createClipViaApi(page.request, slug, "hello explore", {
         burnOnRead: false,
@@ -265,7 +276,7 @@ test.describe("Webklip E2E", () => {
       await expect(modal).toBeVisible();
       await modal.locator("#public-owner-password").fill("ownerpass1");
       await modal.getByRole("button", { name: "Publish" }).click();
-      await expect(page.locator(".toast")).toContainText(/public|Explore|Published/i);
+      await expect(page.locator(".toast")).toContainText(/public|Klipwall|Published/i);
       await expect(
         page.locator("#settings-form-desktop [data-public-toggle]")
       ).toBeChecked();
@@ -273,8 +284,8 @@ test.describe("Webklip E2E", () => {
       await expect(page.locator(".header-chips .chip--public")).toBeVisible();
       await expect(page.locator("#ttl")).not.toHaveValue("burn");
 
-      await page.goto("/explore");
-      await expect(page.getByRole("heading", { name: "Explore" })).toBeVisible();
+      await page.goto("/klipwall");
+      await expect(page.getByRole("heading", { name: "Klipwall" })).toBeVisible();
       await expect(page.locator(`a[href="/${slug}"]`)).toBeVisible();
     });
 
@@ -295,7 +306,7 @@ test.describe("Webklip E2E", () => {
       await expect(page.locator(".header-chips .chip--public")).toHaveCount(0);
     });
 
-    test("burn after read removes a public clip from Explore", async ({ page }) => {
+    test("burn after read removes a public clip from Klipwall", async ({ page }) => {
       const slug = uniqueSlug("pubburn");
       await createClipViaApi(page.request, slug, "public then burn", {
         visibility: "public",
@@ -313,11 +324,11 @@ test.describe("Webklip E2E", () => {
 
       await page.selectOption("#ttl", "burn");
       await expect(page.locator("#ttl")).toHaveValue("burn");
-      await expect(page.locator(".toast")).toContainText(/removed from Explore/i);
+      await expect(page.locator(".toast")).toContainText(/removed from Klipwall/i);
       await page.reload();
       await expect(page.locator(".header-chips .chip--public")).toHaveCount(0);
 
-      await page.goto("/explore");
+      await page.goto("/klipwall");
       await expect(page.locator(`a[href="/${slug}"]`)).toHaveCount(0);
     });
 

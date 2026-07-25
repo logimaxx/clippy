@@ -153,21 +153,21 @@ export function settingsToastMessage(
   clip: { webhookUrl: string | null; encrypted: boolean; visibility: string },
   opts: { wasPublic?: boolean } = {}
 ): string {
-  const demotedFromExplore =
+  const demotedFromKlipwall =
     opts.wasPublic && clip.visibility !== "public";
 
   if (parsed.visibility !== undefined) {
     return parsed.visibility === "public"
-      ? "Published on public space"
-      : "Unpublished from public space";
+      ? "Published on Klipwall"
+      : "Unpublished from Klipwall";
   }
   if (parsed.expiresAt !== undefined) {
     return `Expires ${formatExpiresAt(parsed.expiresAt)}`;
   }
   if (parsed.ttl !== undefined) {
     if (parsed.ttl === EXPIRES_BURN) {
-      return demotedFromExplore
-        ? "Burn after read enabled - removed from Explore"
+      return demotedFromKlipwall
+        ? "Burn after read enabled - removed from Klipwall"
         : "Burn after read enabled";
     }
     const opt = TTL_OPTIONS.find((o) => o.value === parsed.ttl);
@@ -181,8 +181,8 @@ export function settingsToastMessage(
   }
   if (parsed.clearPin) return "PIN removed";
   if (parsed.pin && parsed.pin.length > 0) {
-    return demotedFromExplore
-      ? "PIN saved - removed from Explore"
+    return demotedFromKlipwall
+      ? "PIN saved - removed from Klipwall"
       : "PIN saved";
   }
   if (parsed.clearOwnerPassword) return "Owner password removed";
@@ -194,8 +194,8 @@ export function settingsToastMessage(
   }
   if ("encrypted" in body) {
     if (clip.encrypted) {
-      return demotedFromExplore
-        ? "Encryption enabled - removed from Explore"
+      return demotedFromKlipwall
+        ? "Encryption enabled - removed from Klipwall"
         : "End-to-end encryption enabled";
     }
     return "Encryption disabled";
@@ -229,6 +229,7 @@ export const RESERVED_SLUGS = new Set([
   "docs",
   "demo",
   "explore",
+  "klipwall",
   "favicon.ico",
   "robots.txt",
   "sitemap.xml",

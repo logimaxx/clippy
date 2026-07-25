@@ -24,7 +24,7 @@
   function updateThemeColor(theme) {
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) {
-      meta.setAttribute("content", theme === "light" ? "#f8fafc" : "#0c1222");
+      meta.setAttribute("content", theme === "light" ? "#f0f7f5" : "#071216");
     }
   }
 

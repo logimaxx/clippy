@@ -1,33 +1,57 @@
 @font-face {
-  font-family: "Inter";
+  font-family: "Manrope";
   font-style: normal;
   font-display: swap;
   font-weight: 400;
-  src: url(./fonts/inter-latin-400-normal.woff2) format("woff2");
+  src: url(./fonts/manrope-latin-400-normal.woff2) format("woff2");
 }
 
 @font-face {
-  font-family: "Inter";
+  font-family: "Manrope";
   font-style: normal;
   font-display: swap;
   font-weight: 500;
-  src: url(./fonts/inter-latin-500-normal.woff2) format("woff2");
+  src: url(./fonts/manrope-latin-500-normal.woff2) format("woff2");
 }
 
 @font-face {
-  font-family: "Inter";
+  font-family: "Manrope";
   font-style: normal;
   font-display: swap;
   font-weight: 600;
-  src: url(./fonts/inter-latin-600-normal.woff2) format("woff2");
+  src: url(./fonts/manrope-latin-600-normal.woff2) format("woff2");
 }
 
 @font-face {
-  font-family: "Inter";
+  font-family: "Manrope";
   font-style: normal;
   font-display: swap;
   font-weight: 700;
-  src: url(./fonts/inter-latin-700-normal.woff2) format("woff2");
+  src: url(./fonts/manrope-latin-700-normal.woff2) format("woff2");
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(./fonts/space-grotesk-latin-500-normal.woff2) format("woff2");
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url(./fonts/space-grotesk-latin-600-normal.woff2) format("woff2");
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url(./fonts/space-grotesk-latin-700-normal.woff2) format("woff2");
 }
 
 @font-face {

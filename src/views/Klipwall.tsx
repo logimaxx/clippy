@@ -3,21 +3,21 @@ import { Layout } from "./Layout";
 import { clipPreviewText, formatClipDate } from "../lib/explore-preview";
 import type { Clip } from "../db/schema";
 
-interface ExplorePageProps {
+interface KlipwallPageProps {
   clips: Clip[];
 }
 
-export function ExplorePage({ clips }: ExplorePageProps) {
+export function KlipwallPage({ clips }: KlipwallPageProps) {
   return (
     <Layout
-      title="Explore — Webklip"
+      title="Klipwall — Webklip"
       description="Browse public Webklip clips shared by the community."
     >
       <main class="home explore-page">
         <p class="explore-kicker">
-          <a href="/">webklip</a>
+          <a href="/" class="logo">webklip</a>
         </p>
-        <h1>Explore</h1>
+        <h1>Klipwall</h1>
         <p class="tagline">
           Public clips anyone can open. Make a clip public from its settings to list it here.
         </p>
