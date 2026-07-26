@@ -873,6 +873,40 @@
       .toolbar__more { display: none; }
 
       .field--pin { display: none; }
+
+      .header-settings-btn {
+        padding: 0;
+        width: 2rem;
+        min-width: 2rem;
+        justify-content: center;
+        gap: 0;
+        border-color: var(--border-default);
+        background: var(--bg-sunken);
+        color: var(--text-primary);
+      }
+
+      .header-settings-btn__label { display: none; }
+
+      .app[data-view="editor"] .files-panel,
+      .app:not([data-view="files"]) .files-panel {
+        display: none;
+      }
+
+      .app[data-view="files"] .editor-panel {
+        display: none;
+      }
+
+      .app[data-view="files"] .files-panel {
+        display: flex;
+        flex: 1;
+        min-height: 0;
+        max-width: none;
+      }
+
+      .app[data-view="files"] .main-grid {
+        flex: 1;
+        min-height: 0;
+      }
     }
 
     @media (min-width: 1024px) {
@@ -912,6 +946,10 @@
       </div>
 
       <div class="header-actions">
+        <button type="button" class="btn btn--ghost btn--sm header-settings-btn" data-open-sheet="settings" aria-label="Settings" aria-haspopup="dialog" aria-controls="sheet-settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09A1.65 1.65 0 0 0 15 4.6a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          <span class="header-settings-btn__label">Settings</span>
+        </button>
         <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Switch to light theme">
           <svg class="theme-toggle-icon theme-toggle-icon--sun" viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="12" cy="12" r="4" />
@@ -993,9 +1031,6 @@
             <span class="countdown" id="countdown-d">23:41:08</span>
           </div>
         </div>
-        <button type="button" class="btn btn--ghost btn--sm toolbar__more" data-open-sheet="settings">
-          All settings
-        </button>
       </div>
 
       <!-- Mobile quick toolbar -->
@@ -1081,13 +1116,9 @@ async function fetchClip(slug) {
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
         Editor
       </button>
-      <button type="button" class="bottom-nav__item" data-view="files" data-open-sheet="files">
+      <button type="button" class="bottom-nav__item" data-view="files">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
         Files
-      </button>
-      <button type="button" class="bottom-nav__item" data-open-sheet="settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-        Settings
       </button>
     </nav>
 
@@ -1152,42 +1183,6 @@ async function fetchClip(slug) {
           <div class="danger-zone">
             <p style="margin:0 0 0.65rem;font-size:0.8125rem;color:var(--text-secondary)">Permanently delete this clip, files, and version history.</p>
             <button type="button" class="btn btn--danger btn--sm">Delete clip</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="sheet" id="sheet-files" role="dialog" aria-modal="true" aria-labelledby="sheet-files-title" hidden>
-      <div class="sheet__handle" aria-hidden="true"></div>
-      <div class="sheet__header">
-        <h2 class="sheet__title" id="sheet-files-title">Files</h2>
-        <button type="button" class="btn btn--ghost btn--icon" data-close-sheet aria-label="Close">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
-        </button>
-      </div>
-      <div class="sheet__body">
-        <label class="drop-zone">
-          Tap to attach files
-          <input type="file" hidden multiple />
-        </label>
-        <div class="file-list" style="padding:0">
-          <div class="file-card">
-            <div class="file-card__icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
-            </div>
-            <div class="file-card__info">
-              <div class="file-card__name">screenshot.png</div>
-              <div class="file-card__meta">248 KB</div>
-            </div>
-          </div>
-          <div class="file-card">
-            <div class="file-card__icon">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            </div>
-            <div class="file-card__info">
-              <div class="file-card__name">notes.md</div>
-              <div class="file-card__meta">1.2 KB</div>
-            </div>
           </div>
         </div>
       </div>
@@ -1314,7 +1309,7 @@ async function fetchClip(slug) {
 
     // Mobile sheets
     const backdrop = $("#sheet-backdrop");
-    const sheets = { settings: $("#sheet-settings"), files: $("#sheet-files") };
+    const sheets = { settings: $("#sheet-settings") };
     let openSheet = null;
 
     function openSheetPanel(name) {
@@ -1348,13 +1343,16 @@ async function fetchClip(slug) {
     $$("[data-close-sheet]").forEach((btn) => btn.addEventListener("click", closeSheets));
     backdrop.addEventListener("click", closeSheets);
 
-    // Bottom nav
+    // Bottom nav — true Editor / Files views
+    const app = $(".app");
     $$(".bottom-nav__item[data-view]").forEach((btn) => {
       btn.addEventListener("click", () => {
+        const view = btn.dataset.view;
+        if (!view || !app) return;
+        app.dataset.view = view;
         $$(".bottom-nav__item").forEach((b) => b.classList.remove("is-active"));
         btn.classList.add("is-active");
-        if (btn.dataset.openSheet) openSheetPanel(btn.dataset.openSheet);
-        else closeSheets();
+        closeSheets();
       });
     });
 

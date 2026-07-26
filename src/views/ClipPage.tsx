@@ -124,11 +124,23 @@ export function ClipPage({
               visibility={visibility}
               devices={devices}
               versions={versions}
-              files={files}
             />
           )}
 
           <div class="header-actions">
+            {!readOnly && (
+              <button
+                type="button"
+                class="btn btn--ghost btn--sm header-settings-btn"
+                data-open-sheet="settings"
+                aria-haspopup="dialog"
+                aria-controls="sheet-settings"
+                aria-label="Settings"
+              >
+                <SettingsNavIcon />
+                <span class="header-settings-btn__label">Settings</span>
+              </button>
+            )}
             <ThemeToggle />
             <div class="share-menu" id="share-menu">
               <button
@@ -319,21 +331,10 @@ export function ClipPage({
             <EditorNavIcon />
             Editor
           </button>
-          <button
-            type="button"
-            class="bottom-nav__item"
-            data-view="files"
-            data-open-sheet="files"
-          >
+          <button type="button" class="bottom-nav__item" data-view="files">
             <FilesNavIcon />
             Files
           </button>
-          {!readOnly && (
-            <button type="button" class="bottom-nav__item" data-open-sheet="settings">
-              <SettingsNavIcon />
-              Settings
-            </button>
-          )}
         </nav>
 
         <div class="modal-backdrop" id="qr-modal-backdrop" hidden data-qr-modal>

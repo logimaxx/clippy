@@ -505,13 +505,12 @@
       if (btn.dataset.navBound === "1") return;
       btn.dataset.navBound = "1";
       btn.addEventListener("click", () => {
+        const view = btn.getAttribute("data-view");
+        if (!view) return;
+        app.dataset.view = view;
         app.querySelectorAll(".bottom-nav__item").forEach((b) => b.classList.remove("is-active"));
         btn.classList.add("is-active");
-        if (btn.dataset.openSheet) {
-          openSheet(btn.dataset.openSheet);
-        } else {
-          closeSheets();
-        }
+        closeSheets();
       });
     });
   }

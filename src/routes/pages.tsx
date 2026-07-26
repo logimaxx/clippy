@@ -82,7 +82,6 @@ function settingsPanelProps(slug: string, clip: Clip, versions: Awaited<ReturnTy
     visibility: clip.visibility === "public" ? ("public" as const) : ("private" as const),
     devices: 1,
     versions,
-    files: getClipFiles(clip),
   };
 }
 

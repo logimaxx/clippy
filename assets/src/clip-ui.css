@@ -133,6 +133,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
   color: var(--accent);
 }
 
+.header-settings-btn__label {
+  display: inline;
+}
+
 .chip--devices-mobile {
   display: none;
 }
@@ -1451,7 +1455,14 @@ a.chip--owner-claim:hover {
 
   .chip--devices-mobile { display: inline-flex; }
 
-  .toolbar__more { display: none; }
+  .header-settings-btn {
+    padding: 0;
+    width: 2rem;
+    min-width: 2rem;
+    justify-content: center;
+  }
+
+  .header-settings-btn__label { display: none; }
 
   .field--pin { display: none; }
 
@@ -1462,6 +1473,28 @@ a.chip--owner-claim:hover {
   .header--clip .header-settings {
     order: 3;
     flex: 1 1 100%;
+  }
+
+  .app[data-view="editor"] .files-panel,
+  .app:not([data-view="files"]) .files-panel {
+    display: none;
+  }
+
+  .app[data-view="files"] .editor-panel {
+    display: none;
+  }
+
+  .app[data-view="files"] .files-panel {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+    max-width: none;
+    border-radius: var(--radius-lg);
+  }
+
+  .app[data-view="files"] .main-grid {
+    flex: 1;
+    min-height: 0;
   }
 }
 

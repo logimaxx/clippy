@@ -9,10 +9,9 @@ import {
 } from "../../lib/constants";
 import { SettingHint } from "./SettingHint";
 import { VersionsPanel } from "./Versions";
-import { CloseIcon, SettingsNavIcon } from "./ClipIcons";
+import { CloseIcon } from "./ClipIcons";
 import type { ClipVersion } from "../../db/schema";
 import type { ClipFileMeta } from "../../store/clips";
-import { FileAttachment } from "./FileAttachment";
 
 interface SettingsProps {
   slug: string;
@@ -27,7 +26,6 @@ interface SettingsProps {
   visibility: "private" | "public";
   devices: number;
   versions: ClipVersion[];
-  files?: ClipFileMeta[];
 }
 
 function SettingsLabel({
@@ -297,7 +295,6 @@ export function SettingsPanel({
   visibility,
   devices,
   versions,
-  files = [],
 }: SettingsProps) {
   const deviceLabel = `${devices} device${devices === 1 ? "" : "s"}`;
   const isPublic = visibility === "public";
@@ -382,16 +379,6 @@ export function SettingsPanel({
             id="ttl"
           />
         </fieldset>
-        <button
-          type="button"
-          class="btn btn--ghost btn--sm header-settings-btn toolbar__more"
-          data-open-sheet="settings"
-          aria-haspopup="dialog"
-          aria-controls="sheet-settings"
-        >
-          <SettingsNavIcon />
-          Settings
-        </button>
       </div>
 
       <div class="sheet-backdrop" id="sheet-backdrop" hidden data-sheet-backdrop></div>
@@ -561,62 +548,6 @@ export function SettingsPanel({
                 Delete clip
               </button>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        class="sheet"
-        id="sheet-files"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="sheet-files-title"
-        hidden
-        data-sheet="files"
-      >
-        <div class="sheet__handle" aria-hidden="true"></div>
-        <div class="sheet__header">
-          <h2 class="sheet__title" id="sheet-files-title">
-            Files
-          </h2>
-          <button
-            type="button"
-            class="btn btn--ghost btn--icon"
-            data-close-sheet
-            aria-label="Close"
-          >
-            <CloseIcon />
-          </button>
-        </div>
-        <div class="sheet__body">
-          <form class="upload-form" data-upload-url={`/${slug}/upload`}>
-            <label class="drop-zone">
-              Tap to attach files
-              <input
-                type="file"
-                name="file"
-                class="file-input"
-                accept="image/*,.pdf,.txt,.zip,.json,.md"
-                multiple
-              />
-            </label>
-          </form>
-          <div class="file-list" style="padding:0">
-            {files.length > 0 ? (
-              files.map((file) => (
-                <FileAttachment
-                  key={file.fileId}
-                  slug={slug}
-                  fileId={file.fileId}
-                  filename={file.filename}
-                  mimeType={file.mimeType}
-                  size={file.size}
-                  compact
-                />
-              ))
-            ) : (
-              <div class="empty-state">No files attached yet.</div>
-            )}
           </div>
         </div>
       </div>
