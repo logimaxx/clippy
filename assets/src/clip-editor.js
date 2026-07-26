@@ -10,6 +10,7 @@ import { css } from "@codemirror/lang-css";
 import { json } from "@codemirror/lang-json";
 import { markdown } from "@codemirror/lang-markdown";
 import { sql } from "@codemirror/lang-sql";
+import { yaml } from "@codemirror/lang-yaml";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
 import { marked } from "marked";
 
@@ -54,6 +55,8 @@ function languageExtension(lang) {
       return css();
     case "sql":
       return sql();
+    case "yaml":
+      return yaml();
     case "markdown":
       return markdown();
     default:

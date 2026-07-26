@@ -55,6 +55,7 @@ function LanguageOptions({ language }: { language: string | null }) {
     ["html", "HTML"],
     ["css", "CSS"],
     ["sql", "SQL"],
+    ["yaml", "YAML"],
     ["markdown", "Markdown"],
   ] as const;
 
