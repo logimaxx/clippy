@@ -85,9 +85,10 @@ When `UMAMI_WEBSITE_ID` is set, CSP also allows the Umami script origin for `scr
 
 ### Data lifecycle
 
-- Default TTL: 24 hours
-- Background cleanup deletes expired clips and orphan files
-- Burn-on-read and view limits apply to API reads
+- Default TTL: 15 minutes (configurable up to 1 year)
+- Background cleanup deletes expired clips, version history, and orphan files
+- Burn-on-read deletes on the first real web visit or API read; unread burn clips still expire after 7 days
+- View limits apply to web and API reads when configured
 
 ## Known limitations
 

@@ -28,6 +28,12 @@ export type ExpiresOptionValue = (typeof EXPIRES_OPTIONS)[number]["value"];
 
 export const DEFAULT_TTL = 900;
 
+/**
+ * Safety-net lifetime for burn-after-read clips that are never viewed.
+ * Burn still deletes on first real read; this only caps abandoned clips.
+ */
+export const BURN_MAX_TTL = 604800; // 7 days
+
 export const MAX_FILES_PER_CLIP = 10;
 
 export function formatExpiresAt(expiresAt: number): string {
@@ -51,7 +57,7 @@ export function clipFromExpiresMode(
   now: number
 ): { burnOnRead: boolean; expiresAt: number | null; maxViews: number | null } {
   if (value === EXPIRES_BURN) {
-    return { burnOnRead: true, expiresAt: null, maxViews: null };
+    return { burnOnRead: true, expiresAt: now + BURN_MAX_TTL, maxViews: null };
   }
   if (value === EXPIRES_CUSTOM) {
     return { burnOnRead: false, expiresAt: now + DEFAULT_TTL, maxViews: null };
@@ -61,6 +67,18 @@ export function clipFromExpiresMode(
     return { burnOnRead: false, expiresAt: now + ttl, maxViews: null };
   }
   return { burnOnRead: false, expiresAt: now + DEFAULT_TTL, maxViews: null };
+}
+
+/** Cap burn-after-read clips so abandoned ones still auto-delete. */
+export function applyBurnExpiryCap(
+  burnOnRead: boolean,
+  expiresAt: number | null | undefined,
+  now: number
+): number | null {
+  if (!burnOnRead) return expiresAt ?? null;
+  const cap = now + BURN_MAX_TTL;
+  if (expiresAt == null || expiresAt > cap) return cap;
+  return expiresAt;
 }
 
 /** @deprecated Advanced read limits — not shown in main UI */
@@ -234,6 +252,7 @@ export const RESERVED_SLUGS = new Set([
   "privacy",
   "terms",
   "security",
+  "about",
   "docs",
   "demo",
   "explore",

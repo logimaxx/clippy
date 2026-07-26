@@ -63,7 +63,7 @@ curl -s https://webklip.com/api/v1/clips/my-clip</code></pre>
   "ownerPassword": "optional-owner-secret"
 }</code></pre>
 <ul>
-  <li><code>burnOnRead</code> — defaults to <code>false</code>. Set <code>true</code> for burn-after-read (no timed expiry).</li>
+  <li><code>burnOnRead</code> — defaults to <code>false</code>. Set <code>true</code> for burn-after-read (deletes on first read; unread clips still expire after 7 days).</li>
   <li><code>ttl</code> — seconds until expiry (default <code>900</code> = 15 min; max 1 year).</li>
   <li><code>maxViews</code> — delete after N API reads (<code>0</code> = unlimited).</li>
   <li><code>pin</code> — lock the clip; stored as a bcrypt hash.</li>

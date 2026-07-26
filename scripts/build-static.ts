@@ -138,7 +138,7 @@ function buildContext(): BuildContext {
     assetBase: loadManifest(),
     contactEmail: process.env.CONTACT_EMAIL ?? "contact@logimaxx.ro",
     year: String(new Date().getFullYear()),
-    legalUpdated: "July 24, 2026",
+    legalUpdated: "July 26, 2026",
     umamiScript: umami?.script ?? "",
     footerTracking: umami
       ? " Privacy-friendly site analytics."
@@ -392,11 +392,11 @@ writePage(
   renderPage(layout, header, footer, homeBody, ctx, {
     title: "Webklip — Temporary Workspace for Instant Text & File Sharing",
     description:
-      "Stop sending yourself links through WhatsApp. Share text and files instantly between devices with a temporary private link. No account, real-time sync, automatic deletion.",
+      "Stop sending yourself links through WhatsApp. Share text and files instantly between devices with a temporary private link. No account, real-time sync, expires in 15 minutes by default.",
     canonical: "/",
     ogTitle: "Webklip — Stop sending yourself links through WhatsApp",
     ogDescription:
-      "Share text and files instantly between devices with a temporary private link. No accounts. No conversations. No permanent storage.",
+      "Share text and files instantly between devices with a temporary private link. No accounts. Expires in 15 minutes by default.",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "WebApplication",
@@ -405,7 +405,7 @@ writePage(
       operatingSystem: "Any",
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
       description:
-        "A free temporary workspace for instant text and file sharing between devices, with a REST API for automation. No sign-up required.",
+        "A free temporary workspace for instant text and file sharing between devices. No sign-up required. Clips expire in 15 minutes by default.",
     },
     jsonLdFile: "index.json",
   })
@@ -413,6 +413,14 @@ writePage(
 
 // Legal pages
 const legalPages = [
+  {
+    path: "/about",
+    file: "about.html",
+    src: "about.html",
+    title: "About — Webklip",
+    description:
+      "Who builds Webklip, why clips are ephemeral by default, and how to contact us.",
+  },
   {
     path: "/privacy",
     file: "privacy.html",

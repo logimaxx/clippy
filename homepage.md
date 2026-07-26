@@ -1,6 +1,6 @@
 # Webklip — Temporary Workspace for Instant Text & File Sharing
 
-**Meta description:** Stop sending yourself links through WhatsApp. Share text and files instantly between devices with a temporary private link. No account, real-time sync, automatic deletion.
+**Meta description:** Stop sending yourself links through WhatsApp. Share text and files instantly between devices with a temporary private link. No account, real-time sync, expires in 15 minutes by default.
 
 ---
 
@@ -11,7 +11,7 @@ Temporary workspace
 # Stop sending yourself links through WhatsApp.
 
 Share text and files instantly between any devices using a temporary private link.
-No accounts. No conversations. No permanent storage.
+No accounts. No conversations. Expires in 15 minutes by default.
 
 **[Create a Clip]**
 Or open any URL like `webklip.com/my-clip` to start sharing.
@@ -71,9 +71,11 @@ Chat apps and email keep permanent copies, need an account, and bury files in co
 
 *(Kept as the single security-focused section — no longer repeating the feature list, just the privacy-specific claims.)*
 
-- No ads, no analytics trackers
+- No ads
+- Privacy-friendly site analytics only when enabled (never tracks the clipboard app itself)
 - Anonymous — no account needed
-- Automatic deletion after expiry
+- Expires in 15 minutes by default (you can extend)
+- Automatic deletion after expiry — we do not keep abandoned clips
 - Choose PIN or end-to-end encryption for sensitive content (not both)
 
 Anyone with the link can access a clip unless you protect it with a PIN or end-to-end encryption — pick one mode for sensitive data. Public Klipwall clips stay unprotected by design.
@@ -92,9 +94,9 @@ A few clips people chose to list on Explore.
 
 ## Footer
 
-Ephemeral by design. No ads. No tracking. Data deleted on expiry.
+Ephemeral by design. No ads. Privacy-friendly site analytics when enabled. Expires in 15 min by default. Data deleted on expiry.
 
-[Privacy] [Terms] [Security] [Contact]
+[About] [Privacy] [Terms] [Security] [Contact]
 
 **Resources:** [Online Clipboard] [Live Sync Clipboard] [Share Text Between Devices] [Temporary File Sharing] [Secure Clipboard] [Share Code Snippets] [Burn After Read Links] [End-to-End Encrypted Clipboard]
 

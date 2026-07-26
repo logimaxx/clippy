@@ -11,9 +11,9 @@
       or use clip content for marketing.
     </p>
     <p>
-      The public service is designed for anonymous clip sharing — no sign-up is required.
-      Registered user accounts are not currently a public feature. If we offer accounts later,
-      we will update this policy before that becomes available.
+      The public service is designed for anonymous clip sharing — no sign-up is required
+      to create or view clips. Optional accounts are available for people who want a
+      dashboard, teams, or API keys. Account features never gate the core clipboard flow.
     </p>
 
     <h2>Who is responsible</h2>
@@ -56,6 +56,13 @@
       ciphertext only; we cannot read that content.
     </p>
 
+    <h3>Optional accounts</h3>
+    <p>
+      If you register, we process the email address and password hash you provide, plus
+      account-scoped data such as API keys and team membership. You can use Webklip without
+      creating an account.
+    </p>
+
     <h3>Webhooks</h3>
     <p>
       If you set a webhook on a clip, we send event notifications to the URL you provide
@@ -95,10 +102,20 @@
 
     <h2>How long we keep clip content</h2>
     <ul>
-      <li>Default lifetime is short (typically 24 hours), or burn-after-read when enabled</li>
-      <li>Configurable TTL options range from 15 minutes to 1 year (including a custom date/time)</li>
+      <li>
+        Default lifetime is <strong>15 minutes</strong>. You can extend it (up to 1 year)
+        or pick a custom date/time
+      </li>
+      <li>
+        Burn-after-read deletes on the first real view (not link previews). Unread burn
+        clips still expire after <strong>7 days</strong> so abandoned one-time links do
+        not linger forever
+      </li>
       <li>Optional view limits can end access earlier</li>
-      <li>Expired and deleted clips, related versions, and orphaned files are removed by cleanup jobs</li>
+      <li>
+        Expired and deleted clips, related version history, and orphaned files are removed
+        by cleanup jobs
+      </li>
     </ul>
     <p>
       Residual copies may exist briefly in caches or database journals until cleanup completes.

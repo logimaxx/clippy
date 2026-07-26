@@ -51,6 +51,10 @@ export async function getVersion(versionId: string) {
   return rows[0] ?? null;
 }
 
+export async function deleteVersionsForClip(clipSlug: string) {
+  await db.delete(clipVersions).where(eq(clipVersions.clipSlug, clipSlug));
+}
+
 const versionTimers = new Map<string, Timer>();
 
 export function scheduleVersionSave(

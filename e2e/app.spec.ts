@@ -67,7 +67,7 @@ test.describe("Webklip E2E", () => {
     });
 
     test("legal pages load", async ({ page }) => {
-      for (const path of ["/privacy", "/terms", "/security"]) {
+      for (const path of ["/about", "/privacy", "/terms", "/security"]) {
         await page.goto(path);
         await expect(page.getByRole("main")).toBeVisible();
         await expect(page).toHaveTitle(/Webklip/i);

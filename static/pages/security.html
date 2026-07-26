@@ -25,9 +25,12 @@
 
     <h2>Data lifecycle</h2>
     <ul>
-      <li>Default TTL: 24 hours, configurable per clip</li>
-      <li>Burn-on-read: optional single-view deletion when enabled</li>
-      <li>Background cleanup: expired clips and orphan files are permanently deleted</li>
+      <li>Default TTL: 15 minutes, configurable per clip (up to 1 year)</li>
+      <li>
+        Burn-on-read: deletes on the first real web visit or API read; unread burn clips
+        still expire after 7 days
+      </li>
+      <li>Background cleanup: expired clips, version history, and orphan files are permanently deleted</li>
       <li>View limits: optional cap on views (1, 3, 10, or unlimited)</li>
     </ul>
 

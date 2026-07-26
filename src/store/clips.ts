@@ -1,9 +1,10 @@
 import { eq, lt, and, isNotNull, isNull, or, gt, desc } from "drizzle-orm";
 import { db } from "../db/client";
 import { clips, type Clip, type NewClip, type ClipVisibility } from "../db/schema";
-import { DEFAULT_TTL } from "../lib/constants";
+import { applyBurnExpiryCap, BURN_MAX_TTL, DEFAULT_TTL } from "../lib/constants";
 import { fireWebhook } from "../lib/webhook";
 import { getFilesDir } from "../lib/cleanup";
+import { deleteVersionsForClip } from "./versions";
 import * as memory from "./memory";
 import { unlink, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
@@ -37,12 +38,15 @@ export async function createClip(
   const now = Math.floor(Date.now() / 1000);
   const normalized = normalizeNewClipPublic(opts, now);
   const burnOnRead = normalized.burnOnRead ?? false;
-  const expiresAt =
+  const expiresAt = applyBurnExpiryCap(
+    burnOnRead,
     normalized.expiresAt !== undefined
       ? normalized.expiresAt
       : burnOnRead
-        ? null
-        : now + DEFAULT_TTL;
+        ? now + BURN_MAX_TTL
+        : now + DEFAULT_TTL,
+    now
+  );
 
   const clip: NewClip = {
     slug,
@@ -249,7 +253,15 @@ export async function updateSettings(slug: string, settings: ClipSettingsUpdate)
   const current = await getClip(slug);
   if (!current) return null;
 
-  const constrained = applyVisibilityConstraints(current, settings);
+  const now = Math.floor(Date.now() / 1000);
+  const constrained = applyVisibilityConstraints(current, settings, now);
+  const burnOnRead =
+    constrained.burnOnRead !== undefined ? constrained.burnOnRead : current.burnOnRead;
+  if (burnOnRead) {
+    const mergedExpires =
+      constrained.expiresAt !== undefined ? constrained.expiresAt : current.expiresAt;
+    constrained.expiresAt = applyBurnExpiryCap(true, mergedExpires, now);
+  }
   await db.update(clips).set(constrained).where(eq(clips.slug, slug));
   memory.deleteCached(slug);
   return getClip(slug);
@@ -301,6 +313,7 @@ export async function recordView(slug: string): Promise<Clip | null> {
 export async function deleteClip(slug: string) {
   const clip = await getClip(slug);
   memory.deleteCached(slug);
+  await deleteVersionsForClip(slug);
   await db.delete(clips).where(eq(clips.slug, slug));
 
   const slugDir = join(getFilesDir(), slug);
@@ -318,10 +331,19 @@ export async function cleanupExpired() {
   const expired = await db
     .select()
     .from(clips)
-    .where(and(isNotNull(clips.expiresAt), lt(clips.expiresAt, now)));
+    .where(
+      or(
+        and(isNotNull(clips.expiresAt), lt(clips.expiresAt, now)),
+        and(
+          eq(clips.burnOnRead, true),
+          isNull(clips.expiresAt),
+          lt(clips.createdAt, now - BURN_MAX_TTL)
+        )
+      )
+    );
 
   for (const clip of expired) {
-    await fireWebhook(clip, "expired", { expiresAt: clip.expiresAt });
+    await fireWebhook(clip, "expired", { expiresAt: clip.expiresAt ?? now });
     await deleteClip(clip.slug);
   }
 

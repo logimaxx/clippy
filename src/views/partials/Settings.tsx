@@ -102,7 +102,7 @@ function ExpiresSelect({
           text={
             isPublic
               ? "Public clips need a timed expiry. Turn Public off to use burn-after-read."
-              : "Burn after read deletes on the first real visit (not link previews). API reads also count."
+              : "Burn after read deletes on the first real visit (not link previews). API reads also count. Unread burn clips still expire after 7 days."
           }
         />
       )}
