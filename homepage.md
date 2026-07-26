@@ -16,9 +16,9 @@ No accounts. No conversations. No permanent storage.
 **[Create a Clip]**
 Or open any URL like `webklip.com/my-clip` to start sharing.
 
-[View Demo] [See how it works]
+[View Demo]
 
-*(Consider putting a live, empty paste box directly in the hero here — instead of only a button — so the product is visible before any scrolling.)*
+*(Hero includes a live paste box so the product is visible before any scrolling. No "How it works" section — the paste box already demonstrates the loop.)*
 
 ---
 
@@ -44,15 +44,6 @@ Or open any URL like `webklip.com/my-clip` to start sharing.
 Type on one device. Watch it appear on every other open tab — live, over a private link.
 
 *(SEO landing page in `static/landing-pages.json` — same template as Online Clipboard / Share Text Between Devices.)*
-
----
-
-## How it works
-
-1. **Create a clip** — One click, custom name or random URL
-2. **Paste or upload** — Text and files sync in real time
-3. **Share the link** — Send the URL or scan the QR code
-4. **Auto-delete** — Clips expire on schedule, nothing left behind
 
 ---
 
@@ -117,4 +108,5 @@ Ephemeral by design. No ads. No tracking. Data deleted on expiry.
 2. Removed the standalone "What is Webklip?" paragraph — redundant with the hero.
 3. Cut the WhatsApp comparison table down to a short paragraph; the hero title already carries that argument.
 4. Reduced "How people use Webklip" from 8 personas to 3.
-5. Suggested moving the actual clip-creation box into the hero so the product is visible without a click.
+5. Moved the clip-creation box into the hero so the product is visible without a click.
+6. Removed "How it works" — redundant with the hero paste box.
