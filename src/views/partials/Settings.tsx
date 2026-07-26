@@ -2,13 +2,14 @@
 import {
   EXPIRES_OPTIONS,
   EXPIRES_CUSTOM,
+  EXPIRES_BURN,
   remainingSeconds,
   expiresModeFromClip,
   formatExpiresAt,
 } from "../../lib/constants";
 import { SettingHint } from "./SettingHint";
 import { VersionsPanel } from "./Versions";
-import { CloseIcon } from "./ClipIcons";
+import { CloseIcon, SettingsNavIcon } from "./ClipIcons";
 import type { ClipVersion } from "../../db/schema";
 import type { ClipFileMeta } from "../../store/clips";
 import { FileAttachment } from "./FileAttachment";
@@ -70,145 +71,136 @@ function LanguageOptions({ language }: { language: string | null }) {
   );
 }
 
-function SettingsPrimaryFields({
+function ExpiresSelect({
   slug,
   expiresAt,
   burnOnRead,
-  language,
-  hasPin,
-  hasOwnerPassword,
-  encrypted,
   visibility,
-  idPrefix = "",
-  mobile = false,
+  id,
+  showHint = false,
 }: {
   slug: string;
   expiresAt: number | null;
   burnOnRead: boolean;
-  language: string | null;
-  hasPin: boolean;
-  hasOwnerPassword: boolean;
-  encrypted: boolean;
   visibility: "private" | "public";
-  idPrefix?: string;
-  mobile?: boolean;
+  id: string;
+  showHint?: boolean;
 }) {
   const currentExpires = expiresModeFromClip(burnOnRead, expiresAt);
-  const ttlId = `${idPrefix}ttl`;
-  const languageId = `${idPrefix}language`;
-  const pinId = `${idPrefix}pin`;
   const isPublic = visibility === "public";
+  const expiresOptions = isPublic
+    ? EXPIRES_OPTIONS.filter((opt) => opt.value !== EXPIRES_BURN)
+    : EXPIRES_OPTIONS;
 
   return (
-    <>
-      <div class="field">
-        <span class="field__label">
-          {mobile ? "List on Klipwall" : "Public"}
-          {!mobile && (
-            <SettingHint text="Lists this clip on Klipwall. You will set an owner password so you can recover access later. Visitors cannot use burn, PIN, or E2E." />
-          )}
-        </span>
-        <div class="settings-e2e-row">
-          <label class="toggle">
-            {isPublic ? (
-              <input
-                type="checkbox"
-                checked
-                data-public-toggle
-                data-slug={slug}
-                data-has-owner-password={hasOwnerPassword ? "true" : "false"}
-                hx-post={`/${slug}/settings`}
-                hx-vals='{"visibility":"private"}'
-                hx-target="#settings-root"
-                hx-swap="outerHTML"
-                hx-trigger="change"
-              />
-            ) : (
-              <input
-                type="checkbox"
-                data-public-toggle
-                data-slug={slug}
-                data-has-owner-password={hasOwnerPassword ? "true" : "false"}
-              />
-            )}
-            <span class="toggle__track" aria-hidden="true"></span>
-            <span>
-              {mobile
-                ? "Show this clip on Klipwall"
-                : isPublic
-                  ? "On"
-                  : "Off"}
-            </span>
-          </label>
-        </div>
+    <div class="field">
+      <SettingsLabel forId={id}>
+        <span>Expires</span>
+      </SettingsLabel>
+      {showHint && (
+        <SettingHint
+          text={
+            isPublic
+              ? "Public clips need a timed expiry. Turn Public off to use burn-after-read."
+              : "Burn after read deletes on the first real visit (not link previews). API reads also count."
+          }
+        />
+      )}
+      <select
+        id={id}
+        name="ttl"
+        data-expires-select
+        data-slug={slug}
+        data-expires-at={expiresAt ?? ""}
+        hx-post={`/${slug}/settings`}
+        hx-target="#settings-root"
+        hx-swap="outerHTML"
+        hx-trigger="change"
+      >
+        {expiresOptions.map((opt) => {
+          const selected = String(opt.value) === currentExpires;
+          const label =
+            opt.value === EXPIRES_CUSTOM && currentExpires === EXPIRES_CUSTOM && expiresAt
+              ? `Custom · ${formatExpiresAt(expiresAt)}`
+              : opt.label;
+          return (
+            <option value={opt.value} selected={selected}>
+              {label}
+            </option>
+          );
+        })}
+      </select>
+    </div>
+  );
+}
+
+function ProtectSection({
+  slug,
+  hasPin,
+  encrypted,
+}: {
+  slug: string;
+  hasPin: boolean;
+  encrypted: boolean;
+}) {
+  const mode = hasPin ? "pin" : encrypted ? "e2e" : "none";
+  const pinId = "m-pin";
+
+  return (
+    <div class="sheet__section" data-protect-section>
+      <h3 class="sheet__section-title">Protect</h3>
+      <SettingHint text="Choose one: PIN gates access on the server, or E2E encrypts in the browser (key in the URL). Not available on Klipwall." />
+      <div class="protect-options" role="radiogroup" aria-label="Protection">
+        <label class="protect-option">
+          <input
+            type="radio"
+            name="protect"
+            value="none"
+            checked={mode === "none"}
+            data-protect-option="none"
+            hx-post={`/${slug}/settings`}
+            hx-vals='{"protect":"none"}'
+            hx-target="#settings-root"
+            hx-swap="outerHTML"
+            hx-trigger="change"
+          />
+          <span class="protect-option__label">None</span>
+          <span class="protect-option__desc">Anyone with the link</span>
+        </label>
+        <label class="protect-option">
+          <input
+            type="radio"
+            name="protect"
+            value="pin"
+            checked={mode === "pin"}
+            data-protect-option="pin"
+            data-has-pin={hasPin ? "true" : "false"}
+            data-encrypted={encrypted ? "true" : "false"}
+          />
+          <span class="protect-option__label">PIN</span>
+          <span class="protect-option__desc">Visitors enter a PIN first</span>
+        </label>
+        <label class="protect-option">
+          <input
+            type="radio"
+            name="protect"
+            value="e2e"
+            checked={mode === "e2e"}
+            data-protect-option="e2e"
+            data-has-pin={hasPin ? "true" : "false"}
+            data-encrypted={encrypted ? "true" : "false"}
+          />
+          <span class="protect-option__label">E2E</span>
+          <span class="protect-option__desc">Encrypt in browser · key in URL</span>
+        </label>
       </div>
 
-      <div class="field">
-        <SettingsLabel forId={ttlId}>
-          <span>Expires</span>
-          {!mobile && (
-            <SettingHint
-              text={
-                isPublic
-                  ? "Burn after read isn’t allowed for public clips — choosing it removes the clip from Klipwall."
-                  : "Burn after read deletes on the first real visit (not link previews). API reads also count."
-              }
-            />
-          )}
-        </SettingsLabel>
-        <select
-          id={ttlId}
-          name="ttl"
-          data-expires-select
-          data-slug={slug}
-          data-expires-at={expiresAt ?? ""}
-          hx-post={`/${slug}/settings`}
-          hx-target="#settings-root"
-          hx-swap="outerHTML"
-          hx-trigger="change"
-        >
-          {EXPIRES_OPTIONS.map((opt) => {
-            const selected = String(opt.value) === currentExpires;
-            const label =
-              opt.value === EXPIRES_CUSTOM && currentExpires === EXPIRES_CUSTOM && expiresAt
-                ? `Custom · ${formatExpiresAt(expiresAt)}`
-                : opt.label;
-            return (
-              <option value={opt.value} selected={selected}>
-                {label}
-              </option>
-            );
-          })}
-        </select>
-      </div>
-
-      <div class="field">
-        <SettingsLabel forId={languageId}>
-          <span>{mobile ? "Syntax highlighting" : "Syntax"}</span>
-          {!mobile && (
-            <SettingHint text="Syntax highlighting in the editor only. Does not change how content is stored." />
-          )}
-        </SettingsLabel>
-        <select
-          id={languageId}
-          name="language"
-          hx-post={`/${slug}/settings`}
-          hx-target="#settings-root"
-          hx-swap="outerHTML"
-          hx-trigger="change"
-        >
-          <LanguageOptions language={language} />
-        </select>
-      </div>
-
-      <div class={`field${mobile ? "" : " field--pin"}`}>
-        <SettingsLabel forId={hasPin ? undefined : pinId}>
-          <span>{mobile ? "PIN protection" : "PIN"}</span>
-          {hasPin && !mobile && <span class="settings-pin-badge">on</span>}
-          {!mobile && (
-            <SettingHint text="Visitors must enter this PIN before they can open the clip." />
-          )}
-        </SettingsLabel>
+      <div
+        id="protect-pin-fields"
+        class="protect-pin-fields"
+        hidden={mode !== "pin"}
+        data-protect-pin-fields
+      >
         {hasPin ? (
           <div class="settings-pin-active">
             <p class="settings-pin-status">PIN protection is active</p>
@@ -217,7 +209,7 @@ function SettingsPrimaryFields({
                 type="button"
                 class="btn btn--ghost btn--sm settings-pin-remove"
                 hx-post={`/${slug}/settings`}
-                hx-vals='{"clearPin":"on"}'
+                hx-vals='{"protect":"none"}'
                 hx-target="#settings-root"
                 hx-swap="outerHTML"
               >
@@ -237,7 +229,7 @@ function SettingsPrimaryFields({
                     type="button"
                     class="btn btn--ghost btn--sm settings-pin-save"
                     hx-post={`/${slug}/settings`}
-                    hx-include={`[name='pin']`}
+                    hx-include={`#${pinId}`}
                     hx-target="#settings-root"
                     hx-swap="outerHTML"
                   >
@@ -260,73 +252,29 @@ function SettingsPrimaryFields({
               type="button"
               class="btn btn--ghost btn--sm settings-pin-save"
               hx-post={`/${slug}/settings`}
-              hx-include={`[name='pin']`}
+              hx-include={`#${pinId}`}
               hx-target="#settings-root"
               hx-swap="outerHTML"
             >
-              Save
+              Save PIN
             </button>
           </div>
         )}
       </div>
 
-      <div class="field">
-        <span class="field__label">
-          {mobile ? "End-to-end encryption" : "E2E encryption"}
-          <SettingHint text="Encrypts in your browser before upload — the server only stores ciphertext. The key stays in the URL fragment (#key=…) and never reaches us. Share the full link (including #key=) so others can decrypt." />
-        </span>
-        <div class="settings-e2e-row">
-          <label class="toggle">
-            <input
-              type="checkbox"
-              checked={encrypted}
-              hx-post={`/${slug}/settings`}
-              hx-vals={encrypted ? '{"encrypted":"off"}' : '{"encrypted":"on"}'}
-              hx-target="#settings-root"
-              hx-swap="outerHTML"
-              hx-trigger="change"
-            />
-            <span class="toggle__track" aria-hidden="true"></span>
-            <span>
-              {mobile
-                ? "Encrypt in browser (key in URL hash)"
-                : encrypted
-                  ? "On"
-                  : "Off"}
-            </span>
-          </label>
-          {encrypted && !mobile && (
-            <button
-              type="button"
-              class="btn btn--ghost btn--sm"
-              id="e2e-generate-key"
-              title="Generate & copy secure link"
-            >
-              Get Key
-            </button>
-          )}
-        </div>
-      </div>
-
-      {!burnOnRead && expiresAt !== null && !mobile && (
-        <div class="field">
-          <span class="field__label">
-            <span>Countdown</span>
-            <SettingHint text="Time left before this clip is deleted." />
-          </span>
-          <span
-            id="ttl-countdown"
-            class="countdown"
-            data-expires={expiresAt}
-            hx-get={`/${slug}/countdown`}
-            hx-trigger="every 1s"
-            hx-swap="innerHTML"
+      {encrypted && (
+        <div class="settings-e2e-row protect-e2e-actions">
+          <button
+            type="button"
+            class="btn btn--ghost btn--sm"
+            id="e2e-generate-key"
+            title="Generate & copy secure link"
           >
-            {remainingSeconds(expiresAt)}s
-          </span>
+            Get Key
+          </button>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
@@ -352,45 +300,67 @@ export function SettingsPanel({
   files = [],
 }: SettingsProps) {
   const deviceLabel = `${devices} device${devices === 1 ? "" : "s"}`;
+  const isPublic = visibility === "public";
+  const protectionAttrs = {
+    "data-has-pin": hasPin ? "true" : "false",
+    "data-encrypted": encrypted ? "true" : "false",
+    "data-burn-on-read": burnOnRead ? "true" : "false",
+  };
 
   return (
-    <div id="settings-root">
-      <div id="settings-panel">
-        <div class="toolbar toolbar--desktop-only" role="toolbar" aria-label="Clip settings">
-          <div class="toolbar__group">
-            <fieldset class="settings-form-desktop" id="settings-form-desktop">
-              <SettingsPrimaryFields
-                slug={slug}
-                expiresAt={expiresAt}
-                burnOnRead={burnOnRead}
-                language={language}
-                hasPin={hasPin}
-                hasOwnerPassword={hasOwnerPassword}
-                encrypted={encrypted}
-                visibility={visibility}
-              />
-            </fieldset>
-          </div>
+    <div id="settings-root" class="header-settings">
+      <div class="header-cluster" aria-label="Clip status">
+        <span class="chip chip--live chip--devices">
+          <span class="pulse" aria-hidden="true"></span>
+          <span id="device-count-desktop">{deviceLabel}</span>
+        </span>
+        <span class="chip chip--live chip--devices-mobile">
+          <span class="pulse" aria-hidden="true"></span>
+          <span id="device-count">{deviceLabel}</span>
+        </span>
+        <button
+          type="button"
+          class={`chip chip--action ${isPublic ? "chip--public" : "chip--private"}`}
+          data-open-sheet="settings"
+          title="Open settings"
+        >
+          {isPublic ? "Public" : "Private"}
+        </button>
+        {hasPin ? (
           <button
             type="button"
-            class="btn btn--ghost btn--sm toolbar__more"
+            class="chip chip--action chip--pin"
             data-open-sheet="settings"
+            title="Open settings"
           >
-            All settings
+            PIN
           </button>
-        </div>
-
-        <div class="toolbar toolbar--mobile-only">
-          <span class="chip chip--live">
-            <span class="pulse" aria-hidden="true"></span>
-            Synced · <span id="device-count">{deviceLabel}</span>
-          </span>
-          {visibility === "public" && <span class="chip chip--public">Public</span>}
-          {encrypted && <span class="chip chip--secure">E2E on</span>}
-          {!burnOnRead && expiresAt !== null && (
+        ) : encrypted ? (
+          <button
+            type="button"
+            class="chip chip--action chip--secure"
+            data-open-sheet="settings"
+            title="Open settings"
+          >
+            E2E
+          </button>
+        ) : (
+          <button
+            type="button"
+            class="chip chip--action chip--open"
+            data-open-sheet="settings"
+            title="Open settings"
+          >
+            Unprotected
+          </button>
+        )}
+        {burnOnRead ? (
+          <span class="chip chip--expiry">Burn</span>
+        ) : (
+          expiresAt !== null && (
             <span
+              id="ttl-countdown"
               class="countdown"
-              style="margin-left:auto"
               data-expires={expiresAt}
               hx-get={`/${slug}/countdown`}
               hx-trigger="every 1s"
@@ -398,8 +368,30 @@ export function SettingsPanel({
             >
               {remainingSeconds(expiresAt)}s
             </span>
-          )}
-        </div>
+          )
+        )}
+      </div>
+
+      <div class="header-quick">
+        <fieldset class="settings-form-desktop" id="settings-form-desktop">
+          <ExpiresSelect
+            slug={slug}
+            expiresAt={expiresAt}
+            burnOnRead={burnOnRead}
+            visibility={visibility}
+            id="ttl"
+          />
+        </fieldset>
+        <button
+          type="button"
+          class="btn btn--ghost btn--sm header-settings-btn toolbar__more"
+          data-open-sheet="settings"
+          aria-haspopup="dialog"
+          aria-controls="sheet-settings"
+        >
+          <SettingsNavIcon />
+          Settings
+        </button>
       </div>
 
       <div class="sheet-backdrop" id="sheet-backdrop" hidden data-sheet-backdrop></div>
@@ -429,21 +421,78 @@ export function SettingsPanel({
         </div>
         <div class="sheet__body">
           <fieldset class="settings-form-mobile" id="settings-form-mobile">
-            <div class="settings-grid">
-              <SettingsPrimaryFields
+            <div class="sheet__section">
+              <h3 class="sheet__section-title">Share</h3>
+              <SettingHint text="Private link for people you share with, or list on Klipwall for discovery. Public clears PIN, E2E, and burn-after-read." />
+              <div class="field">
+                <span class="field__label">Klipwall</span>
+                <div class="settings-e2e-row">
+                  <label class="toggle">
+                    {isPublic ? (
+                      <input
+                        type="checkbox"
+                        checked
+                        data-public-toggle
+                        data-slug={slug}
+                        data-has-owner-password={hasOwnerPassword ? "true" : "false"}
+                        {...protectionAttrs}
+                        hx-post={`/${slug}/settings`}
+                        hx-vals='{"visibility":"private"}'
+                        hx-target="#settings-root"
+                        hx-swap="outerHTML"
+                        hx-trigger="change"
+                      />
+                    ) : (
+                      <input
+                        type="checkbox"
+                        data-public-toggle
+                        data-slug={slug}
+                        data-has-owner-password={hasOwnerPassword ? "true" : "false"}
+                        {...protectionAttrs}
+                      />
+                    )}
+                    <span class="toggle__track" aria-hidden="true"></span>
+                    <span>{isPublic ? "Listed on Klipwall" : "Private link only"}</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            {!isPublic && <ProtectSection slug={slug} hasPin={hasPin} encrypted={encrypted} />}
+
+            <div class="sheet__section">
+              <h3 class="sheet__section-title">Lifetime</h3>
+              <ExpiresSelect
                 slug={slug}
                 expiresAt={expiresAt}
                 burnOnRead={burnOnRead}
-                language={language}
-                hasPin={hasPin}
-                hasOwnerPassword={hasOwnerPassword}
-                encrypted={encrypted}
                 visibility={visibility}
-                idPrefix="m-"
-                mobile
+                id="m-ttl"
+                showHint
               />
             </div>
+
+            <div class="sheet__section">
+              <h3 class="sheet__section-title">Editor</h3>
+              <div class="field">
+                <SettingsLabel forId="m-language">
+                  <span>Syntax highlighting</span>
+                </SettingsLabel>
+                <SettingHint text="Syntax highlighting in the editor only. Does not change how content is stored." />
+                <select
+                  id="m-language"
+                  name="language"
+                  hx-post={`/${slug}/settings`}
+                  hx-target="#settings-root"
+                  hx-swap="outerHTML"
+                  hx-trigger="change"
+                >
+                  <LanguageOptions language={language} />
+                </select>
+              </div>
+            </div>
           </fieldset>
+
           <div class="sheet__section">
             <h3 class="sheet__section-title">Ownership</h3>
             <p class="field-hint">
@@ -465,8 +514,9 @@ export function SettingsPanel({
               </button>
             )}
           </div>
+
           <div class="sheet__section">
-            <h3 class="sheet__section-title">Integrations</h3>
+            <h3 class="sheet__section-title">Advanced</h3>
             <div class="field">
               <label class="field__label" for="m-webhook">
                 Webhook URL
@@ -492,15 +542,15 @@ export function SettingsPanel({
               and webhooks.
             </p>
           </div>
+
           <div class="sheet__section">
             <VersionsPanel slug={slug} versions={versions} />
           </div>
+
           <div class="sheet__section">
             <h3 class="sheet__section-title">Danger zone</h3>
             <div class="danger-zone">
-              <p>
-                Permanently delete this clip, files, and version history.
-              </p>
+              <p>Permanently delete this clip, files, and version history.</p>
               <button
                 id="delete-clip-btn"
                 type="button"
@@ -567,6 +617,69 @@ export function SettingsPanel({
             ) : (
               <div class="empty-state">No files attached yet.</div>
             )}
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="protect-switch-modal"
+        class="confirm-modal"
+        hidden
+        data-protect-switch-modal
+        data-slug={slug}
+      >
+        <div class="confirm-modal__backdrop" data-protect-switch-cancel></div>
+        <div
+          class="confirm-modal__panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="protect-switch-title"
+        >
+          <h2 class="confirm-modal__title" id="protect-switch-title">
+            Switch protection?
+          </h2>
+          <p class="confirm-modal__body" data-protect-switch-body>
+            Enabling this clears the other protection method.
+          </p>
+          <div class="confirm-modal__actions">
+            <button type="button" class="btn btn--ghost" data-protect-switch-cancel>
+              Cancel
+            </button>
+            <button type="button" class="btn btn--primary" data-protect-switch-confirm>
+              Continue
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="public-clear-protections-modal"
+        class="confirm-modal"
+        hidden
+        data-public-clear-modal
+        data-slug={slug}
+        data-has-owner-password={hasOwnerPassword ? "true" : "false"}
+      >
+        <div class="confirm-modal__backdrop" data-public-clear-modal-cancel></div>
+        <div
+          class="confirm-modal__panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="public-clear-protections-title"
+        >
+          <h2 class="confirm-modal__title" id="public-clear-protections-title">
+            Clear protections to publish?
+          </h2>
+          <p class="confirm-modal__body" data-public-clear-modal-body>
+            Publishing on Klipwall clears PIN, E2E encryption, and burn-after-read.
+          </p>
+          <div class="confirm-modal__actions">
+            <button type="button" class="btn btn--ghost" data-public-clear-modal-cancel>
+              Cancel
+            </button>
+            <button type="button" class="btn btn--primary" data-public-clear-modal-confirm>
+              Continue
+            </button>
           </div>
         </div>
       </div>

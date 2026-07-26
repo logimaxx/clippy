@@ -40,7 +40,7 @@ async function createClipViaApi(
 }
 
 async function openMoreSettings(page: Page) {
-  await page.getByRole("button", { name: "All settings" }).click();
+  await page.getByRole("button", { name: "Settings" }).click();
   await expect(page.locator("#sheet-settings.is-open")).toBeVisible();
 }
 
@@ -212,8 +212,9 @@ test.describe("Webklip E2E", () => {
       await createClipViaApi(page.request, slug, "const x = 1;");
       await page.goto(`/${slug}`);
 
-      await page.selectOption("#language", "javascript");
-      await expect(page.locator("#language")).toHaveValue("javascript");
+      await openMoreSettings(page);
+      await page.selectOption("#m-language", "javascript");
+      await expect(page.locator("#m-language")).toHaveValue("javascript");
     });
 
     test("TTL setting updates", async ({ page }) => {
@@ -271,18 +272,22 @@ test.describe("Webklip E2E", () => {
       });
       await page.goto(`/${slug}`);
 
-      await page.locator("#settings-form-desktop [data-public-toggle]").click({ force: true });
+      await openMoreSettings(page);
+      await page.locator("#settings-form-mobile [data-public-toggle]").click({ force: true });
       const modal = page.locator("#public-publish-modal");
       await expect(modal).toBeVisible();
       await modal.locator("#public-owner-password").fill("ownerpass1");
       await modal.getByRole("button", { name: "Publish" }).click();
       await expect(page.locator(".toast")).toContainText(/public|Klipwall|Published/i);
       await expect(
-        page.locator("#settings-form-desktop [data-public-toggle]")
+        page.locator("#settings-form-mobile [data-public-toggle]")
       ).toBeChecked();
       await page.reload();
-      await expect(page.locator(".header-chips .chip--public")).toBeVisible();
+      await expect(page.locator(".header-cluster .chip--public")).toBeVisible();
       await expect(page.locator("#ttl")).not.toHaveValue("burn");
+      await expect(page.locator("#ttl option[value='burn']")).toHaveCount(0);
+      await openMoreSettings(page);
+      await expect(page.locator("[data-protect-section]")).toHaveCount(0);
 
       await page.goto("/klipwall");
       await expect(page.getByRole("heading", { name: "Klipwall" })).toBeVisible();
@@ -297,36 +302,105 @@ test.describe("Webklip E2E", () => {
       });
       await page.goto(`/${slug}`);
 
-      await page.locator("#settings-form-desktop [data-public-toggle]").click({ force: true });
+      await openMoreSettings(page);
+      await page.locator("#settings-form-mobile [data-public-toggle]").click({ force: true });
       const modal = page.locator("#public-publish-modal");
       await expect(modal).toBeVisible();
       await modal.getByRole("button", { name: "Cancel" }).click();
       await expect(modal).toBeHidden();
-      await expect(page.locator("#settings-form-desktop [data-public-toggle]")).not.toBeChecked();
-      await expect(page.locator(".header-chips .chip--public")).toHaveCount(0);
+      await expect(page.locator("#settings-form-mobile [data-public-toggle]")).not.toBeChecked();
+      await expect(page.locator(".header-cluster .chip--public")).toHaveCount(0);
     });
 
-    test("burn after read removes a public clip from Klipwall", async ({ page }) => {
+    test("publishing with PIN asks to clear protections first", async ({ page }) => {
+      const slug = uniqueSlug("pubpin");
+      await createClipViaApi(page.request, slug, "protected then public", {
+        burnOnRead: false,
+        ttl: 3600,
+      });
+      await page.goto(`/${slug}`);
+
+      await openMoreSettings(page);
+      await page.locator('[data-protect-option="pin"]').check({ force: true });
+      await page.fill("#m-pin", "secretpin");
+      await page.locator("#settings-form-mobile .settings-pin-save").click();
+      await expect(page.getByRole("button", { name: "Remove PIN" })).toBeVisible({
+        timeout: 5_000,
+      });
+
+      await page.locator("#settings-form-mobile [data-public-toggle]").click({ force: true });
+      const clearModal = page.locator("#public-clear-protections-modal");
+      await expect(clearModal).toBeVisible();
+      await expect(clearModal).toContainText(/PIN/i);
+      await clearModal.getByRole("button", { name: "Cancel" }).click();
+      await expect(clearModal).toBeHidden();
+      await expect(page.locator("#settings-form-mobile [data-public-toggle]")).not.toBeChecked();
+      await expect(page.getByRole("button", { name: "Remove PIN" })).toBeVisible();
+
+      await page.locator("#settings-form-mobile [data-public-toggle]").click({ force: true });
+      await expect(clearModal).toBeVisible();
+      await clearModal.getByRole("button", { name: "Continue" }).click();
+      const publishModal = page.locator("#public-publish-modal");
+      await expect(publishModal).toBeVisible();
+      await publishModal.locator("#public-owner-password").fill("ownerpass1");
+      await publishModal.getByRole("button", { name: "Publish" }).click();
+      await expect(page.getByText(/Published on Klipwall/i)).toBeVisible();
+      await expect(
+        page.locator("#settings-form-mobile [data-public-toggle]")
+      ).toBeChecked();
+      await expect(page.locator("[data-protect-section]")).toHaveCount(0);
+      await page.reload();
+      await expect(page.locator(".header-cluster .chip--public")).toBeVisible();
+    });
+
+    test("PIN and E2E are mutually exclusive", async ({ page }) => {
+      const slug = uniqueSlug("xorprot");
+      await createClipViaApi(page.request, slug, "one protection", {
+        burnOnRead: false,
+        ttl: 3600,
+      });
+      await page.goto(`/${slug}`);
+      await openMoreSettings(page);
+
+      await page.locator('[data-protect-option="pin"]').check({ force: true });
+      await page.fill("#m-pin", "secretpin");
+      await page.locator("#settings-form-mobile .settings-pin-save").click();
+      await expect(page.getByRole("button", { name: "Remove PIN" })).toBeVisible({
+        timeout: 5_000,
+      });
+
+      await page.locator('[data-protect-option="e2e"]').click({ force: true });
+      const switchModal = page.locator("#protect-switch-modal");
+      await expect(switchModal).toBeVisible();
+      await switchModal.getByRole("button", { name: "Continue" }).click();
+      await expect(page.getByText(/encryption enabled/i)).toBeVisible();
+      await expect(page.locator('[data-protect-option="e2e"]')).toBeChecked();
+      await expect(page.getByRole("button", { name: "Remove PIN" })).toHaveCount(0);
+      await expect(page.locator(".header-cluster .chip--secure")).toBeVisible();
+    });
+
+    test("API burn demotes a public clip from Klipwall", async ({ page }) => {
       const slug = uniqueSlug("pubburn");
       await createClipViaApi(page.request, slug, "public then burn", {
         visibility: "public",
-        burnOnRead: true,
+        burnOnRead: false,
+        ttl: 3600,
         ownerPassword: "ownerpass1",
       });
 
-      const created = await page.request.get(`/api/v1/clips/${slug}`);
-      const body = await created.json();
-      expect(body.visibility).toBe("public");
-      expect(body.burnOnRead).toBe(false);
-
       await page.goto(`/${slug}`);
-      await expect(page.locator(".header-chips .chip--public")).toBeVisible();
+      await expect(page.locator(".header-cluster .chip--public")).toBeVisible();
+      await expect(page.locator("#ttl option[value='burn']")).toHaveCount(0);
 
-      await page.selectOption("#ttl", "burn");
-      await expect(page.locator("#ttl")).toHaveValue("burn");
-      await expect(page.locator(".toast")).toContainText(/removed from Klipwall/i);
+      const demote = await page.request.post(`/${slug}/settings`, {
+        form: { ttl: "burn" },
+      });
+      expect(demote.ok()).toBeTruthy();
+      expect(demote.headers()["hx-trigger"] ?? "").toMatch(/removed from Klipwall/i);
+
       await page.reload();
-      await expect(page.locator(".header-chips .chip--public")).toHaveCount(0);
+      await expect(page.locator(".header-cluster .chip--public")).toHaveCount(0);
+      await expect(page.locator("#ttl")).toHaveValue("burn");
 
       await page.goto("/klipwall");
       await expect(page.locator(`a[href="/${slug}"]`)).toHaveCount(0);
@@ -343,7 +417,7 @@ test.describe("Webklip E2E", () => {
 
       await page.goto(`/${slug}`);
       await expect(page.locator("#clip-content")).toBeEditable();
-      await expect(page.locator(".header-chips .chip--public")).toBeVisible();
+      await expect(page.locator(".header-cluster .chip--public")).toBeVisible();
 
       const visitor = await browser.newContext();
       const visitorPage = await visitor.newPage();
@@ -492,12 +566,13 @@ test.describe("Webklip E2E", () => {
       const setupPage = await setup.newPage();
       await createClipViaApi(setupPage.request, slug);
       await setupPage.goto(`/${slug}`);
-      await setupPage.fill("#pin", pin);
-      await setupPage.locator("#settings-form-desktop .settings-pin-save").click();
+      await openMoreSettings(setupPage);
+      await setupPage.locator('[data-protect-option="pin"]').check({ force: true });
+      await setupPage.fill("#m-pin", pin);
+      await setupPage.locator("#settings-form-mobile .settings-pin-save").click();
       await expect(setupPage.getByRole("button", { name: "Remove PIN" })).toBeVisible({
         timeout: 5_000,
       });
-      await expect(setupPage.locator("#pin")).not.toBeVisible();
       await setup.close();
 
       const locked = await browser.newContext();
@@ -537,7 +612,8 @@ test.describe("Webklip E2E", () => {
       await createClipViaApi(page.request, slug, "docs modal");
       await page.goto(`/${slug}`);
 
-      await page.getByRole("button", { name: /API documentation/i }).click();
+      await openMoreSettings(page);
+      await page.getByRole("button", { name: /REST API/i }).click();
       const dialog = page.locator("#docs-modal");
       await expect(dialog).toBeVisible();
       await expect(dialog.getByText("/api/v1/clips/:slug").first()).toBeVisible();

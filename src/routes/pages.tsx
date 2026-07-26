@@ -105,7 +105,7 @@ async function renderClipPage(c: Context, slug: string) {
   const crawler = isLinkPreviewCrawler(userAgent);
 
   const hadClip = await getClip(slug);
-  const clip = await ensureClip(slug, {
+  let clip = await ensureClip(slug, {
     ownerId: authUser?.id ?? null,
   });
   // Creator is owner on this request; Set-Cookie is not visible to getCookie yet.
@@ -131,6 +131,13 @@ async function renderClipPage(c: Context, slug: string) {
   const owner =
     createdNow || isClipOwner(c, slug, authUser?.id ?? null, clip.ownerId);
   const canWrite = await canWriteClip(clip, authUser?.id ?? null, owner);
+
+  // Heal legacy PIN+E2E (prefer E2E).
+  if (owner && clip.pinHash && clip.encrypted) {
+    const healed = await updateSettings(slug, {});
+    if (healed) clip = healed;
+  }
+
   let content = clip.content;
   let readOnly = !canWrite;
   let burned = false;
@@ -545,15 +552,25 @@ pages.post("/:slug/settings", async (c) => {
     updates.maxViews = parsed.data.maxViews === 0 ? null : parsed.data.maxViews;
   }
   if (parsed.data.language !== undefined) updates.language = parsed.data.language || null;
-  if (parsed.data.clearPin) updates.pinHash = null;
-  else if (parsed.data.pin && parsed.data.pin.length > 0) {
+  if (parsed.data.protect === "none") {
+    updates.pinHash = null;
+    updates.encrypted = false;
+  } else if (parsed.data.protect === "e2e") {
+    updates.encrypted = true;
+    updates.pinHash = null;
+  } else if (parsed.data.clearPin) {
+    updates.pinHash = null;
+  } else if (parsed.data.pin && parsed.data.pin.length > 0) {
     updates.pinHash = await hashPin(parsed.data.pin);
+    setUnlockCookie(c, slug);
   }
   if (parsed.data.webhook !== undefined) {
     const url = parsed.data.webhook.trim();
     updates.webhookUrl = url.length > 0 ? url : null;
   }
-  if ("encrypted" in body) updates.encrypted = parsed.data.encrypted ?? false;
+  if ("encrypted" in body && parsed.data.protect === undefined) {
+    updates.encrypted = parsed.data.encrypted ?? false;
+  }
 
   const updated = await updateSettings(slug, updates);
   if (!updated) return c.text("Not found", 404);

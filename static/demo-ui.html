@@ -123,36 +123,12 @@
       font-weight: 800;
     }
 
-    .url-bar {
-      flex: 1;
-      min-width: 0;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.35rem 0.5rem 0.35rem 0.75rem;
-      background: var(--bg-sunken);
-      border: 1px solid var(--border-subtle);
-      border-radius: var(--radius-md);
-    }
-
-    .url-bar__path {
-      flex: 1;
-      min-width: 0;
-      font-family: var(--font-mono);
-      font-size: 0.78rem;
-      color: var(--text-secondary);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .url-bar__path strong { color: var(--text-primary); font-weight: 500; }
-
     .header-actions {
       display: flex;
       align-items: center;
       gap: 0.35rem;
       flex-shrink: 0;
+      margin-left: auto;
     }
 
     .header-actions .btn {
@@ -926,10 +902,6 @@
         <span class="logo-mark" aria-hidden="true">W</span>
         webklip
       </a>
-
-      <div class="url-bar" role="group" aria-label="Clip URL">
-        <span class="url-bar__path">webklip.com/<strong>demo-clip</strong></span>
-      </div>
 
       <div class="header-chips" aria-hidden="false">
         <span class="chip chip--live chip--devices">

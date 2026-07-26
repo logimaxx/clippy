@@ -131,6 +131,8 @@ export const clipSettingsSchema = z.object({
     .optional()
     .transform((v) => v === true || v === "on" || v === "true" || v === "1"),
   webhook: z.string().max(2048).optional(),
+  /** Mutual-exclusive protect mode: none clears PIN+E2E; e2e enables encryption (clears PIN). */
+  protect: z.enum(["none", "e2e"]).optional(),
   encrypted: z.preprocess((v) => {
     if (v === undefined || v === null || v === "") return undefined;
     const values = Array.isArray(v) ? v : [v];
@@ -150,7 +152,7 @@ export const clipSettingsSchema = z.object({
 export function settingsToastMessage(
   body: Record<string, unknown>,
   parsed: z.infer<typeof clipSettingsSchema>,
-  clip: { webhookUrl: string | null; encrypted: boolean; visibility: string },
+  clip: { webhookUrl: string | null; encrypted: boolean; visibility: string; pinHash?: string | null },
   opts: { wasPublic?: boolean } = {}
 ): string {
   const demotedFromKlipwall =
@@ -178,6 +180,12 @@ export function settingsToastMessage(
     const label =
       parsed.language.charAt(0).toUpperCase() + parsed.language.slice(1);
     return `Syntax: ${label}`;
+  }
+  if (parsed.protect === "none") return "Protection removed";
+  if (parsed.protect === "e2e") {
+    return demotedFromKlipwall
+      ? "Encryption enabled - removed from Klipwall"
+      : "End-to-end encryption enabled";
   }
   if (parsed.clearPin) return "PIN removed";
   if (parsed.pin && parsed.pin.length > 0) {
@@ -235,6 +243,7 @@ export const RESERVED_SLUGS = new Set([
   "sitemap.xml",
   // SEO landing pages
   "online-clipboard",
+  "live-sync",
   "share-text-between-devices",
   "temporary-file-sharing",
   "secure-clipboard",

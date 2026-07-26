@@ -160,16 +160,43 @@ export function isListablePublic(clip: Clip, now = Math.floor(Date.now() / 1000)
 }
 
 /**
+ * PIN and E2E are mutually exclusive. Prefer E2E when both would be active
+ * (enabling encryption clears PIN; setting a PIN clears encryption; heal legacy both).
+ */
+export function applyProtectionConstraints(
+  clip: Pick<Clip, "pinHash" | "encrypted">,
+  updates: ClipSettingsUpdate
+): ClipSettingsUpdate {
+  const next: ClipSettingsUpdate = { ...updates };
+
+  if (next.encrypted === true) {
+    next.pinHash = null;
+  }
+  if (next.pinHash !== undefined && next.pinHash !== null) {
+    next.encrypted = false;
+  }
+
+  const pinHash = next.pinHash !== undefined ? next.pinHash : clip.pinHash;
+  const encrypted = next.encrypted !== undefined ? next.encrypted : clip.encrypted;
+  if (pinHash && encrypted) {
+    next.pinHash = null;
+  }
+
+  return next;
+}
+
+/**
  * Enforce: public clips cannot use burn-after-read, PIN, or E2E.
  * - Publishing clears those and sets a TTL if needed.
  * - Enabling burn / PIN / E2E on a public clip demotes it to private.
+ * Also enforces PIN XOR E2E.
  */
 export function applyVisibilityConstraints(
   clip: Clip,
   updates: ClipSettingsUpdate,
   now = Math.floor(Date.now() / 1000)
 ): ClipSettingsUpdate {
-  const next: ClipSettingsUpdate = { ...updates };
+  const next = applyProtectionConstraints(clip, updates);
 
   if (next.visibility === "public") {
     const mergedExpires =
@@ -183,7 +210,7 @@ export function applyVisibilityConstraints(
   const visibility = next.visibility ?? clip.visibility;
   const burnOnRead = next.burnOnRead ?? clip.burnOnRead;
   const pinHash = next.pinHash !== undefined ? next.pinHash : clip.pinHash;
-  const encrypted = next.encrypted ?? clip.encrypted;
+  const encrypted = next.encrypted !== undefined ? next.encrypted : clip.encrypted;
 
   if (visibility === "public" && (burnOnRead || !!pinHash || encrypted)) {
     next.visibility = "private";
@@ -196,14 +223,19 @@ function normalizeNewClipPublic(
   opts: Partial<NewClip>,
   now: number
 ): Partial<NewClip> {
-  if ((opts.visibility ?? "private") !== "public") return opts;
+  let next = opts;
+  if (next.encrypted && next.pinHash) {
+    next = { ...next, pinHash: null };
+  }
+
+  if ((next.visibility ?? "private") !== "public") return next;
 
   const listing = publicListingUpdates(
-    { expiresAt: opts.expiresAt ?? null },
+    { expiresAt: next.expiresAt ?? null },
     now
   );
   return {
-    ...opts,
+    ...next,
     visibility: "public",
     burnOnRead: false,
     maxViews: null,

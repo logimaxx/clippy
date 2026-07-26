@@ -12,7 +12,6 @@ import {
   FilesNavIcon,
   SettingsNavIcon,
   CloseIcon,
-  ApiDocsIcon,
 } from "./partials/ClipIcons";
 import { asset } from "../lib/assets";
 import { siteHost } from "../lib/constants";
@@ -76,49 +75,55 @@ export function ClipPage({
       robots={isPublic ? undefined : "noindex, nofollow"}
     >
       <div class="app" data-view="editor">
-        <header class="header">
-          <a href="/" class="logo" aria-label="Webklip home">
+        <header class="header header--clip">
+          <a href="/" class="logo logo--icon" aria-label="Webklip home">
             <span class="logo-mark" aria-hidden="true">
               W
             </span>
-            webklip
           </a>
 
-          <div class="url-bar" role="group" aria-label="Clip URL">
-            <span class="url-bar__path">
-              {host}/<strong>{slug}</strong>
-            </span>
-          </div>
-
-          <div class="header-chips" aria-hidden="false">
-            <span class="chip chip--live chip--devices">
-              <span class="pulse" aria-hidden="true"></span>
-              <span id="device-count-desktop">{deviceLabel}</span>
-            </span>
-            {isPublic && <span class="chip chip--public">Public</span>}
-            {encrypted && <span class="chip chip--secure">E2E</span>}
-            {!isOwner && hasOwnerPassword && (
-              <a href={`/${slug}/claim`} class="chip chip--owner-claim">
-                Recover ownership
-              </a>
-            )}
-          </div>
+          {readOnly ? (
+            <div class="header-cluster" aria-label="Clip status">
+              <span class="chip chip--live chip--devices">
+                <span class="pulse" aria-hidden="true"></span>
+                <span id="device-count-desktop">{deviceLabel}</span>
+              </span>
+              <span class={`chip ${isPublic ? "chip--public" : "chip--private"}`}>
+                {isPublic ? "Public" : "Private"}
+              </span>
+              {hasPin ? (
+                <span class="chip chip--pin">PIN</span>
+              ) : encrypted ? (
+                <span class="chip chip--secure">E2E</span>
+              ) : (
+                <span class="chip chip--open">Unprotected</span>
+              )}
+              {!isOwner && hasOwnerPassword && (
+                <a href={`/${slug}/claim`} class="chip chip--owner-claim">
+                  Recover ownership
+                </a>
+              )}
+            </div>
+          ) : (
+            <SettingsPanel
+              slug={slug}
+              expiresAt={expiresAt}
+              burnOnRead={burnOnRead}
+              language={language}
+              maxViews={maxViews}
+              hasPin={hasPin}
+              hasOwnerPassword={hasOwnerPassword}
+              webhookUrl={webhookUrl}
+              encrypted={encrypted}
+              visibility={visibility}
+              devices={devices}
+              versions={versions}
+              files={files}
+            />
+          )}
 
           <div class="header-actions">
             <ThemeToggle />
-            <button
-              type="button"
-              class="btn btn--ghost"
-              data-open-docs-modal
-              data-docs-path="/docs/api"
-              aria-label="API documentation"
-              aria-haspopup="dialog"
-              aria-controls="docs-modal"
-              title="API documentation"
-            >
-              <ApiDocsIcon />
-              <span class="header-api-label" aria-hidden="true">API</span>
-            </button>
             <div class="share-menu" id="share-menu">
               <button
                 type="button"
@@ -183,23 +188,6 @@ export function ClipPage({
                 </>
               ) : null}
             </div>
-          )}
-          {!readOnly && (
-            <SettingsPanel
-              slug={slug}
-              expiresAt={expiresAt}
-              burnOnRead={burnOnRead}
-              language={language}
-              maxViews={maxViews}
-              hasPin={hasPin}
-              hasOwnerPassword={hasOwnerPassword}
-              webhookUrl={webhookUrl}
-              encrypted={encrypted}
-              visibility={visibility}
-              devices={devices}
-              versions={versions}
-              files={files}
-            />
           )}
 
           <div class="main-grid">

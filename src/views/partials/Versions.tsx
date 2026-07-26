@@ -10,12 +10,10 @@ interface VersionsPanelProps {
 export function VersionsPanel({ slug, versions }: VersionsPanelProps) {
   return (
     <div id="versions-panel" class="versions-panel">
-      <h3 class="sheet__section-title">
-        <span>Version history</span>
-        <SettingHint text="Auto-saved every 5 seconds while you edit. Restore an older snapshot anytime." />
-      </h3>
+      <h3 class="sheet__section-title">Version history</h3>
+      <SettingHint text="Auto-saved every 5 seconds while you edit. Restore an older snapshot anytime." />
       {versions.length === 0 ? (
-        <p class="field-hint">No saved versions yet (auto-saved every 5s while editing)</p>
+        <p class="field-hint">No saved versions yet.</p>
       ) : (
         <ul class="version-list">
           {versions.map((v) => (

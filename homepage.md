@@ -24,7 +24,7 @@ Or open any URL like `webklip.com/my-clip` to start sharing.
 
 ## Everything you need for quick, private sharing
 
-*(Single feature block — this replaces both the old feature grid and the later duplicated "Features" section.)*
+*(Single feature block — this replaces both the old feature grid and the later duplicated "Features" section. Live sync stays here as a highlight; the full use-case page lives at `/live-sync`.)*
 
 - **Real-time sync** — Updates appear on every open device as you type or paste
 - **No account required** — Your link is the key
@@ -34,6 +34,16 @@ Or open any URL like `webklip.com/my-clip` to start sharing.
 - **Burn after read** — Delete automatically after one view
 - **File attachments** — Images, PDFs, and documents
 - **Syntax highlighting & Markdown preview** — For code and notes
+
+---
+
+## Live sync (dedicated landing)
+
+**URL:** `/live-sync`
+
+Type on one device. Watch it appear on every other open tab — live, over a private link.
+
+*(SEO landing page in `static/landing-pages.json` — same template as Online Clipboard / Share Text Between Devices.)*
 
 ---
 
@@ -95,7 +105,7 @@ Ephemeral by design. No ads. No tracking. Data deleted on expiry.
 
 [Privacy] [Terms] [Security] [Contact]
 
-**Resources:** [Online Clipboard] [Share Text Between Devices] [Temporary File Sharing] [Secure Clipboard] [Share Code Snippets] [Burn After Read Links] [End-to-End Encrypted Clipboard]
+**Resources:** [Online Clipboard] [Live Sync Clipboard] [Share Text Between Devices] [Temporary File Sharing] [Secure Clipboard] [Share Code Snippets] [Burn After Read Links] [End-to-End Encrypted Clipboard]
 
 © 2026 Webklip. A LogiMaxx Systems product.
 

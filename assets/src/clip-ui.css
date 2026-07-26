@@ -54,9 +54,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
   flex-shrink: 0;
 }
 
+.logo--icon {
+  gap: 0;
+}
+
 .logo-mark {
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 2rem;
+  height: 2rem;
   border-radius: var(--radius-sm);
   background: linear-gradient(135deg, var(--accent), var(--spark));
   display: grid;
@@ -66,36 +70,79 @@ button, input, select, textarea { font: inherit; color: inherit; }
   font-weight: 800;
 }
 
-.url-bar {
-  flex: 1;
-  min-width: 0;
+.header--clip {
+  height: auto;
+  min-height: var(--header-h);
+  flex-wrap: nowrap;
+  gap: 0.5rem 0.75rem;
+  /* backdrop-filter creates a containing block and traps position:fixed sheets */
+  backdrop-filter: none;
+  background: var(--bg-elevated);
+}
+
+.header-settings {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.5rem 0.35rem 0.75rem;
-  background: var(--bg-sunken);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-}
-
-.url-bar__path {
+  gap: 0.5rem 0.75rem;
   flex: 1;
   min-width: 0;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.url-bar__path strong { color: var(--text-primary); font-weight: 500; }
+.header-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.header-quick {
+  display: none;
+  align-items: flex-end;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.header-quick .field {
+  min-width: 7.5rem;
+}
+
+.header-quick .field__label {
+  display: none;
+}
+
+.header-settings-btn {
+  min-height: 2rem;
+  padding: 0 0.7rem;
+  gap: 0.4rem;
+  border-color: var(--border-default);
+  background: var(--bg-sunken);
+  color: var(--text-primary);
+}
+
+.header-settings-btn svg {
+  width: 0.95rem;
+  height: 0.95rem;
+  flex-shrink: 0;
+}
+
+.header-settings-btn:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border-default));
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+.chip--devices-mobile {
+  display: none;
+}
 
 .header-actions {
   display: flex;
   align-items: center;
   gap: 0.35rem;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .header-actions .btn {
@@ -481,6 +528,30 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border: 1px solid var(--border-subtle);
 }
 
+button.chip {
+  font: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: inherit;
+  appearance: none;
+}
+
+.chip--action {
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition), color var(--transition);
+}
+
+.chip--action:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border-subtle));
+  color: var(--text-primary);
+}
+
+.chip--action:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 2px;
+}
+
 .chip--live {
   background: var(--success-muted);
   color: var(--success);
@@ -497,6 +568,76 @@ button, input, select, textarea { font: inherit; color: inherit; }
   background: var(--accent-muted);
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.chip--private {
+  background: var(--bg-sunken);
+  color: var(--text-secondary);
+  border-color: var(--border-subtle);
+}
+
+.chip--pin,
+.chip--expiry {
+  background: var(--bg-sunken);
+  color: var(--text-secondary);
+  border-color: var(--border-subtle);
+}
+
+.chip--open {
+  background: var(--warning-muted);
+  color: var(--warning);
+  border-color: color-mix(in srgb, var(--warning) 30%, transparent);
+}
+
+.protect-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0.75rem;
+}
+
+.protect-option {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 0.65rem;
+  row-gap: 0.1rem;
+  align-items: center;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-sunken);
+  cursor: pointer;
+}
+
+.protect-option:has(input:checked) {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border-default));
+  background: color-mix(in srgb, var(--accent-muted) 55%, var(--bg-sunken));
+}
+
+.protect-option input {
+  grid-row: 1 / span 2;
+  margin: 0;
+  accent-color: var(--accent);
+}
+
+.protect-option__label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.protect-option__desc {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+}
+
+.protect-pin-fields {
+  margin-top: 0.5rem;
+}
+
+.protect-e2e-actions {
+  margin-top: 0.5rem;
 }
 
 a.chip--owner-claim {
@@ -538,11 +679,26 @@ a.chip--owner-claim:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.5rem 0.75rem;
   padding: 0.65rem 0.75rem;
   background: var(--bg-elevated);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
+}
+
+.toolbar__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.toolbar__quick {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
 }
 
 .toolbar__group {
@@ -968,7 +1124,7 @@ a.chip--owner-claim:hover {
 
 .bottom-nav__item svg { width: 1.25rem; height: 1.25rem; }
 
-/* ── Sheet (mobile settings/files) ── */
+/* ── Sheet: mobile bottom sheet / desktop right drawer ── */
 .sheet-backdrop {
   position: fixed;
   inset: 0;
@@ -1006,6 +1162,7 @@ a.chip--owner-claim:hover {
   margin: 0.6rem auto 0;
   border-radius: var(--radius-full);
   background: var(--border-default);
+  flex-shrink: 0;
 }
 
 .sheet__header {
@@ -1013,6 +1170,7 @@ a.chip--owner-claim:hover {
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem 0.5rem;
+  flex-shrink: 0;
 }
 
 .sheet__title {
@@ -1024,6 +1182,8 @@ a.chip--owner-claim:hover {
 .sheet__body {
   overflow: auto;
   padding: 0.5rem 1rem 1.5rem;
+  flex: 1;
+  min-height: 0;
 }
 
 .sheet__section { margin-bottom: 1.25rem; }
@@ -1035,6 +1195,10 @@ a.chip--owner-claim:hover {
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--text-tertiary);
+}
+
+.sheet__section-title + .field-hint {
+  margin-top: -0.35rem;
 }
 
 .settings-grid {
@@ -1127,6 +1291,10 @@ a.chip--owner-claim:hover {
 
   .header-chips { display: flex; align-items: center; gap: 0.35rem; }
 
+  .header-quick { display: flex; }
+
+  .chip--devices-mobile { display: none !important; }
+
   .toolbar--mobile-only { display: none; }
 
   .main-grid {
@@ -1151,16 +1319,63 @@ a.chip--owner-claim:hover {
 
   .sheet-backdrop.is-open { display: block !important; }
   .sheet.is-open { display: flex !important; }
+
+  /* Desktop: right drawer instead of full-width bottom sheet */
+  .sheet {
+    left: auto;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: min(26rem, 100vw);
+    max-height: none;
+    height: 100%;
+    border-top: none;
+    border-left: 1px solid var(--border-subtle);
+    border-radius: 0;
+    box-shadow: var(--shadow-lg);
+    transform: translateX(100%);
+    transition: transform 240ms cubic-bezier(0.32, 0.72, 0, 1);
+  }
+
+  .sheet.is-open { transform: translateX(0); }
+
+  .sheet__handle { display: none; }
+
+  .sheet__header {
+    padding: 1rem 1.15rem 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .sheet__body {
+    padding: 1rem 1.15rem 2rem;
+  }
+
+  .sheet-backdrop {
+    background: color-mix(in srgb, var(--bg-overlay) 70%, transparent);
+  }
 }
 
 @media (max-width: 767px) {
   .toolbar--desktop-only { display: none; }
 
+  .header-quick { display: none; }
+
   .header .chip--devices { display: none; }
+
+  .chip--devices-mobile { display: inline-flex; }
 
   .toolbar__more { display: none; }
 
   .field--pin { display: none; }
+
+  .header--clip {
+    flex-wrap: wrap;
+  }
+
+  .header--clip .header-settings {
+    order: 3;
+    flex: 1 1 100%;
+  }
 }
 
 @media (min-width: 1024px) {
@@ -1201,12 +1416,9 @@ a.chip--owner-claim:hover {
 /* Participate in the toolbar flex row without display:contents (fieldset +
    display:contents breaks interactivity in some browsers). */
 .settings-form-desktop {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 0.5rem 0.75rem;
-  flex: 1;
-  min-width: 0;
+  display: block;
+  flex: 0 0 auto;
+  min-width: 8rem;
 }
 
 .settings-label-with-hint {
@@ -1342,73 +1554,6 @@ a.chip--owner-claim:hover {
   font-weight: 400;
 }
 
-.setting-hint {
-  position: relative;
-  display: inline-flex;
-  flex-shrink: 0;
-  z-index: 1;
-}
-
-.setting-hint:hover,
-.setting-hint:focus-within {
-  z-index: 201;
-}
-
-.setting-hint-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 0.85rem;
-  height: 0.85rem;
-  border-radius: 50%;
-  font-size: 0.58rem;
-  font-weight: 700;
-  font-style: italic;
-  font-family: Georgia, "Times New Roman", serif;
-  line-height: 1;
-  color: var(--text-tertiary);
-  border: 1px solid color-mix(in srgb, var(--text-tertiary) 50%, var(--border-subtle));
-  cursor: help;
-}
-
-.setting-hint:hover .setting-hint-icon,
-.setting-hint:focus-within .setting-hint-icon {
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--border-subtle));
-}
-
-.setting-hint-tooltip {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
-  width: max-content;
-  max-width: min(240px, 70vw);
-  padding: 0.4rem 0.55rem;
-  font-size: 0.68rem;
-  font-weight: 400;
-  font-style: normal;
-  font-family: var(--font-ui);
-  text-transform: none;
-  letter-spacing: normal;
-  line-height: 1.4;
-  color: var(--text-primary);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-md);
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  z-index: 200;
-}
-
-.setting-hint:hover .setting-hint-tooltip,
-.setting-hint:focus-within .setting-hint-tooltip {
-  opacity: 1;
-  visibility: visible;
-}
-
 .upload-status {
   display: block;
   margin: 0 0.5rem 0.5rem;
@@ -1464,7 +1609,13 @@ a.chip--owner-claim:hover {
 .field-hint {
   font-size: 0.8125rem;
   color: var(--text-tertiary);
-  margin: 0;
+  margin: 0 0 0.65rem;
+  line-height: 1.45;
+}
+
+.field > .field-hint {
+  margin-top: -0.1rem;
+  margin-bottom: 0.35rem;
 }
 
 .danger-zone p {
