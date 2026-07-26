@@ -1,4 +1,4 @@
-import { eq, lt, and, isNotNull, isNull, or, gt, desc } from "drizzle-orm";
+import { eq, lt, and, isNotNull, isNull, or, gt, desc, sql, count } from "drizzle-orm";
 import { db } from "../db/client";
 import { clips, type Clip, type NewClip, type ClipVisibility } from "../db/schema";
 import { applyBurnExpiryCap, BURN_MAX_TTL, DEFAULT_TTL } from "../lib/constants";
@@ -11,6 +11,38 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 
 const writeTimers = new Map<string, Timer>();
+
+export const KLIPWALL_PAGE_SIZE = 20;
+const PUBLIC_SEARCH_MAX_LEN = 100;
+
+/** Escape `\`, `%`, and `_` so user input is matched literally in LIKE. */
+function escapeLikePattern(value: string): string {
+  return value.replace(/([\\%_])/g, "\\$1");
+}
+
+function publicClipConditions(query?: string) {
+  const now = Math.floor(Date.now() / 1000);
+  const conditions = [
+    eq(clips.visibility, "public"),
+    eq(clips.burnOnRead, false),
+    eq(clips.encrypted, false),
+    isNull(clips.pinHash),
+    or(isNull(clips.expiresAt), gt(clips.expiresAt, now)),
+  ];
+
+  const q = query?.trim().slice(0, PUBLIC_SEARCH_MAX_LEN);
+  if (q) {
+    const pattern = `%${escapeLikePattern(q)}%`;
+    conditions.push(
+      or(
+        sql`${clips.slug} LIKE ${pattern} ESCAPE '\\'`,
+        sql`${clips.content} LIKE ${pattern} ESCAPE '\\'`
+      )
+    );
+  }
+
+  return conditions;
+}
 
 export async function getClip(slug: string): Promise<Clip | null> {
   const cached = memory.getCached(slug);
@@ -81,6 +113,28 @@ export async function ensureClip(
   const existing = await getClip(slug);
   if (existing) return existing;
   return createClip(slug, opts);
+}
+
+/**
+ * Create a private clip with the same text content (and language) as a
+ * listable public source. Attachments are copied separately.
+ */
+export async function clonePublicClip(
+  source: Clip,
+  newSlug: string,
+  opts: { ownerId?: string | null } = {}
+): Promise<Clip> {
+  if (!isListablePublic(source)) {
+    throw new Error("Source clip is not publicly listable");
+  }
+
+  return createClip(newSlug, {
+    content: source.content,
+    contentType: "text",
+    language: source.language,
+    visibility: "private",
+    ownerId: opts.ownerId ?? null,
+  });
 }
 
 export function schedulePersist(slug: string, content: string) {
@@ -267,22 +321,26 @@ export async function updateSettings(slug: string, settings: ClipSettingsUpdate)
   return getClip(slug);
 }
 
-export async function listPublicClips(limit = 50): Promise<Clip[]> {
-  const now = Math.floor(Date.now() / 1000);
+export async function listPublicClips(
+  limit = 50,
+  query?: string,
+  offset = 0
+): Promise<Clip[]> {
   return db
     .select()
     .from(clips)
-    .where(
-      and(
-        eq(clips.visibility, "public"),
-        eq(clips.burnOnRead, false),
-        eq(clips.encrypted, false),
-        isNull(clips.pinHash),
-        or(isNull(clips.expiresAt), gt(clips.expiresAt, now))
-      )
-    )
-    .orderBy(desc(clips.createdAt))
-    .limit(limit);
+    .where(and(...publicClipConditions(query)))
+    .orderBy(desc(clips.createdAt), desc(clips.slug))
+    .limit(limit)
+    .offset(Math.max(0, offset));
+}
+
+export async function countPublicClips(query?: string): Promise<number> {
+  const rows = await db
+    .select({ value: count() })
+    .from(clips)
+    .where(and(...publicClipConditions(query)));
+  return rows[0]?.value ?? 0;
 }
 
 export async function recordView(slug: string): Promise<Clip | null> {

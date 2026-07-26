@@ -221,6 +221,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
   transition: background var(--transition);
 }
 
+.share-menu__popover form {
+  margin: 0;
+  display: block;
+}
+
 .share-menu__item:hover,
 .share-menu__item:focus-visible {
   background: color-mix(in srgb, var(--text-primary) 7%, transparent);
@@ -325,6 +330,70 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .qr-modal__hint strong {
   color: var(--text-primary);
   font-weight: 600;
+}
+
+.clone-modal {
+  width: min(100%, 24rem);
+}
+
+.clone-modal__body {
+  align-items: stretch;
+  gap: 0.55rem;
+}
+
+.clone-modal__hint {
+  margin: 0 0 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  line-height: 1.45;
+  text-align: left;
+}
+
+.clone-modal__label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.clone-modal__slug-row {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.clone-modal__prefix {
+  flex: 0 0 auto;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+.clone-modal__slug-row .slug-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+}
+
+.clone-modal__field-hint,
+.clone-modal__error {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.35;
+}
+
+.clone-modal__field-hint {
+  color: var(--text-muted, var(--text-secondary));
+}
+
+.clone-modal__error {
+  color: var(--danger);
+}
+
+.clone-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 /* ── Docs modal (API / webhooks) ── */
@@ -1280,6 +1349,24 @@ a.chip--owner-claim:hover {
   color: var(--text-secondary);
   font-size: 0.8125rem;
   line-height: 1.45;
+}
+
+.burn-banner--public {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem 1rem;
+}
+
+.burn-banner__text {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.burn-banner__clone {
+  flex: 0 0 auto;
+  margin: 0;
 }
 
 /* ── Desktop breakpoints ── */

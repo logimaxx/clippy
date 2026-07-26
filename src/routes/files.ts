@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { mkdir, readdir, unlink } from "node:fs/promises";
+import { copyFile, mkdir, readdir, unlink } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { Context } from "hono";
@@ -90,6 +90,52 @@ export type AttachFileResult =
       wasEmpty: boolean;
     }
   | { ok: false; error: string };
+
+/** Copy attachment files from one clip onto another (new file IDs). */
+export async function copyClipAttachments(
+  sourceSlug: string,
+  destSlug: string,
+  sourceFiles: ClipFileMeta[]
+): Promise<ClipFileMeta[]> {
+  if (sourceFiles.length === 0) return [];
+
+  const destDir = join(getFilesDir(), destSlug);
+  await mkdir(destDir, { recursive: true });
+
+  const copied: ClipFileMeta[] = [];
+  for (const file of sourceFiles.slice(0, MAX_FILES_PER_CLIP)) {
+    const srcPath = getClipFilePath(sourceSlug, file.fileId);
+    if (!existsSync(srcPath)) continue;
+    const newId = crypto.randomUUID();
+    const destPath = getClipFilePath(destSlug, newId);
+    await copyFile(srcPath, destPath);
+    copied.push({
+      fileId: newId,
+      filename: file.filename,
+      size: file.size,
+      mimeType: file.mimeType,
+    });
+  }
+
+  if (copied.length === 0) return [];
+
+  const lastFile = copied[copied.length - 1]!;
+  const { db } = await import("../db/client");
+  const { clips } = await import("../db/schema");
+  const { eq } = await import("drizzle-orm");
+
+  await db
+    .update(clips)
+    .set({
+      filePath: getClipFilePath(destSlug, lastFile.fileId),
+      contentType: copied.some((f) => isImageMime(f.mimeType)) ? "image" : "file",
+      metadata: JSON.stringify({ files: copied }),
+    })
+    .where(eq(clips.slug, destSlug));
+
+  memory.deleteCached(destSlug);
+  return copied;
+}
 
 /** Attach one file to an existing (or newly ensured) clip. */
 export async function attachFileToClip(

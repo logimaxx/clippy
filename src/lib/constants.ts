@@ -280,6 +280,7 @@ export const RESERVED_CLIP_SUFFIXES = new Set([
   "qr",
   "unlock",
   "claim",
+  "clone",
   "new-clip",
 ]);
 

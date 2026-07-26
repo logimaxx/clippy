@@ -97,7 +97,9 @@
 
   function syncBodyScrollLock() {
     document.body.style.overflow =
-      openSheetName || isQrModalOpen() || isDocsModalOpen() ? "hidden" : "";
+      openSheetName || isQrModalOpen() || isDocsModalOpen() || isCloneModalOpen()
+        ? "hidden"
+        : "";
   }
 
   function closeSheets() {
@@ -181,6 +183,70 @@
     backdrop.querySelectorAll("[data-close-qr-modal]").forEach((btn) => {
       btn.addEventListener("click", closeQrModal);
     });
+  }
+
+  function getCloneModal() {
+    return document.querySelector("[data-clone-modal]");
+  }
+
+  function isCloneModalOpen() {
+    const backdrop = getCloneModal();
+    return Boolean(backdrop && !backdrop.hidden);
+  }
+
+  function openCloneModal() {
+    const backdrop = getCloneModal();
+    const modal = document.getElementById("clone-modal");
+    const input = document.getElementById("clone-slug");
+    if (!backdrop || !modal) return;
+    closeSheets();
+    closeQrModal();
+    backdrop.hidden = false;
+    modal.hidden = false;
+    requestAnimationFrame(() => {
+      backdrop.classList.add("is-open");
+      input?.focus();
+      input?.select();
+    });
+    syncBodyScrollLock();
+  }
+
+  function closeCloneModal() {
+    const backdrop = getCloneModal();
+    const modal = document.getElementById("clone-modal");
+    if (!backdrop || !modal || backdrop.hidden) return;
+    backdrop.classList.remove("is-open");
+    window.setTimeout(() => {
+      backdrop.hidden = true;
+      modal.hidden = true;
+      syncBodyScrollLock();
+    }, 220);
+  }
+
+  function initCloneModal() {
+    const backdrop = getCloneModal();
+    if (!backdrop || backdrop.dataset.bound === "1") return;
+    backdrop.dataset.bound = "1";
+
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop) closeCloneModal();
+    });
+
+    backdrop.querySelectorAll("[data-close-clone-modal]").forEach((btn) => {
+      btn.addEventListener("click", closeCloneModal);
+    });
+
+    document.querySelectorAll("[data-open-clone-modal]").forEach((btn) => {
+      if (btn.dataset.cloneBound === "1") return;
+      btn.dataset.cloneBound = "1";
+      btn.addEventListener("click", openCloneModal);
+    });
+
+    if (!backdrop.hidden) {
+      const input = document.getElementById("clone-slug");
+      requestAnimationFrame(() => input?.focus());
+      syncBodyScrollLock();
+    }
   }
 
   const DOCS_TITLES = {
@@ -377,6 +443,9 @@
       } else if (action === "qr") {
         openQrModal(item.dataset.qrUrl);
         closeShareMenu();
+      } else if (action === "clone") {
+        openCloneModal();
+        closeShareMenu();
       } else if (action === "native" && navigator.share) {
         try {
           await navigator.share({ title: "Webklip clip", url: location.href });
@@ -450,6 +519,7 @@
   function init() {
     bindSheetControls();
     initQrModal();
+    initCloneModal();
     initDocsModal();
     bindDocsTriggers();
     initShareMenu();
@@ -472,6 +542,10 @@
       if (e.key !== "Escape") return;
       if (isDocsModalOpen()) {
         closeDocsModal();
+        return;
+      }
+      if (isCloneModalOpen()) {
+        closeCloneModal();
         return;
       }
       if (isQrModalOpen()) {

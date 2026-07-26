@@ -84,6 +84,66 @@ test.describe("Webklip E2E", () => {
       await page.goto("/klipwall");
       await expect(page.getByRole("heading", { name: "Klipwall" })).toBeVisible();
       await expect(page).toHaveTitle(/Klipwall/i);
+      await expect(page.getByRole("search")).toBeVisible();
+      await expect(page.getByLabel("Search Klipwall")).toBeVisible();
+    });
+
+    test("klipwall search finds public clips by content", async ({ page }) => {
+      const needle = `klipsearch-${Date.now().toString(36)}`;
+      const slug = uniqueSlug("kwsearch");
+      await createClipViaApi(page.request, slug, `Unique phrase ${needle} on Klipwall`, {
+        visibility: "public",
+        burnOnRead: false,
+        ttl: 3600,
+        ownerPassword: "ownerpass1",
+      });
+
+      await page.goto("/klipwall");
+      await page.getByLabel("Search Klipwall").fill(needle);
+      await page.getByRole("button", { name: "Search" }).click();
+      await expect(page).toHaveURL(new RegExp(`[?&]q=${needle}`));
+      await expect(page.locator(`a[href="/${slug}"]`)).toBeVisible();
+
+      await page.getByLabel("Search Klipwall").fill("no-such-klipwall-hit-zzzz");
+      await page.getByRole("button", { name: "Search" }).click();
+      await expect(page.getByText(/No public clips match/i)).toBeVisible();
+      await expect(page.locator(`a[href="/${slug}"]`)).toHaveCount(0);
+    });
+
+    test("klipwall paginates public clips", async ({ page }) => {
+      const marker = `kwpage-${Date.now().toString(36)}`;
+      const pageSize = 20;
+      const slugs: string[] = [];
+      for (let i = 0; i < pageSize + 1; i++) {
+        const slug = uniqueSlug(`kwp${String(i).padStart(2, "0")}`);
+        slugs.push(slug);
+        await createClipViaApi(page.request, slug, `${marker} clip ${i}`, {
+          visibility: "public",
+          burnOnRead: false,
+          ttl: 3600,
+          ownerPassword: "ownerpass1",
+        });
+      }
+
+      await page.goto(`/klipwall?q=${encodeURIComponent(marker)}`);
+      await expect(page.getByText(new RegExp(`${pageSize + 1} results`))).toBeVisible();
+      await expect(page.getByRole("navigation", { name: "Klipwall pages" })).toBeVisible();
+      await expect(page.locator(".explore-list .explore-item")).toHaveCount(pageSize);
+
+      await page.getByRole("link", { name: /Older/i }).click();
+      await expect(page).toHaveURL(/[?&]page=2/);
+      await expect(page).toHaveURL(new RegExp(`[?&]q=${marker}`));
+      await expect(page.locator(".explore-list .explore-item")).toHaveCount(1);
+
+      const page2Href = await page.locator(".explore-list a.explore-link").getAttribute("href");
+      expect(page2Href).toBeTruthy();
+      expect(slugs.map((s) => `/${s}`)).toContain(page2Href);
+
+      await page.getByRole("link", { name: /Newer/i }).click();
+      await expect(page).toHaveURL(new RegExp(`[?&]q=${marker}`));
+      await expect(page).not.toHaveURL(/[?&]page=/);
+      await expect(page.locator(".explore-list .explore-item")).toHaveCount(pageSize);
+      await expect(page.locator(`a[href="${page2Href}"]`)).toHaveCount(0);
     });
 
     test("home shows Klipwall teaser", async ({ page }) => {
@@ -435,6 +495,101 @@ test.describe("Webklip E2E", () => {
       expect((await still.json()).content).toBe("owner content");
 
       await visitor.close();
+    });
+
+    test("visitor can clone a public clip", async ({ browser, page }) => {
+      const slug = uniqueSlug("pubclone");
+      const body = "clone-me-public-content";
+      await createClipViaApi(page.request, slug, body, {
+        visibility: "public",
+        burnOnRead: false,
+        ttl: 3600,
+        ownerPassword: "ownerpass1",
+      });
+
+      const visitor = await browser.newContext();
+      const visitorPage = await visitor.newPage();
+      await visitorPage.goto(`/${slug}`);
+      await expect(visitorPage.locator("#clone-clip-banner-btn")).toBeVisible();
+      await visitorPage.locator("#clone-clip-banner-btn").click();
+      await expect(visitorPage.locator("#clone-modal")).toBeVisible();
+      await visitorPage.locator("#clone-clip-submit").click();
+
+      await expect(visitorPage).toHaveURL(/\/[a-zA-Z0-9_-]{3,64}$/);
+      const clonedSlug = new URL(visitorPage.url()).pathname.slice(1);
+      expect(clonedSlug).not.toBe(slug);
+      await expect(visitorPage.locator("#clip-content")).toBeEditable();
+      await expect(visitorPage.locator("#clip-content")).toHaveValue(body);
+      await expect(visitorPage.locator(".header-cluster .chip--public")).toHaveCount(0);
+      await expect(visitorPage.locator("#settings-root")).toBeVisible();
+
+      const source = await page.request.get(`/api/v1/clips/${slug}`);
+      expect((await source.json()).content).toBe(body);
+
+      await visitor.close();
+    });
+
+    test("visitor can clone a public clip with a custom slug", async ({ browser, page }) => {
+      const slug = uniqueSlug("pubcust");
+      const customSlug = uniqueSlug("mycopy");
+      await createClipViaApi(page.request, slug, "custom clone body", {
+        visibility: "public",
+        burnOnRead: false,
+        ttl: 3600,
+        ownerPassword: "ownerpass1",
+      });
+
+      const visitor = await browser.newContext();
+      const visitorPage = await visitor.newPage();
+      await visitorPage.goto(`/${slug}`);
+      await visitorPage.locator("#clone-clip-banner-btn").click();
+      await visitorPage.locator("#clone-slug").fill(customSlug);
+      await visitorPage.locator("#clone-clip-submit").click();
+
+      await expect(visitorPage).toHaveURL(new RegExp(`/${customSlug}$`));
+      await expect(visitorPage.locator("#clip-content")).toHaveValue("custom clone body");
+      await expect(visitorPage.locator("#clip-content")).toBeEditable();
+
+      await visitor.close();
+    });
+
+    test("clone rejects a taken custom slug", async ({ browser, page }) => {
+      const slug = uniqueSlug("pubtaken");
+      const taken = uniqueSlug("taken");
+      await createClipViaApi(page.request, taken, "already here", {
+        burnOnRead: false,
+        ttl: 3600,
+      });
+      await createClipViaApi(page.request, slug, "clone source", {
+        visibility: "public",
+        burnOnRead: false,
+        ttl: 3600,
+        ownerPassword: "ownerpass1",
+      });
+
+      const visitor = await browser.newContext();
+      const visitorPage = await visitor.newPage();
+      await visitorPage.goto(`/${slug}`);
+      await visitorPage.locator("#clone-clip-banner-btn").click();
+      await visitorPage.locator("#clone-slug").fill(taken);
+      await visitorPage.locator("#clone-clip-submit").click();
+
+      await expect(visitorPage).toHaveURL(new RegExp(`/${slug}\\?`));
+      await expect(visitorPage.locator("#clone-modal")).toBeVisible();
+      await expect(visitorPage.getByText(/already taken/i)).toBeVisible();
+      await expect(visitorPage.locator("#clone-slug")).toHaveValue(taken);
+
+      await visitor.close();
+    });
+
+    test("private clip cannot be cloned", async ({ page }) => {
+      const slug = uniqueSlug("privclone");
+      await createClipViaApi(page.request, slug, "secret private", {
+        burnOnRead: false,
+        ttl: 3600,
+      });
+      const res = await page.request.post(`/${slug}/clone`);
+      expect(res.status()).toBe(404);
     });
 
     test("copy link button is present", async ({ page }) => {

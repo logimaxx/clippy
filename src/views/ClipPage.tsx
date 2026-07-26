@@ -6,6 +6,7 @@ import { FileAttachment } from "./partials/FileAttachment";
 import {
   ShareIcon,
   CopyIcon,
+  CloneIcon,
   QrIcon,
   NativeShareIcon,
   EditorNavIcon,
@@ -37,6 +38,8 @@ interface ClipPageProps {
   visibility: "private" | "public";
   readOnly?: boolean;
   burned?: boolean;
+  cloneError?: string | null;
+  cloneSlugValue?: string;
 }
 
 export function ClipPage({
@@ -57,6 +60,8 @@ export function ClipPage({
   visibility,
   readOnly = false,
   burned = false,
+  cloneError = null,
+  cloneSlugValue = "",
 }: ClipPageProps) {
   const files = getClipFiles(clip);
   const deviceLabel = `${devices} device${devices === 1 ? "" : "s"}`;
@@ -64,6 +69,7 @@ export function ClipPage({
   const host = siteHost();
   const clipPathLabel = `${host}/${slug}`;
   const seo = isPublic ? clipSeoMeta(slug, content) : null;
+  const showCloneModal = Boolean(cloneError);
 
   return (
     <Layout
@@ -147,6 +153,18 @@ export function ClipPage({
                   <CopyIcon />
                   Copy link
                 </button>
+                {isPublic && (
+                  <button
+                    type="button"
+                    class="share-menu__item"
+                    role="menuitem"
+                    data-share-action="clone"
+                    id="clone-clip-btn"
+                  >
+                    <CloneIcon />
+                    Clone to edit
+                  </button>
+                )}
                 <button
                   type="button"
                   class="share-menu__item"
@@ -179,14 +197,27 @@ export function ClipPage({
             </div>
           )}
           {readOnly && !burned && isPublic && (
-            <div class="burn-banner" role="status">
-              This public clip is view-only.
-              {hasOwnerPassword ? (
-                <>
-                  {" "}
-                  <a href={`/${slug}/claim`}>Recover ownership</a> to edit.
-                </>
-              ) : null}
+            <div class="burn-banner burn-banner--public" role="status">
+              <span class="burn-banner__text">
+                This public clip is view-only.
+                {hasOwnerPassword ? (
+                  <>
+                    {" "}
+                    <a href={`/${slug}/claim`}>Recover ownership</a> to edit, or
+                    clone it to make your own copy.
+                  </>
+                ) : (
+                  <> Clone it to make your own editable copy.</>
+                )}
+              </span>
+              <button
+                type="button"
+                class="btn btn--primary btn--sm burn-banner__clone"
+                id="clone-clip-banner-btn"
+                data-open-clone-modal
+              >
+                Clone
+              </button>
             </div>
           )}
 
@@ -343,6 +374,80 @@ export function ClipPage({
             </div>
           </div>
         </div>
+
+        {isPublic && (
+          <div
+            class={`modal-backdrop${showCloneModal ? " is-open" : ""}`}
+            id="clone-modal-backdrop"
+            hidden={!showCloneModal}
+            data-clone-modal
+          >
+            <div
+              class="modal clone-modal"
+              id="clone-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="clone-modal-title"
+              hidden={!showCloneModal}
+            >
+              <div class="modal__header">
+                <h2 class="modal__title" id="clone-modal-title">
+                  Clone this clip
+                </h2>
+                <button
+                  type="button"
+                  class="btn btn--ghost btn--icon"
+                  data-close-clone-modal
+                  aria-label="Close"
+                >
+                  <CloseIcon />
+                </button>
+              </div>
+              <form method="post" action={`/${slug}/clone`} class="modal__body clone-modal__body">
+                <p class="clone-modal__hint">
+                  Creates a private copy you can edit. Leave the name blank for a random link.
+                </p>
+                <label class="clone-modal__label" for="clone-slug">
+                  Custom name <span class="muted">(optional)</span>
+                </label>
+                <div class="clone-modal__slug-row">
+                  <span class="clone-modal__prefix muted">{host}/</span>
+                  <input
+                    type="text"
+                    id="clone-slug"
+                    name="slug"
+                    class="slug-input"
+                    placeholder="my-clip"
+                    pattern="[a-zA-Z0-9_-]{3,64}"
+                    maxlength={64}
+                    autocomplete="off"
+                    spellcheck={false}
+                    value={cloneSlugValue}
+                    aria-invalid={cloneError ? "true" : undefined}
+                    aria-describedby={cloneError ? "clone-slug-error" : "clone-slug-hint"}
+                  />
+                </div>
+                {cloneError ? (
+                  <p class="clone-modal__error" id="clone-slug-error" role="alert">
+                    {cloneError}
+                  </p>
+                ) : (
+                  <p class="clone-modal__field-hint" id="clone-slug-hint">
+                    3–64 letters, numbers, hyphens, or underscores
+                  </p>
+                )}
+                <div class="clone-modal__actions">
+                  <button type="button" class="btn btn--ghost" data-close-clone-modal>
+                    Cancel
+                  </button>
+                  <button type="submit" class="btn btn--primary" id="clone-clip-submit">
+                    Clone
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         <div class="modal-backdrop docs-modal-backdrop" id="docs-modal-backdrop" hidden data-docs-modal>
           <div

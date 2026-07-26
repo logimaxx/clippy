@@ -523,11 +523,64 @@ a {
   margin: 2rem 0;
 }
 
+.explore-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem;
+  margin: 1.5rem 0 0;
+  text-align: left;
+}
+
+.explore-search .slug-input {
+  flex: 1 1 12rem;
+  min-width: 0;
+}
+
+.explore-search-clear {
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.explore-search-clear:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.explore-count {
+  margin: 1.25rem 0 0;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
 .explore-list {
   list-style: none;
   padding: 0;
+  margin: 0.75rem 0 0;
+  text-align: left;
+}
+
+.explore-pager {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
   margin: 1.5rem 0 0;
   text-align: left;
+}
+
+.explore-pager .btn {
+  text-decoration: none;
+}
+
+.explore-pager-status {
+  font-size: 0.9rem;
+}
+
+.explore-pager-disabled {
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .explore-item {

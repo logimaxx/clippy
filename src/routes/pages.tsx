@@ -16,7 +16,7 @@ import {
   clipContentSchema,
   MAX_FILES_PER_CLIP,
 } from "../lib/constants";
-import { getClientIp } from "../lib/rate-limit";
+import { getClientIp, rateLimit } from "../lib/rate-limit";
 import {
   hashPin,
   verifyPin,
@@ -48,8 +48,11 @@ import {
   deleteClip,
   recordView,
   listPublicClips,
+  countPublicClips,
+  KLIPWALL_PAGE_SIZE,
   getClipFiles,
   isListablePublic,
+  clonePublicClip,
 } from "../store/clips";
 import { listVersions, getVersion } from "../store/versions";
 import { ClipPage } from "../views/ClipPage";
@@ -63,6 +66,7 @@ import * as rooms from "../ws/rooms";
 import type { Clip } from "../db/schema";
 
 const pages = new Hono();
+const CLIP_CREATE_LIMIT = Number(process.env.RATE_LIMIT_CLIPS_PER_HOUR ?? 30);
 
 function settingsPanelProps(slug: string, clip: Clip, versions: Awaited<ReturnType<typeof listVersions>>) {
   return {
@@ -153,6 +157,16 @@ async function renderClipPage(c: Context, slug: string) {
   }
 
   const versions = await listVersions(slug);
+  const cloneErrorCode = c.req.query("clone_error");
+  const cloneSlugValue = (c.req.query("clone_slug") ?? "").trim();
+  const cloneError =
+    cloneErrorCode === "invalid"
+      ? "Use 3–64 letters, numbers, hyphens, or underscores."
+      : cloneErrorCode === "reserved"
+        ? "That name is reserved. Pick another."
+        : cloneErrorCode === "taken"
+          ? "That name is already taken. Pick another."
+          : null;
 
   return c.html(
     <ClipPage
@@ -173,13 +187,35 @@ async function renderClipPage(c: Context, slug: string) {
       versions={versions}
       readOnly={readOnly}
       burned={burned}
+      cloneError={cloneError}
+      cloneSlugValue={cloneSlugValue}
     />
   );
 }
 
 pages.get("/klipwall", async (c) => {
-  const clips = await listPublicClips(50);
-  return c.html(<KlipwallPage clips={clips} />);
+  const query = (c.req.query("q") ?? "").trim();
+  const search = query || undefined;
+  const total = await countPublicClips(search);
+  const totalPages = Math.max(1, Math.ceil(total / KLIPWALL_PAGE_SIZE));
+  const requested = Number.parseInt(c.req.query("page") ?? "1", 10);
+  const page = Number.isFinite(requested)
+    ? Math.min(Math.max(1, requested), totalPages)
+    : 1;
+  const clips = await listPublicClips(
+    KLIPWALL_PAGE_SIZE,
+    search,
+    (page - 1) * KLIPWALL_PAGE_SIZE
+  );
+  return c.html(
+    <KlipwallPage
+      clips={clips}
+      query={query}
+      page={page}
+      totalPages={totalPages}
+      total={total}
+    />
+  );
 });
 
 pages.get("/explore", (c) => c.redirect("/klipwall", 301));
@@ -370,6 +406,66 @@ pages.post("/:slug/claim", async (c) => {
   const slug = c.req.param("slug");
   if (!isValidSlug(slug) || isReservedSlug(slug)) return c.notFound();
   return renderOwnerClaimPost(c, slug);
+});
+
+async function handleCloneClip(c: Context, slug: string) {
+  const source = await getClip(slug);
+  if (!source || !isListablePublic(source)) return c.notFound();
+
+  const ip = getClientIp(c.req.raw.headers);
+  const { allowed } = rateLimit(`clip:${ip}`, CLIP_CREATE_LIMIT, 60 * 60 * 1000);
+  if (!allowed) return c.text("Too many clips created. Try again later.", 429);
+
+  const body = await c.req.parseBody();
+  const custom = typeof body.slug === "string" ? body.slug.trim() : "";
+
+  const cloneErrorRedirect = (code: string) => {
+    const params = new URLSearchParams({ clone_error: code });
+    if (custom) params.set("clone_slug", custom);
+    return c.redirect(`/${slug}?${params}`, 302);
+  };
+
+  let newSlug: string;
+  if (custom) {
+    if (!isValidSlug(custom)) return cloneErrorRedirect("invalid");
+    if (isReservedSlug(custom)) return cloneErrorRedirect("reserved");
+    if (await getClip(custom)) return cloneErrorRedirect("taken");
+    newSlug = custom;
+  } else {
+    newSlug = generateSlug(10);
+    for (let i = 0; i < 5 && (await getClip(newSlug)); i++) {
+      newSlug = generateSlug(10);
+    }
+    if (await getClip(newSlug)) {
+      return c.text("Could not allocate a unique clip. Try again.", 503);
+    }
+  }
+
+  const authUser = await resolveAuth(c);
+  await clonePublicClip(source, newSlug, {
+    ownerId: authUser?.id ?? null,
+  });
+
+  const files = getClipFiles(source);
+  if (files.length > 0) {
+    const { copyClipAttachments } = await import("./files");
+    await copyClipAttachments(slug, newSlug, files);
+  }
+
+  setOwnerCookie(c, newSlug);
+  return c.redirect(`/${newSlug}`, 302);
+}
+
+pages.post("/:slug/clone", async (c) => {
+  const slug = c.req.param("slug");
+  if (!isValidSlug(slug) || isReservedSlug(slug)) return c.notFound();
+  return handleCloneClip(c, slug);
+});
+
+pages.post("/:team/:name/clone", async (c) => {
+  const slug = parseVanitySlug(c.req.param("team"), c.req.param("name"));
+  if (!slug) return c.notFound();
+  return handleCloneClip(c, slug);
 });
 
 pages.get("/:team/:name/claim", async (c) => {
