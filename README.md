@@ -31,13 +31,15 @@ Open http://localhost:3000
 
 ### E2E encryption
 
-1. Enable "End-to-end encryption" in clip settings
-2. Click "Generate & copy secure link" — adds `#key=...` to URL
-3. Share the **full URL including the hash** — recipients can decrypt in browser
+1. In clip settings → Protect, choose **E2E** (clears any PIN — protect modes are mutually exclusive)
+2. Click "Get Key" — adds `#key=...` to the URL
+3. Share the **full URL including the hash** — recipients can decrypt in the browser
+
+Public Klipwall clips cannot use E2E or PIN.
 
 ## Phase 2 features
 
-- **PIN protection** — set in UI or API; unlock via web form or `X-Clip-Pin` header
+- **PIN protection** — choose PIN in Protect settings (mutually exclusive with E2E); unlock via web form or `X-Clip-Pin` header
 - **View limits** — 1, 3, 10 reads or unlimited (API reads only)
 - **Webhooks** — `POST` JSON to your URL on `read`, `burned`, `expired` events
 - **File/image upload** — HTMX multipart, image preview inline

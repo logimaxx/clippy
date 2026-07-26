@@ -6,8 +6,8 @@
     <h2>Our security model</h2>
     <p>
       Webklip uses a <strong>link-as-secret</strong> model: knowing the URL is the primary access
-      control for anonymous clips. For sensitive content, use PIN protection or client-side
-      end-to-end encryption.
+      control for anonymous clips. For sensitive content, choose one protect mode — PIN protection
+      or client-side end-to-end encryption (not both). Public Klipwall listings cannot use either.
     </p>
 
     <h2>Transport security</h2>
@@ -18,9 +18,9 @@
 
     <h2>Access controls</h2>
     <ul>
-      <li><strong>PIN protection</strong> — optional per-clip PIN, stored as a bcrypt hash. Five failed attempts trigger a 15-minute lockout per IP.</li>
+      <li><strong>PIN protection</strong> — optional per-clip PIN, stored as a bcrypt hash. Five failed attempts trigger a 15-minute lockout per IP. Mutually exclusive with E2E.</li>
       <li><strong>Unlock cookies</strong> — after PIN entry, an httpOnly HMAC-signed cookie grants access for 24 hours.</li>
-      <li><strong>End-to-end encryption</strong> — AES-256-GCM in the browser; the server never sees plaintext or the decryption key.</li>
+      <li><strong>End-to-end encryption</strong> — AES-256-GCM in the browser; the server never sees plaintext or the decryption key. Mutually exclusive with PIN.</li>
     </ul>
 
     <h2>Data lifecycle</h2>

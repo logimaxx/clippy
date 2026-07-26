@@ -981,16 +981,12 @@
             </select>
           </div>
           <div class="field field--pin">
-            <label class="field__label" for="pin-d">PIN</label>
-            <input type="password" id="pin-d" placeholder="Set PIN" autocomplete="off" />
-          </div>
-          <div class="field">
-            <span class="field__label">E2E encryption</span>
-            <label class="toggle">
-              <input type="checkbox" id="e2e-d" checked />
-              <span class="toggle__track" aria-hidden="true"></span>
-              <span>On</span>
-            </label>
+            <label class="field__label" for="protect-d">Protect</label>
+            <select id="protect-d" aria-label="Protection mode">
+              <option value="none">None — anyone with the link</option>
+              <option value="pin">PIN — visitors enter a PIN first</option>
+              <option value="e2e" selected>E2E — encrypt in browser · key in URL</option>
+            </select>
           </div>
           <div class="field">
             <span class="field__label">Countdown</span>
@@ -1034,7 +1030,7 @@ async function fetchClip(slug) {
 }
 
 // Open this page on another device to see real-time sync.
-// Try the settings panel to set expiry, PIN, or E2E encryption.</textarea>
+// Try Settings → Protect to choose PIN or E2E (one mode).</textarea>
           </div>
         </section>
 
@@ -1133,16 +1129,15 @@ async function fetchClip(slug) {
             </select>
           </div>
           <div class="field">
-            <label class="field__label" for="pin-m">PIN protection</label>
-            <input type="password" id="pin-m" placeholder="Set a PIN" autocomplete="off" />
-          </div>
-          <div class="field">
-            <span class="field__label">End-to-end encryption</span>
-            <label class="toggle">
-              <input type="checkbox" id="e2e-m" checked />
-              <span class="toggle__track"></span>
-              <span>Encrypt in browser (key in URL hash)</span>
-            </label>
+            <span class="field__label">Protect</span>
+            <p class="field-hint" style="margin:0 0 0.5rem;font-size:0.75rem;color:var(--text-secondary)">
+              Choose one: PIN gates access on the server, or E2E encrypts in the browser (key in the URL).
+            </p>
+            <select id="protect-m" aria-label="Protection mode">
+              <option value="none">None — anyone with the link</option>
+              <option value="pin">PIN — visitors enter a PIN first</option>
+              <option value="e2e" selected>E2E — encrypt in browser · key in URL</option>
+            </select>
           </div>
         </div>
         <div class="sheet__section">

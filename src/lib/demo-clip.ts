@@ -11,8 +11,8 @@ Try editing this text — if you open this page on another device, changes sync 
 
 Features to explore in Settings:
 • Set a TTL (15 min to 1 year, or a custom date)
-• Add a PIN for sensitive content
-• Enable burn-after-read or end-to-end encryption
+• Protect with a PIN or end-to-end encryption (choose one)
+• Enable burn-after-read for single-use secrets
 • Attach files and images
 
 When you are ready, head back to the homepage and create your own clip.`;

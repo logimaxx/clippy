@@ -29,8 +29,8 @@ Or open any URL like `webklip.com/my-clip` to start sharing.
 - **Real-time sync** — Updates appear on every open device as you type or paste
 - **No account required** — Your link is the key
 - **QR code** — Scan to open a clip on your phone
-- **End-to-end encryption** — Encrypt in the browser before upload
-- **PIN protection** — Lock sensitive clips; PINs are never stored in plain text
+- **End-to-end encryption** — Encrypt in the browser before upload — choose instead of a PIN
+- **PIN protection** — Or lock with a PIN; never stored in plain text
 - **Burn after read** — Delete automatically after one view
 - **File attachments** — Images, PDFs, and documents
 - **Syntax highlighting & Markdown preview** — For code and notes
@@ -70,7 +70,7 @@ Chat apps and email keep permanent copies, need an account, and bury files in co
 
 **Developers** — Move snippets between machines with syntax highlighting, no Slack threads that never disappear.
 
-**IT & support** — Send one-time passwords or recovery codes with PIN protection and burn-after-read.
+**IT & support** — Send one-time passwords or recovery codes with PIN or E2E, plus burn-after-read.
 
 **Everyone else** — Move text or a photo between your phone and desktop in seconds.
 
@@ -83,9 +83,9 @@ Chat apps and email keep permanent copies, need an account, and bury files in co
 - No ads, no analytics trackers
 - Anonymous — no account needed
 - Automatic deletion after expiry
-- Optional PIN or end-to-end encryption for sensitive content
+- Choose PIN or end-to-end encryption for sensitive content (not both)
 
-Anyone with the link can access a clip unless you set a PIN or enable end-to-end encryption — use those options for sensitive data.
+Anyone with the link can access a clip unless you protect it with a PIN or end-to-end encryption — pick one mode for sensitive data. Public Klipwall clips stay unprotected by design.
 
 [Read our security practices →]
 

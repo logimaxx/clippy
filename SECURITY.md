@@ -4,7 +4,7 @@ This document is for operators deploying Webklip in production and for security 
 
 ## Threat model
 
-Webklip is an **ephemeral web clipboard**. Access control for anonymous clips relies on the **link-as-secret** model: anyone who knows the URL can read and edit unless you add a PIN or client-side end-to-end encryption.
+Webklip is an **ephemeral web clipboard**. Access control for anonymous clips relies on the **link-as-secret** model: anyone who knows the URL can read and edit unless you add a PIN **or** client-side end-to-end encryption (mutually exclusive protect modes). Public Klipwall clips cannot use PIN, E2E, or burn-after-read.
 
 | Asset | Risk if compromised |
 |-------|---------------------|
@@ -69,6 +69,7 @@ When `UMAMI_WEBSITE_ID` is set, CSP also allows the Umami script origin for `scr
 
 ### Access control
 
+- **Protect modes**: choose **PIN** or **E2E** (not both); public/Klipwall clips cannot use either
 - **PIN protection**: bcrypt hashes, 5-attempt lockout per IP/slug (15 min)
 - **Unlock cookies**: HMAC-signed, httpOnly, SameSite=Lax, optional Secure flag
 - **File downloads**: require PIN unlock cookie or `X-Clip-Pin` header when clip is PIN-protected

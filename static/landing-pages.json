@@ -67,7 +67,7 @@
       "Instant transfer with no app install",
       "Live updates as you type on any device",
       "Configurable expiry from 15 minutes to 7 days",
-      "Optional PIN or encryption for sensitive transfers"
+      "Optional PIN or E2E encryption — choose one protect mode"
     ],
     "useCases": [
       "Transfer a verification code from phone to laptop",
@@ -111,16 +111,16 @@
   {
     "slug": "secure-clipboard",
     "title": "Secure Clipboard — PIN & Encryption | Webklip",
-    "description": "Secure clipboard with optional PIN protection and end-to-end encryption. Share sensitive text safely, then let it expire.",
+    "description": "Secure clipboard with PIN protection or end-to-end encryption. Choose one protect mode, share sensitive text safely, then let it expire.",
     "h1": "Secure Clipboard",
-    "intro": "Share sensitive content with PIN locks and optional encryption — then let it disappear automatically.",
+    "intro": "Share sensitive content with a PIN lock or end-to-end encryption — choose one, then let it disappear automatically.",
     "paragraphs": [
-      "A secure clipboard needs more than a random URL. Add a PIN so only people who know the code can read your content — PINs are hashed before saving, never stored in plain text.",
-      "Layer on short TTLs, burn-after-read, or view caps so secrets are protected and then deleted. For zero-knowledge storage, enable end-to-end encryption so the server never sees plaintext."
+      "A secure clipboard needs more than a random URL. In Protect settings, pick PIN or E2E — not both. A PIN gates access on the server so only people who know the code can open the clip; PINs are hashed before saving, never stored in plain text.",
+      "Prefer zero-knowledge storage? Choose E2E instead: content is encrypted in the browser before upload, and the key stays in the URL fragment. Pair either mode with a short TTL or burn-after-read so secrets are deleted when you are done. Public Klipwall listings cannot use PIN, E2E, or burn-after-read."
     ],
     "benefits": [
-      "PIN protection — PINs are never stored in plain text",
-      "Optional end-to-end encryption in the browser",
+      "Choose PIN or E2E — mutually exclusive protect modes",
+      "PIN hashed on the server, or browser-side E2E with the key in the URL",
       "Burn after read for single-use secrets",
       "Automatic deletion after expiry"
     ],
@@ -197,13 +197,13 @@
     "intro": "Encrypt your content in the browser before it leaves your device. Only people with the key can read it.",
     "paragraphs": [
       "Standard clipboard sharing trusts the server with your content. With end-to-end encryption, text is encrypted in your browser before upload — the server stores ciphertext only and cannot read your data even if compelled.",
-      "The decryption key lives in the URL fragment (after #), which browsers never send to the server. Share the full URL including the key; recipients decrypt locally in their browser."
+      "The decryption key lives in the URL fragment (after #), which browsers never send to the server. Share the full URL including the key; recipients decrypt locally in their browser. E2E replaces PIN protection — choose one protect mode in Settings."
     ],
     "benefits": [
       "Encryption happens in your browser before upload",
       "Server stores ciphertext only — no plaintext access",
       "Decryption key stays in the URL fragment",
-      "Works alongside PIN protection and auto-expiry"
+      "Choose E2E instead of a PIN; combine with auto-expiry or burn-after-read"
     ],
     "useCases": [
       "Share credentials that the server cannot read",
