@@ -10,6 +10,8 @@ interface LayoutProps {
   ogDescription?: string;
   /** Use "none" when the page embeds ThemeToggle in its own top bar. */
   themeToggle?: "floating" | "none";
+  /** Body class — use "with-chrome" for marketing pages with site header/footer. */
+  bodyClass?: string;
   /** robots meta; private clips should stay noindex */
   robots?: string;
   children: Child;
@@ -21,6 +23,7 @@ export function Layout({
   ogTitle,
   ogDescription,
   themeToggle = "floating",
+  bodyClass,
   robots,
   children,
 }: LayoutProps) {
@@ -51,7 +54,7 @@ export function Layout({
         <script src={asset("htmx.min.js")} defer></script>
         <script src={asset("app.js")} defer></script>
       </head>
-      <body>
+      <body class={bodyClass}>
         {themeToggle === "floating" && <ThemeToggle floating />}
         <div id="toast-host" class="toast-host" aria-live="polite" aria-atomic="true"></div>
         {children}

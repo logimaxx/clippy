@@ -1,5 +1,7 @@
 /** @jsxImportSource hono/jsx */
 import { Layout } from "./Layout";
+import { SiteHeader } from "./partials/SiteHeader";
+import { SiteFooter } from "./partials/SiteFooter";
 import { clipPreviewText, formatClipDate } from "../lib/explore-preview";
 import type { Clip } from "../db/schema";
 
@@ -33,11 +35,11 @@ export function KlipwallPage({
     <Layout
       title="Klipwall — Webklip"
       description="Browse public Webklip clips shared by the community."
+      themeToggle="none"
+      bodyClass="with-chrome"
     >
+      <SiteHeader />
       <main class="home explore-page">
-        <p class="explore-kicker">
-          <a href="/" class="logo">webklip</a>
-        </p>
         <h1>Klipwall</h1>
         <p class="tagline">
           Public clips anyone can open. Make a clip public from its settings to list it here.
@@ -128,6 +130,7 @@ export function KlipwallPage({
           </>
         )}
       </main>
+      <SiteFooter />
     </Layout>
   );
 }

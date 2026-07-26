@@ -86,6 +86,8 @@ test.describe("Webklip E2E", () => {
       await expect(page).toHaveTitle(/Klipwall/i);
       await expect(page.getByRole("search")).toBeVisible();
       await expect(page.getByLabel("Search Klipwall")).toBeVisible();
+      await expect(page.locator(".site-header .site-nav a[href='/klipwall']")).toBeVisible();
+      await expect(page.locator(".site-footer a[href='/about']")).toBeVisible();
     });
 
     test("klipwall search finds public clips by content", async ({ page }) => {
