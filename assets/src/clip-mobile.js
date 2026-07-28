@@ -100,13 +100,19 @@
     return Boolean(backdrop && !backdrop.hidden);
   }
 
+  function isMdPreviewOpen() {
+    const backdrop = document.querySelector("[data-md-preview-modal]");
+    return Boolean(backdrop && !backdrop.hidden);
+  }
+
   function syncBodyScrollLock() {
     document.body.style.overflow =
       openSheetName ||
       isQrModalOpen() ||
       isDocsModalOpen() ||
       isCloneModalOpen() ||
-      isFilePreviewOpen()
+      isFilePreviewOpen() ||
+      isMdPreviewOpen()
         ? "hidden"
         : "";
   }
@@ -550,6 +556,10 @@
       if (e.key !== "Escape") return;
       if (isFilePreviewOpen()) {
         window.WebklipFiles?.closePreview?.();
+        return;
+      }
+      if (isMdPreviewOpen()) {
+        window.WebklipEditor?.closePreview?.();
         return;
       }
       if (isDocsModalOpen()) {

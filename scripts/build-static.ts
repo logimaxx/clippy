@@ -239,7 +239,7 @@ function renderPage(
   });
 }
 
-function buildLandingSlugBar(): string {
+function buildLandingSlugBar(statusId: string): string {
   return `<div class="landing-hero-paste-bar">
   <input
     type="text"
@@ -249,9 +249,11 @@ function buildLandingSlugBar(): string {
     class="slug-input"
     autocomplete="off"
     aria-label="Custom clip name (optional)"
+    aria-describedby="${statusId}"
   />
   <button type="submit" class="btn btn-primary btn-lg">Create a Clip</button>
-</div>`;
+</div>
+<p class="landing-create-status" id="${statusId}" hidden role="status"></p>`;
 }
 
 function buildLandingPasteForm(id: string): string {
@@ -265,7 +267,7 @@ function buildLandingPasteForm(id: string): string {
     placeholder="Paste text here…"
     spellcheck="false"
   ></textarea>
-  ${buildLandingSlugBar()}
+  ${buildLandingSlugBar(`${id}-slug-status`)}
 </form>`;
 }
 
@@ -293,7 +295,7 @@ function buildLandingFileForm(id: string): string {
     placeholder="Optional note to go with the file…"
     spellcheck="false"
   ></textarea>
-  ${buildLandingSlugBar()}
+  ${buildLandingSlugBar(`${id}-slug-status`)}
 </form>`;
 }
 

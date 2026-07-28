@@ -52,6 +52,22 @@ async function requirePin(
   return verifyPin(pin, pinHash);
 }
 
+/** Existence check only — does not count as a view (safe for burn-on-read). */
+clipsApi.get("/api/v1/clips/:slug/available", async (c) => {
+  const slug = c.req.param("slug");
+  if (!isValidSlug(slug)) {
+    return c.json({ available: false, reason: "invalid" as const });
+  }
+  if (isReservedSlug(slug)) {
+    return c.json({ available: false, reason: "reserved" as const });
+  }
+  const existing = await getClip(slug);
+  if (existing) {
+    return c.json({ available: false, reason: "taken" as const });
+  }
+  return c.json({ available: true as const });
+});
+
 clipsApi.get("/api/v1/clips/:slug", async (c) => {
   const slug = c.req.param("slug");
   if (!isValidSlug(slug)) return c.json({ error: "Invalid slug" }, 400);

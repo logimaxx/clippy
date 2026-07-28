@@ -35,15 +35,18 @@
     <div class="landing-hero-paste-bar">
       <input
         type="text"
+        id="home-slug"
         name="slug"
         placeholder="custom-name (optional)"
         pattern="[a-zA-Z0-9_-]{3,64}"
         class="slug-input"
         autocomplete="off"
         aria-label="Custom clip name (optional)"
+        aria-describedby="create-slug-status"
       />
       <button type="submit" class="btn btn-primary btn-lg">Create a Clip</button>
     </div>
+    <p class="landing-create-status" id="create-slug-status" hidden role="status"></p>
   </form>
 </section>
 

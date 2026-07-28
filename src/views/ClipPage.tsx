@@ -131,7 +131,7 @@ export function ClipPage({
             {!readOnly && (
               <button
                 type="button"
-                class="btn btn--ghost btn--sm header-settings-btn"
+                class="btn btn--sm header-settings-btn"
                 data-open-sheet="settings"
                 aria-haspopup="dialog"
                 aria-controls="sheet-settings"
@@ -455,6 +455,40 @@ export function ClipPage({
             </div>
           </div>
         )}
+
+        <div
+          class="modal-backdrop md-preview-backdrop"
+          id="md-preview-backdrop"
+          hidden
+          data-md-preview-modal
+        >
+          <div
+            class="modal md-preview-modal"
+            id="md-preview-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="md-preview-modal-title"
+            hidden
+          >
+            <div class="modal__header md-preview-modal__header">
+              <h2 class="modal__title" id="md-preview-modal-title">
+                Preview
+              </h2>
+              <button
+                type="button"
+                class="btn btn--ghost btn--icon"
+                data-close-md-preview
+                aria-label="Close preview"
+              >
+                <CloseIcon />
+              </button>
+            </div>
+            <div
+              class="modal__body md-preview-modal__body clip-md-preview"
+              id="md-preview-modal-body"
+            ></div>
+          </div>
+        </div>
 
         <div
           class="modal-backdrop file-preview-backdrop"

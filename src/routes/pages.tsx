@@ -42,6 +42,7 @@ import {
 import { getTeamBySlug, canReadClip, canWriteClip } from "../lib/teams";
 import {
   ensureClip,
+  createClip,
   updateSettings,
   getClip,
   updateContent,
@@ -234,18 +235,49 @@ pages.post("/new", async (c) => {
   const authUser = await resolveAuth(c);
   const body = await c.req.parseBody({ all: true });
   const custom = typeof body.slug === "string" ? body.slug.trim() : "";
-  const slug =
-    custom && isValidSlug(custom) && !isReservedSlug(custom)
-      ? custom
-      : generateSlug(10);
+  const wantsCustom = Boolean(custom);
+  const customOk =
+    wantsCustom && isValidSlug(custom) && !isReservedSlug(custom);
+
+  if (wantsCustom && customOk) {
+    if (await getClip(custom)) {
+      const params = new URLSearchParams({
+        create_error: "taken",
+        create_slug: custom,
+      });
+      return c.redirect(`/?${params}`, 302);
+    }
+  }
+
+  let slug = customOk ? custom : generateSlug(10);
+  if (!customOk) {
+    for (let i = 0; i < 5 && (await getClip(slug)); i++) {
+      slug = generateSlug(10);
+    }
+    if (await getClip(slug)) {
+      return c.text("Could not allocate a unique clip. Try again.", 503);
+    }
+  }
+
   const rawContent = typeof body.content === "string" ? body.content : "";
   const parsed = clipContentSchema.safeParse({ content: rawContent });
   if (!parsed.success) return c.text("Content too large", 400);
   const files = collectUploadFiles(body as Record<string, unknown>);
-  await ensureClip(slug, {
-    ownerId: authUser?.id ?? null,
-    content: parsed.data.content,
-  });
+  try {
+    await createClip(slug, {
+      ownerId: authUser?.id ?? null,
+      content: parsed.data.content,
+    });
+  } catch {
+    if (customOk) {
+      const params = new URLSearchParams({
+        create_error: "taken",
+        create_slug: custom,
+      });
+      return c.redirect(`/?${params}`, 302);
+    }
+    return c.text("Could not allocate a unique clip. Try again.", 503);
+  }
   setOwnerCookie(c, slug);
 
   if (files.length > 0) {

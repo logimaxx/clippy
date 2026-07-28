@@ -716,6 +716,210 @@
     });
   });
 
+  // Homepage / landing create: slug availability + taken-name feedback
+  (function initCreateSlugValidation() {
+    const SLUG_RE = /^[a-zA-Z0-9_-]{3,64}$/;
+    const DRAFT_KEY = "webklip_create_draft";
+    const forms = document.querySelectorAll('form.home-form[action="/new"]');
+    if (!forms.length) return;
+
+    function clearUrlCreateParams() {
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has("create_error") && !url.searchParams.has("create_slug")) {
+        return;
+      }
+      url.searchParams.delete("create_error");
+      url.searchParams.delete("create_slug");
+      const qs = url.searchParams.toString();
+      window.history.replaceState({}, "", qs ? `${url.pathname}?${qs}` : url.pathname);
+    }
+
+    /**
+     * @param {HTMLElement} status
+     * @param {"ok"|"error"|"idle"} kind
+     * @param {string} text
+     * @param {string | null} openSlug
+     */
+    function setStatus(status, kind, text, openSlug) {
+      status.hidden = !text;
+      status.classList.toggle("is-error", kind === "error");
+      status.classList.toggle("is-ok", kind === "ok");
+      status.replaceChildren();
+      if (!text) return;
+      status.append(document.createTextNode(text));
+      if (openSlug) {
+        status.append(document.createTextNode(" "));
+        const link = document.createElement("a");
+        link.href = `/${encodeURIComponent(openSlug)}`;
+        link.textContent = "Open existing clip →";
+        status.append(link);
+      }
+    }
+
+    forms.forEach((form) => {
+      if (!(form instanceof HTMLFormElement)) return;
+      const slugInput = form.querySelector('input[name="slug"]');
+      const contentInput = form.querySelector('textarea[name="content"]');
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const status =
+        form.querySelector(".landing-create-status") ||
+        document.getElementById("create-slug-status");
+      if (!(slugInput instanceof HTMLInputElement) || !(status instanceof HTMLElement)) {
+        return;
+      }
+
+      let timer = 0;
+      let reqId = 0;
+
+      function setBlocked(next) {
+        form.dataset.slugBlocked = next ? "1" : "";
+        if (submitBtn instanceof HTMLButtonElement) {
+          submitBtn.disabled = next;
+        }
+        slugInput.classList.toggle("is-invalid", next);
+      }
+
+      form.addEventListener("submit", () => {
+        if (contentInput instanceof HTMLTextAreaElement) {
+          try {
+            sessionStorage.setItem(DRAFT_KEY, contentInput.value);
+          } catch {
+            /* ignore */
+          }
+        }
+      });
+
+      async function checkSlug(value) {
+        const id = ++reqId;
+        if (!value) {
+          setBlocked(false);
+          setStatus(status, "idle", "", null);
+          return;
+        }
+        if (!SLUG_RE.test(value)) {
+          setBlocked(true);
+          setStatus(
+            status,
+            "error",
+            "Use 3–64 letters, numbers, hyphens, or underscores.",
+            null
+          );
+          return;
+        }
+        try {
+          const res = await fetch(`/api/v1/clips/${encodeURIComponent(value)}/available`, {
+            headers: { Accept: "application/json" },
+          });
+          if (id !== reqId) return;
+          if (!res.ok) {
+            setBlocked(false);
+            setStatus(status, "idle", "", null);
+            return;
+          }
+          const data = await res.json();
+          if (id !== reqId) return;
+          if (data.available) {
+            setBlocked(false);
+            setStatus(status, "ok", "Name is available.", null);
+            return;
+          }
+          if (data.reason === "taken") {
+            setBlocked(true);
+            setStatus(
+              status,
+              "error",
+              "That name is already taken.",
+              value
+            );
+            return;
+          }
+          if (data.reason === "reserved") {
+            setBlocked(true);
+            setStatus(status, "error", "That name is reserved. Pick another.", null);
+            return;
+          }
+          setBlocked(true);
+          setStatus(
+            status,
+            "error",
+            "Use 3–64 letters, numbers, hyphens, or underscores.",
+            null
+          );
+        } catch {
+          if (id !== reqId) return;
+          setBlocked(false);
+          setStatus(status, "idle", "", null);
+        }
+      }
+
+      slugInput.addEventListener("input", () => {
+        const value = slugInput.value.trim();
+        window.clearTimeout(timer);
+        if (!value) {
+          reqId += 1;
+          setBlocked(false);
+          setStatus(status, "idle", "", null);
+          return;
+        }
+        timer = window.setTimeout(() => checkSlug(value), 300);
+      });
+
+      form.addEventListener("submit", (e) => {
+        if (form.dataset.slugBlocked === "1") e.preventDefault();
+      });
+    });
+
+    const params = new URLSearchParams(window.location.search);
+    const createError = params.get("create_error");
+    const createSlug = (params.get("create_slug") ?? "").trim();
+    if (createError === "taken" && createSlug) {
+      const primary =
+        document.getElementById("create-klip") ||
+        document.querySelector('form.home-form[action="/new"]');
+      if (primary instanceof HTMLFormElement) {
+        const slugInput = primary.querySelector('input[name="slug"]');
+        const contentInput = primary.querySelector('textarea[name="content"]');
+        const status =
+          primary.querySelector(".landing-create-status") ||
+          document.getElementById("create-slug-status");
+        const submitBtn = primary.querySelector('button[type="submit"]');
+        if (slugInput instanceof HTMLInputElement) {
+          slugInput.value = createSlug;
+          slugInput.classList.add("is-invalid");
+        }
+        primary.dataset.slugBlocked = "1";
+        if (submitBtn instanceof HTMLButtonElement) submitBtn.disabled = true;
+        if (status instanceof HTMLElement) {
+          status.hidden = false;
+          status.classList.add("is-error");
+          status.replaceChildren();
+          status.append(document.createTextNode("That name is already taken. "));
+          const link = document.createElement("a");
+          link.href = `/${encodeURIComponent(createSlug)}`;
+          link.textContent = "Open existing clip →";
+          status.append(link);
+        }
+        if (contentInput instanceof HTMLTextAreaElement) {
+          try {
+            const draft = sessionStorage.getItem(DRAFT_KEY);
+            if (draft != null) contentInput.value = draft;
+            sessionStorage.removeItem(DRAFT_KEY);
+          } catch {
+            /* ignore */
+          }
+        }
+        primary.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+      clearUrlCreateParams();
+    } else {
+      try {
+        sessionStorage.removeItem(DRAFT_KEY);
+      } catch {
+        /* ignore */
+      }
+    }
+  })();
+
   // Landing page file upload drop zones (multipart create-from-hero)
   document.querySelectorAll(".landing-hero-upload").forEach((form) => {
     const zone = form.querySelector(".landing-drop-zone");

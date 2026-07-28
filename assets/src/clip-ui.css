@@ -115,7 +115,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   display: none;
 }
 
-.header-settings-btn {
+.btn.header-settings-btn {
   min-height: 2rem;
   padding: 0 0.7rem;
   gap: 0.4rem;
@@ -130,7 +130,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   flex-shrink: 0;
 }
 
-.header-settings-btn:hover {
+.btn.header-settings-btn:hover {
   border-color: color-mix(in srgb, var(--accent) 40%, var(--border-default));
   background: var(--accent-muted);
   color: var(--accent);
@@ -1055,6 +1055,51 @@ a.chip--owner-claim:hover {
 
 .clip-md-preview a {
   color: var(--accent);
+}
+
+/* ── Markdown preview modal (mobile) ── */
+.md-preview-backdrop {
+  z-index: 85;
+  align-items: stretch;
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+.md-preview-modal {
+  width: min(100%, 40rem);
+  height: min(92dvh, 92vh);
+  max-height: min(92dvh, 92vh);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.md-preview-modal__header {
+  flex-shrink: 0;
+}
+
+.md-preview-modal__body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.35rem 1rem 1.25rem;
+}
+
+@media (max-width: 767px) {
+  #clip-editor-wrap.clip-editor--split,
+  .clip-editor-wrap.clip-editor--split {
+    flex-direction: column;
+  }
+
+  .clip-editor-wrap > .clip-md-preview {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .md-preview-backdrop {
+    display: none !important;
+  }
 }
 
 .clip-editor--hidden {

@@ -241,6 +241,57 @@ test.describe("Webklip E2E", () => {
       await expect(page.locator("#clip-content")).toHaveValue(text);
     });
 
+    test("rejects homepage create when custom slug is taken", async ({ page }) => {
+      const slug = uniqueSlug("taken");
+      const original = `Original ${Date.now()}`;
+      const attempt = `Should not replace ${Date.now()}`;
+      await createClipViaApi(page.request, slug, original);
+
+      await page.goto("/");
+      await page.locator("#home-paste").fill(attempt);
+      await page.fill('input[name="slug"]', slug);
+      await expect(page.locator("#create-slug-status")).toContainText(/already taken/i);
+      await expect(page.getByRole("link", { name: /Open existing clip/i })).toHaveAttribute(
+        "href",
+        `/${slug}`
+      );
+      await expect(page.getByRole("button", { name: /Create a? clip/i })).toBeDisabled();
+
+      // Bypass client guard to assert server hard-reject + draft restore
+      await page.locator("#create-klip").evaluate((form) => {
+        if (!(form instanceof HTMLFormElement)) return;
+        delete form.dataset.slugBlocked;
+        const btn = form.querySelector("button[type='submit']");
+        if (btn instanceof HTMLButtonElement) btn.disabled = false;
+        const input = form.querySelector('input[name="slug"]');
+        input?.classList.remove("is-invalid");
+      });
+      await page.getByRole("button", { name: /Create a? clip/i }).click();
+      await expect(page).toHaveURL(/\/(\?|$)/);
+      await expect(page.locator("#create-slug-status")).toContainText(/already taken/i);
+      await expect(page.locator("#home-slug")).toHaveValue(slug);
+      await expect(page.locator("#home-paste")).toHaveValue(attempt);
+
+      await page.getByRole("link", { name: /Open existing clip/i }).click();
+      await expect(page).toHaveURL(new RegExp(`/${slug}$`));
+      await expect(page.locator("#clip-content")).toHaveValue(original);
+    });
+
+    test("slug availability API does not burn a burn-on-read clip", async ({ request }) => {
+      const slug = uniqueSlug("avail");
+      await createClipViaApi(request, slug, "secret once", { burnOnRead: true });
+      const avail = await request.get(`/api/v1/clips/${slug}/available`);
+      expect(avail.ok()).toBeTruthy();
+      expect(await avail.json()).toMatchObject({
+        available: false,
+        reason: "taken",
+      });
+      const still = await request.get(`/api/v1/clips/${slug}`);
+      expect(still.ok()).toBeTruthy();
+      const body = await still.json();
+      expect(body.content).toBe("secret once");
+    });
+
     test("first direct visit to a new slug is editable (not burned)", async ({ page }) => {
       const slug = uniqueSlug("firsthit");
       await page.goto(`/${slug}`);

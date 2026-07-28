@@ -117,6 +117,7 @@ function webklipTheme() {
   let mountEl = null;
   let previewEl = null;
   let bound = false;
+  const mobileQuery = window.matchMedia("(max-width: 767px)");
 
   function getWrap() {
     return document.getElementById("clip-editor-wrap");
@@ -134,6 +135,18 @@ function webklipTheme() {
     return wrap?.dataset.encrypted === "true";
   }
 
+  function isMobile() {
+    return mobileQuery.matches;
+  }
+
+  function getPreviewModal() {
+    return document.querySelector("[data-md-preview-modal]");
+  }
+
+  function getModalPreviewBody() {
+    return document.getElementById("md-preview-modal-body");
+  }
+
   function shouldUseEditor() {
     const ta = getTextarea();
     if (!ta || ta.disabled) return false;
@@ -141,14 +154,80 @@ function webklipTheme() {
     return ta.dataset.decrypted === "true";
   }
 
+  function openPreviewModal() {
+    const backdrop = getPreviewModal();
+    const modal = document.getElementById("md-preview-modal");
+    if (!backdrop || !modal) return;
+    backdrop.hidden = false;
+    modal.hidden = false;
+    requestAnimationFrame(() => {
+      backdrop.classList.add("is-open");
+    });
+    window.WebklipMobile?.syncBodyScrollLock?.();
+  }
+
+  function closePreviewModal() {
+    const backdrop = getPreviewModal();
+    const modal = document.getElementById("md-preview-modal");
+    if (!backdrop || !modal || backdrop.hidden) return;
+    backdrop.classList.remove("is-open");
+    window.setTimeout(() => {
+      backdrop.hidden = true;
+      modal.hidden = true;
+      window.WebklipMobile?.syncBodyScrollLock?.();
+    }, 220);
+  }
+
+  function previewText() {
+    return view?.state.doc.toString() ?? getTextarea()?.value ?? "";
+  }
+
   function updatePreview(text) {
-    if (!previewEl) return;
-    if (!previewOpen || language() !== "markdown") {
-      previewEl.hidden = true;
+    const show = previewOpen && language() === "markdown";
+    const html = show ? marked.parse(text || "", { async: false }) : "";
+    const useModal = isMobile();
+
+    if (previewEl) {
+      if (!show || useModal) {
+        previewEl.hidden = true;
+        previewEl.replaceChildren();
+      } else {
+        previewEl.hidden = false;
+        previewEl.innerHTML = html;
+      }
+    }
+
+    const modalBody = getModalPreviewBody();
+    if (modalBody) {
+      modalBody.innerHTML = show && useModal ? html : "";
+    }
+  }
+
+  function applyPreviewMode() {
+    const btn = document.getElementById("md-preview-toggle");
+    btn?.classList.toggle("is-active", previewOpen);
+    btn?.setAttribute("aria-pressed", String(previewOpen));
+
+    if (!previewOpen) {
+      wrap?.classList.remove("clip-editor--split");
+      closePreviewModal();
+      updatePreview(previewText());
       return;
     }
-    previewEl.hidden = false;
-    previewEl.innerHTML = marked.parse(text || "", { async: false });
+
+    if (isMobile()) {
+      wrap?.classList.remove("clip-editor--split");
+      openPreviewModal();
+    } else {
+      closePreviewModal();
+      wrap?.classList.add("clip-editor--split");
+    }
+    updatePreview(previewText());
+  }
+
+  function setPreviewOpen(open) {
+    previewOpen = open;
+    applyPreviewMode();
   }
 
   function updatePreviewToggle() {
@@ -156,11 +235,8 @@ function webklipTheme() {
     if (!btn) return;
     const show = language() === "markdown" && shouldUseEditor();
     btn.hidden = !show;
-    if (!show) {
-      previewOpen = false;
-      btn.classList.remove("is-active");
-      wrap?.classList.remove("clip-editor--split");
-      if (previewEl) previewEl.hidden = true;
+    if (!show && previewOpen) {
+      setPreviewOpen(false);
     }
   }
 
@@ -332,13 +408,7 @@ function webklipTheme() {
   }
 
   function togglePreview() {
-    previewOpen = !previewOpen;
-    const btn = document.getElementById("md-preview-toggle");
-    btn?.classList.toggle("is-active", previewOpen);
-    btn?.setAttribute("aria-pressed", String(previewOpen));
-    wrap?.classList.toggle("clip-editor--split", previewOpen);
-    if (view) updatePreview(view.state.doc.toString());
-    else refresh();
+    setPreviewOpen(!previewOpen);
   }
 
   function bind() {
@@ -346,6 +416,19 @@ function webklipTheme() {
     bound = true;
 
     document.getElementById("md-preview-toggle")?.addEventListener("click", togglePreview);
+    const previewBackdrop = getPreviewModal();
+    if (previewBackdrop && previewBackdrop.dataset.bound !== "1") {
+      previewBackdrop.dataset.bound = "1";
+      previewBackdrop.addEventListener("click", (e) => {
+        if (e.target === previewBackdrop) setPreviewOpen(false);
+      });
+      previewBackdrop.querySelectorAll("[data-close-md-preview]").forEach((btn) => {
+        btn.addEventListener("click", () => setPreviewOpen(false));
+      });
+    }
+    mobileQuery.addEventListener("change", () => {
+      if (previewOpen) applyPreviewMode();
+    });
     document.addEventListener("change", onSettingsChange);
     document.body.addEventListener("htmx:afterSwap", onHtmxSwap);
     document.addEventListener("webklip-theme-change", () => {
@@ -364,6 +447,12 @@ function webklipTheme() {
     bind();
     window.WebklipEditor = {
       refresh,
+      closePreview() {
+        if (previewOpen) setPreviewOpen(false);
+      },
+      isPreviewOpen() {
+        return previewOpen;
+      },
       getValue() {
         return view?.state.doc.toString() ?? getTextarea()?.value ?? "";
       },
