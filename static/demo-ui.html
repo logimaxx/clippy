@@ -1065,7 +1065,7 @@ async function fetchClip(slug) {
 }
 
 // Open this page on another device to see real-time sync.
-// Try Settings → Protect to choose PIN or E2E (one mode).</textarea>
+// Try Settings → Protect → Passphrase for true E2E encryption.</textarea>
           </div>
         </section>
 
@@ -1076,7 +1076,7 @@ async function fetchClip(slug) {
           </div>
           <div class="files-panel__body">
             <label class="drop-zone" id="drop-zone">
-              Drop files here or tap to browse
+              Drop, paste (Ctrl+V), or tap to browse
               <input type="file" hidden multiple accept="image/*,.pdf,.txt,.zip,.json,.md" />
             </label>
             <div class="file-list">
@@ -1162,12 +1162,11 @@ async function fetchClip(slug) {
           <div class="field">
             <span class="field__label">Protect</span>
             <p class="field-hint" style="margin:0 0 0.5rem;font-size:0.75rem;color:var(--text-secondary)">
-              Choose one: PIN gates access on the server, or E2E encrypts in the browser (key in the URL).
+              Passphrase E2E encrypts in the browser. Webklip never receives your passphrase.
             </p>
             <select id="protect-m" aria-label="Protection mode">
               <option value="none">None — anyone with the link</option>
-              <option value="pin">PIN — visitors enter a PIN first</option>
-              <option value="e2e" selected>E2E — encrypt in browser · key in URL</option>
+              <option value="passphrase" selected>Passphrase — E2E encrypt in browser</option>
             </select>
           </div>
         </div>

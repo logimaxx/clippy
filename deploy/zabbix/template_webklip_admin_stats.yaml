@@ -1,0 +1,945 @@
+zabbix_export:
+  version: '6.0'
+  template_groups:
+    - uuid: a9a17eb6c4f44f75957ab46930ede280
+      name: Templates/Applications
+  templates:
+    - uuid: 44b1ffba0136484d9fd1c581345eb523
+      template: 'Webklip Admin Stats by HTTP'
+      name: 'Webklip Admin Stats by HTTP'
+      description: |
+        Monitors Webklip (clippy) via HTTP Basic–auth admin stats API.
+        
+        Requires ADMIN_USER and ADMIN_PASSWORD on the Webklip instance.
+        
+        Macros:
+          {$WEBKLIP.URL}           — base URL, e.g. https://webklip.example.com
+          {$WEBKLIP.ADMIN.PATH}    — admin mount path (default /admin)
+          {$WEBKLIP.ADMIN.USER}    — ADMIN_USER
+          {$WEBKLIP.ADMIN.PASSWORD}— ADMIN_PASSWORD
+        
+        Items scrape GET {$WEBKLIP.URL}{$WEBKLIP.ADMIN.PATH}/api/stats
+        and GET {$WEBKLIP.URL}/api/health.
+      groups:
+        - name: Templates/Applications
+      items:
+        - uuid: 76fd6ca627a14ea1aa1e0acd38bdb0fa
+          name: 'Webklip: Get admin stats'
+          type: HTTP_AGENT
+          key: webklip.admin.stats
+          delay: 1m
+          history: 1h
+          trends: '0'
+          value_type: TEXT
+          description: 'Master item. Fetches JSON from /admin/api/stats.'
+          timeout: 10s
+          url: '{$WEBKLIP.URL}{$WEBKLIP.ADMIN.PATH}/api/stats'
+          status_codes: '200'
+          authtype: BASIC
+          username: '{$WEBKLIP.ADMIN.USER}'
+          password: '{$WEBKLIP.ADMIN.PASSWORD}'
+          tags:
+            - tag: component
+              value: admin
+            - tag: application
+              value: webklip
+          triggers:
+            - uuid: 059497647db3439eb05c4bf858d09b0c
+              expression: 'nodata(/Webklip Admin Stats by HTTP/webklip.admin.stats,5m)=1'
+              name: 'Webklip: Admin stats unavailable'
+              priority: AVERAGE
+              description: 'No successful /admin/api/stats fetch for 5m (auth, path, or service down).'
+              manual_close: 'YES'
+              tags:
+                - tag: scope
+                  value: availability
+
+        - uuid: 649fa8d094db4295b0ed562a46d03436
+          name: 'Webklip: Get health'
+          type: HTTP_AGENT
+          key: webklip.health
+          delay: 1m
+          history: 7d
+          trends: '0'
+          value_type: TEXT
+          description: 'Unauthenticated GET /api/health.'
+          timeout: 10s
+          url: '{$WEBKLIP.URL}/api/health'
+          status_codes: '200'
+          tags:
+            - tag: component
+              value: health
+            - tag: application
+              value: webklip
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.status
+          triggers:
+            - uuid: 414806c60b574a178be837e514939f79
+              expression: 'nodata(/Webklip Admin Stats by HTTP/webklip.health,5m)=1 or last(/Webklip Admin Stats by HTTP/webklip.health)<>"ok"'
+              name: 'Webklip: Health check failed'
+              priority: HIGH
+              description: '/api/health unreachable for 5m or status is not "ok".'
+              manual_close: 'YES'
+              tags:
+                - tag: scope
+                  value: availability
+
+        # --- Top-level clip stats ---
+        - uuid: ab16f465b4d740269b16b65df1920eb7
+          name: 'Webklip: Active clips'
+          type: DEPENDENT
+          key: webklip.admin.stats.total
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          description: 'Total active clips.'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.total
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        - uuid: e1cbef01673448adbcf67585b3af9374
+          name: 'Webklip: Clips created (24h)'
+          type: DEPENDENT
+          key: webklip.admin.stats.created_last_24h
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.createdLast24h
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        - uuid: 663447b0dbdf4d17b4d511a6e15bd374
+          name: 'Webklip: Clips created (7d)'
+          type: DEPENDENT
+          key: webklip.admin.stats.created_last_7d
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.createdLast7d
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        - uuid: 404cea37f7014f14ab120c832c1b0d25
+          name: 'Webklip: API requests (24h)'
+          type: DEPENDENT
+          key: webklip.admin.stats.api_requests_last_24h
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          description: 'API requests over the last 24 hours (snapshots + current period).'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.apiRequestsLast24h
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: api
+
+        - uuid: 51355df8be8140b9b42090cfd2640fb2
+          name: 'Webklip: Stats recorded at'
+          type: DEPENDENT
+          key: webklip.admin.stats.recorded_at
+          delay: '0'
+          history: 7d
+          trends: '0'
+          value_type: UNSIGNED
+          units: unixtime
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.recordedAt
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: admin
+
+        # --- Breakdown: burn on read ---
+        - uuid: 1d5b6803ffbf47fa963c7d58c807e516
+          name: 'Webklip: Clips burn-on-read'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.burn_on_read.true
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.burnOnRead.true
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        - uuid: 648fec1b8fef47acb1f82338d4aa1078
+          name: 'Webklip: Clips persistent'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.burn_on_read.false
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.burnOnRead.false
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        # --- Breakdown: max views ---
+        - uuid: 928f9f4b0af64b4fa29f87466113a5c9
+          name: 'Webklip: Clips max-views none'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.max_views.none
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.maxViews.none
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        - uuid: b23b1950059049f0a0d272090bcdc242
+          name: 'Webklip: Clips max-views one'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.max_views.one
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.maxViews.one
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        - uuid: 8d6871cef2b0495787407dee9515e6a7
+          name: 'Webklip: Clips max-views many'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.max_views.many
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.maxViews.many
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        # --- Breakdown: TTL ---
+        - uuid: 8b1fa7e03c5348bebbaaeaac76b74eb6
+          name: 'Webklip: Clips TTL none'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.ttl.none
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.ttl.none
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        - uuid: 027b7686fa4d434f99824ac2540d1e50
+          name: 'Webklip: Clips TTL set'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.ttl.set
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.ttl.set
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        # --- Breakdown: PIN ---
+        - uuid: 0424dfbd6c4d46c19fe527fda14066a6
+          name: 'Webklip: Clips with PIN'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.pin.set
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.pin.set
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        - uuid: 1257187f39f94f0ab0a21031ef1cacbe
+          name: 'Webklip: Clips without PIN'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.pin.none
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.pin.none
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        # --- Breakdown: encrypted ---
+        - uuid: b733ea8ccbc94df99b37535c635ab5d2
+          name: 'Webklip: Clips encrypted'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.encrypted.true
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.encrypted.true
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        - uuid: c929c665577a43fab80d16d687407a2e
+          name: 'Webklip: Clips unencrypted'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.encrypted.false
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.encrypted.false
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        # --- Breakdown: content type (common keys; 0 if missing) ---
+        - uuid: 710471868acb407baff0dd001bed4bbe
+          name: 'Webklip: Clips content-type text'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.content_type.text
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.contentType.text
+              error_handler: CUSTOM_VALUE
+              error_handler_params: '0'
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        - uuid: 71c7d56942194022850ede8fbfacccfa
+          name: 'Webklip: Clips content-type file'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.content_type.file
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.contentType.file
+              error_handler: CUSTOM_VALUE
+              error_handler_params: '0'
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        - uuid: 296661fc19884e6b957f397c4e419a8b
+          name: 'Webklip: Clips content-type image'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.content_type.image
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.contentType.image
+              error_handler: CUSTOM_VALUE
+              error_handler_params: '0'
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        # --- Breakdown: attachments ---
+        - uuid: fb6334798d674c63b36a46530d31a9dc
+          name: 'Webklip: Clips with attachments'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.attachments.yes
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.attachments.yes
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        - uuid: be93413176b74f2cb294d01fe5aa52aa
+          name: 'Webklip: Clips without attachments'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.attachments.no
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.attachments.no
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        # --- Breakdown: ownership ---
+        - uuid: 28f07ab543484325bacceb089b16e610
+          name: 'Webklip: Clips anonymous'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.ownership.anonymous
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.ownership.anonymous
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        - uuid: 42fab35521cc493ca6ab8c9a78b4d370
+          name: 'Webklip: Clips authenticated'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.ownership.authenticated
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.ownership.authenticated
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        # --- Breakdown: team ---
+        - uuid: 93a0a166db964f05a8c0834be31ae999
+          name: 'Webklip: Clips team none'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.team.none
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.team.none
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        - uuid: 311088442f604ca7876e5a7d917bf883
+          name: 'Webklip: Clips team set'
+          type: DEPENDENT
+          key: webklip.admin.stats.breakdown.team.set
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.breakdown.team.set
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: clips
+
+        # --- API usage (current in-memory period) ---
+        - uuid: 005e4da9755d4700b04da45c41cd7b67
+          name: 'Webklip: API usage total (period)'
+          type: DEPENDENT
+          key: webklip.admin.stats.api_usage.total
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          description: 'API requests in the current in-memory period (since last snapshot / process start).'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.apiUsage.total
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: api
+
+        - uuid: 5b5a5c2beec244cdbe319a0a51462420
+          name: 'Webklip: API rate limited (period)'
+          type: DEPENDENT
+          key: webklip.admin.stats.api_usage.rate_limited
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          description: 'HTTP 429 responses in the current API usage period.'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.apiUsage.rateLimited
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: api
+          triggers:
+            - uuid: 4ed0526bbf514e6993123356402ff1b2
+              expression: 'min(/Webklip Admin Stats by HTTP/webklip.admin.stats.api_usage.rate_limited,5m)>{$WEBKLIP.API.RATE_LIMITED.MAX}'
+              name: 'Webklip: High rate-limited API responses'
+              priority: WARNING
+              description: 'Rate-limited (429) count in the current period exceeded {$WEBKLIP.API.RATE_LIMITED.MAX}.'
+              manual_close: 'YES'
+              tags:
+                - tag: scope
+                  value: performance
+
+        - uuid: 3b2da0fab2814a9aa4a394ab1e0439b7
+          name: 'Webklip: API by resource clips'
+          type: DEPENDENT
+          key: webklip.admin.stats.api_usage.by_resource.clips
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.apiUsage.byResource.clips
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: api
+
+        - uuid: c54924c230774c25b13928855cd776ed
+          name: 'Webklip: API by resource files'
+          type: DEPENDENT
+          key: webklip.admin.stats.api_usage.by_resource.files
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.apiUsage.byResource.files
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: api
+
+        - uuid: 5b5376973cf24954b6e040d3af360238
+          name: 'Webklip: API by resource auth'
+          type: DEPENDENT
+          key: webklip.admin.stats.api_usage.by_resource.auth
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.apiUsage.byResource.auth
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: api
+
+        - uuid: 3ddb29e258354ea781b735a0d7766e40
+          name: 'Webklip: API by resource other'
+          type: DEPENDENT
+          key: webklip.admin.stats.api_usage.by_resource.other
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.apiUsage.byResource.other
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: api
+
+        - uuid: 1dd146d23148468ba0b7912d8ff2269b
+          name: 'Webklip: API by auth anonymous'
+          type: DEPENDENT
+          key: webklip.admin.stats.api_usage.by_auth.anonymous
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.apiUsage.byAuth.anonymous
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: api
+
+        - uuid: a174f05d91df416f8558c79f2429c751
+          name: 'Webklip: API by auth api_key'
+          type: DEPENDENT
+          key: webklip.admin.stats.api_usage.by_auth.api_key
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.apiUsage.byAuth.api_key
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: api
+
+        - uuid: 05cf18085e60490ebbea0ca11a207f05
+          name: 'Webklip: API by auth session'
+          type: DEPENDENT
+          key: webklip.admin.stats.api_usage.by_auth.session
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.apiUsage.byAuth.session
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: api
+
+        - uuid: f3201c2679a94989807a5b422740b6a3
+          name: 'Webklip: API by method GET'
+          type: DEPENDENT
+          key: webklip.admin.stats.api_usage.by_method.GET
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.apiUsage.byMethod.GET
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: api
+
+        - uuid: 6f150da86fbc40a99302b94daf07bd1c
+          name: 'Webklip: API by method POST'
+          type: DEPENDENT
+          key: webklip.admin.stats.api_usage.by_method.POST
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.apiUsage.byMethod.POST
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: api
+
+        - uuid: 963e49f8730c437baae257421ff56149
+          name: 'Webklip: API by method PUT'
+          type: DEPENDENT
+          key: webklip.admin.stats.api_usage.by_method.PUT
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.apiUsage.byMethod.PUT
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: api
+
+        - uuid: 65520ec490184e7a9172d76638c461c6
+          name: 'Webklip: API by method DELETE'
+          type: DEPENDENT
+          key: webklip.admin.stats.api_usage.by_method.DELETE
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.apiUsage.byMethod.DELETE
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: api
+
+        - uuid: 70b26fbc836d4fcf83372fd35a1d1c42
+          name: 'Webklip: API by method other'
+          type: DEPENDENT
+          key: webklip.admin.stats.api_usage.by_method.other
+          delay: '0'
+          history: 90d
+          trends: 365d
+          value_type: UNSIGNED
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.apiUsage.byMethod.other
+          master_item:
+            key: webklip.admin.stats
+          tags:
+            - tag: component
+              value: api
+
+      tags:
+        - tag: class
+          value: application
+        - tag: target
+          value: webklip
+      macros:
+        - uuid: 0959179f3aae4e6d8c52ba642ec61568
+          macro: '{$WEBKLIP.URL}'
+          value: 'https://webklip.example.com'
+          description: 'Base URL of the Webklip instance (no trailing slash).'
+        - uuid: 8398feea4b3148b69c97907aa569ed8b
+          macro: '{$WEBKLIP.ADMIN.PATH}'
+          value: /admin
+          description: 'Admin mount path (ADMIN_PATH env).'
+        - uuid: 0d316913258b4182a2436f969f291236
+          macro: '{$WEBKLIP.ADMIN.USER}'
+          value: admin
+          description: 'HTTP Basic username (ADMIN_USER).'
+        - uuid: 182e47ffec454935908f25520c8ccad6
+          macro: '{$WEBKLIP.ADMIN.PASSWORD}'
+          value: change-me
+          description: 'HTTP Basic password (ADMIN_PASSWORD). Override per host.'
+        - uuid: dfe659ceecaf4c50a289c03ce41f54b6
+          macro: '{$WEBKLIP.API.RATE_LIMITED.MAX}'
+          value: '50'
+          description: 'Alert when period rate-limited (429) count stays above this for 5m.'
+      dashboards:
+        - uuid: fcb22de36d1e42f7923656cfb5c70e35
+          name: 'Webklip overview'
+          pages:
+            - name: Overview
+              widgets:
+                - type: GRAPH_CLASSIC
+                  width: 36
+                  height: 5
+                  fields:
+                    - type: GRAPH
+                      name: graphid
+                      value:
+                        name: 'Webklip: Clips overview'
+                - type: GRAPH_CLASSIC
+                  'y': 5
+                  width: 36
+                  height: 5
+                  fields:
+                    - type: GRAPH
+                      name: graphid
+                      value:
+                        name: 'Webklip: API usage'
+                - type: GRAPH_CLASSIC
+                  'y': 10
+                  width: 36
+                  height: 5
+                  fields:
+                    - type: GRAPH
+                      name: graphid
+                      value:
+                        name: 'Webklip: Clip breakdown'
+      graphs:
+        - uuid: 3395ecfd2ad4457ea2c9cbab9d314005
+          name: 'Webklip: Clips overview'
+          graph_items:
+            - sortorder: '1'
+              color: 1A7C11
+              item:
+                host: 'Webklip Admin Stats by HTTP'
+                key: webklip.admin.stats.total
+            - sortorder: '2'
+              color: F63100
+              item:
+                host: 'Webklip Admin Stats by HTTP'
+                key: webklip.admin.stats.created_last_24h
+            - sortorder: '3'
+              color: 2774A4
+              item:
+                host: 'Webklip Admin Stats by HTTP'
+                key: webklip.admin.stats.created_last_7d
+        - uuid: 6fcc0d60382e43fabdace6b9e4b606a2
+          name: 'Webklip: API usage'
+          graph_items:
+            - sortorder: '1'
+              color: 1A7C11
+              item:
+                host: 'Webklip Admin Stats by HTTP'
+                key: webklip.admin.stats.api_requests_last_24h
+            - sortorder: '2'
+              color: 2774A4
+              item:
+                host: 'Webklip Admin Stats by HTTP'
+                key: webklip.admin.stats.api_usage.total
+            - sortorder: '3'
+              color: F63100
+              item:
+                host: 'Webklip Admin Stats by HTTP'
+                key: webklip.admin.stats.api_usage.rate_limited
+        - uuid: 88fbccb085ff4a7898113d915c3b0957
+          name: 'Webklip: Clip breakdown'
+          graph_items:
+            - sortorder: '1'
+              color: 1A7C11
+              item:
+                host: 'Webklip Admin Stats by HTTP'
+                key: webklip.admin.stats.breakdown.burn_on_read.true
+            - sortorder: '2'
+              color: 2774A4
+              item:
+                host: 'Webklip Admin Stats by HTTP'
+                key: webklip.admin.stats.breakdown.encrypted.true
+            - sortorder: '3'
+              color: F63100
+              item:
+                host: 'Webklip Admin Stats by HTTP'
+                key: webklip.admin.stats.breakdown.pin.set
+            - sortorder: '4'
+              color: A54F10
+              item:
+                host: 'Webklip Admin Stats by HTTP'
+                key: webklip.admin.stats.breakdown.attachments.yes
+            - sortorder: '5'
+              color: FC6EA3
+              item:
+                host: 'Webklip Admin Stats by HTTP'
+                key: webklip.admin.stats.breakdown.ownership.authenticated

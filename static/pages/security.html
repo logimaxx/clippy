@@ -6,8 +6,9 @@
     <h2>Our security model</h2>
     <p>
       Webklip uses a <strong>link-as-secret</strong> model: knowing the URL is the primary access
-      control for anonymous clips. For sensitive content, choose one protect mode — PIN protection
-      or client-side end-to-end encryption (not both). Public Klipwall listings cannot use either.
+      control for anonymous clips. For sensitive content, enable
+      <strong>passphrase end-to-end encryption</strong>. Public Klipwall listings cannot use E2E
+      or burn-after-read.
     </p>
 
     <h2>Transport security</h2>
@@ -18,9 +19,10 @@
 
     <h2>Access controls</h2>
     <ul>
-      <li><strong>PIN protection</strong> — optional per-clip PIN, stored as a bcrypt hash. Five failed attempts trigger a 15-minute lockout per IP. Mutually exclusive with E2E.</li>
-      <li><strong>Unlock cookies</strong> — after PIN entry, an httpOnly HMAC-signed cookie grants access for 24 hours.</li>
-      <li><strong>End-to-end encryption</strong> — AES-256-GCM in the browser; the server never sees plaintext or the decryption key. Mutually exclusive with PIN.</li>
+      <li><strong>Passphrase E2E</strong> — AES-256-GCM in the browser. A random content key is wrapped with a key derived from your passphrase (PBKDF2). The passphrase never leaves your browser; Webklip stores only ciphertext, salt, and the wrapped key.</li>
+      <li><strong>Short passphrases</strong> — allowed with an explicit warning. Stolen ciphertext plus a weak PIN can be cracked offline.</li>
+      <li><strong>Legacy PIN</strong> — older clips may still use a server-side bcrypt PIN gate (not encryption at rest).</li>
+      <li><strong>File uploads</strong> — disabled while a clip is E2E encrypted.</li>
     </ul>
 
     <h2>Data lifecycle</h2>
@@ -50,8 +52,10 @@
 
     <h2>What we do not claim</h2>
     <ul>
-      <li>We do not encrypt data at rest in the database by default</li>
-      <li>We do not guarantee protection against someone who already has your link</li>
+      <li>We do not encrypt data at rest in the database by default (use passphrase E2E for ciphertext-only storage)</li>
+      <li>We cannot decrypt passphrase-protected clips — and we cannot recover a lost passphrase</li>
+      <li>We do not guarantee protection against someone who already has your link and passphrase</li>
+      <li>Short passphrases do not resist offline attacks if ciphertext is stolen</li>
     </ul>
 
     <h2>Responsible disclosure</h2>

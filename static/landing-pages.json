@@ -18,12 +18,12 @@
     "useCases": [
       "Copy a shopping list from laptop to phone",
       "Share a URL or address with yourself",
-      "Move meeting notes between workstations"
+      "Paste a screenshot and open it on another device"
     ],
     "relatedSlugs": [
       "live-sync",
       "share-text-between-devices",
-      "secure-clipboard"
+      "pastebin-vs-webklip"
     ]
   },
   {
@@ -34,18 +34,19 @@
     "intro": "Type on one device. Watch it appear on every other open tab — live, over a private link.",
     "paragraphs": [
       "Most \"share between devices\" tools are one-shot: paste, send a link, open it later. Live sync keeps every open clip connected. Edit on your laptop and the same text updates on your phone in real time — no refresh, no WhatsApp self-message, no waiting for someone to re-open the page.",
-      "Open the same Webklip link on two (or more) devices and you get a temporary shared workspace. Paste a code snippet, tweak a note, drop a file — every connected browser stays in sync until the clip expires. Ideal when you are bouncing between screens or collaborating without creating a permanent chat thread."
+      "Open the same Webklip link on two (or more) devices and you get a temporary shared workspace. Paste a code snippet, tweak a note, drop a file or paste a screenshot — every connected browser stays in sync until the clip expires. Ideal when you are bouncing between screens or collaborating without creating a permanent chat thread."
     ],
     "benefits": [
       "Real-time updates as you type or paste — no page reload",
       "Works across phone, tablet, and desktop browsers",
       "Same private link for every device — no account required",
-      "Text and file attachments sync together, then auto-expire"
+      "Text and file attachments sync together, then auto-expire",
+      "Paste a screenshot with Ctrl+V and see it on every open device"
     ],
     "useCases": [
       "Draft on desktop while reading the same clip on your phone",
       "Pair on a snippet with a colleague without Slack history",
-      "Move a verification code or long URL between screens as you type it"
+      "Paste a screenshot on one screen and review it on another"
     ],
     "relatedSlugs": [
       "share-text-between-devices",
@@ -61,18 +62,19 @@
     "intro": "Stop emailing yourself. Copy between devices with a single link that syncs in real time.",
     "paragraphs": [
       "Moving text between your phone and computer should take seconds. Create a temporary page that acts as a shared clipboard, paste on one device, open the link on another, and your content is there — no app install, no chat thread.",
-      "Keep both devices open and watch text appear as you type. Ideal for a verification code, a long URL, or a paragraph you are editing across screens."
+      "Keep both devices open and watch text appear as you type. Ideal for a verification code, a long URL, a paragraph you are editing across screens, or a screenshot pasted with Ctrl+V."
     ],
     "benefits": [
       "Instant transfer with no app install",
       "Live updates as you type on any device",
+      "Paste screenshots from your clipboard (Ctrl+V / Cmd+V)",
       "Configurable expiry from 15 minutes to 7 days",
-      "Optional PIN or E2E encryption — choose one protect mode"
+      "Optional passphrase end-to-end encryption"
     ],
     "useCases": [
       "Transfer a verification code from phone to laptop",
       "Continue writing a paragraph on a different device",
-      "Share a long URL without retyping it"
+      "Paste a screenshot on desktop and open it on your phone"
     ],
     "relatedSlugs": [
       "live-sync",
@@ -83,44 +85,46 @@
   {
     "slug": "temporary-file-sharing",
     "title": "Temporary File Sharing — Send Files Online | Webklip",
-    "description": "Share files online temporarily without permanent cloud links. Attach images and PDFs to clips that auto-expire.",
+    "description": "Share files online temporarily without permanent cloud links. Drop, browse, or paste a screenshot (Ctrl+V) onto clips that auto-expire.",
     "h1": "Temporary File Sharing",
-    "intro": "Send a file for a few hours, not forever. Attach to a clip that deletes itself when done.",
+    "intro": "Send a file for a few hours, not forever. Drop, browse, or paste a screenshot onto a clip that deletes itself when done.",
     "heroVariant": "file",
     "paragraphs": [
       "Most file sharing tools create permanent links that linger in cloud storage. Webklip attaches files to a temporary clip that expires on a schedule — share an image, PDF, or document with a single URL, then let it disappear.",
-      "Paste a note, attach a screenshot, and send one link. Recipients open it in their browser; expired clips and their files are cleaned up automatically."
+      "Capture a screenshot, press Ctrl+V (or Cmd+V) on the clip page, and send one link. Recipients open it in their browser and can preview images, PDFs, text, and media without downloading first; expired clips and their files are cleaned up automatically."
     ],
     "benefits": [
+      "Paste screenshots from the clipboard with Ctrl+V / Cmd+V",
       "Attach images, PDFs, and documents to any clip",
+      "Preview files in the browser before downloading",
       "Files deleted automatically when the clip expires",
       "No permanent cloud storage account required",
       "Combine text and files in a single shareable link"
     ],
     "useCases": [
-      "Send a screenshot for a quick review",
-      "Share a PDF for a one-time download",
+      "Paste a screenshot for a quick review",
+      "Share a PDF recipients can preview in the browser",
       "Transfer a document between phone and desktop"
     ],
     "relatedSlugs": [
       "online-clipboard",
-      "burn-after-read",
-      "secure-clipboard"
+      "share-screenshot",
+      "burn-after-read"
     ]
   },
   {
     "slug": "secure-clipboard",
-    "title": "Secure Clipboard — PIN & Encryption | Webklip",
-    "description": "Secure clipboard with PIN protection or end-to-end encryption. Choose one protect mode, share sensitive text safely, then let it expire.",
+    "title": "Secure Clipboard — Passphrase E2E | Webklip",
+    "description": "Secure clipboard with passphrase end-to-end encryption. Encrypt in the browser, share a clean link plus passphrase, then let it expire.",
     "h1": "Secure Clipboard",
-    "intro": "Share sensitive content with a PIN lock or end-to-end encryption — choose one, then let it disappear automatically.",
+    "intro": "Share sensitive content with passphrase end-to-end encryption, then let it disappear automatically.",
     "paragraphs": [
-      "A secure clipboard needs more than a random URL. In Protect settings, pick PIN or E2E — not both. A PIN gates access on the server so only people who know the code can open the clip; PINs are hashed before saving, never stored in plain text.",
-      "Prefer zero-knowledge storage? Choose E2E instead: content is encrypted in the browser before upload, and the key stays in the URL fragment. Pair either mode with a short TTL or burn-after-read so secrets are deleted when you are done. Public Klipwall listings cannot use PIN, E2E, or burn-after-read."
+      "A secure clipboard needs more than a random URL. In Protect settings, choose Passphrase: Webklip generates a memorable phrase (or you set your own). Content is encrypted in the browser before upload — we never receive your passphrase and cannot decrypt your clip.",
+      "Share the clean clip URL and the passphrase separately. Recipients unlock in the browser only. Pair with a short TTL or burn-after-read so secrets are deleted when you are done. Short secrets are allowed with a clear offline-crack warning. Public Klipwall listings cannot use E2E or burn-after-read."
     ],
     "benefits": [
-      "Choose PIN or E2E — mutually exclusive protect modes",
-      "PIN hashed on the server, or browser-side E2E with the key in the URL",
+      "True E2E — passphrase never leaves the browser",
+      "Auto-generated memorable phrases, or your own secret",
       "Burn after read for single-use secrets",
       "Automatic deletion after expiry"
     ],
@@ -132,7 +136,7 @@
     "relatedSlugs": [
       "encrypted-clipboard",
       "burn-after-read",
-      "share-text-between-devices"
+      "share-password"
     ]
   },
   {
@@ -158,7 +162,7 @@
     ],
     "relatedSlugs": [
       "live-sync",
-      "share-text-between-devices",
+      "pastebin-vs-webklip",
       "online-clipboard"
     ]
   },
@@ -170,11 +174,11 @@
     "intro": "Share a secret once. After it has been viewed, the clip deletes itself permanently.",
     "paragraphs": [
       "Some information should only be seen once — a password, a recovery code, or a temporary credential. Burn after read deletes the clip after a single view: the recipient gets the content, and it is gone.",
-      "Combine with PIN protection so a guessed URL is still locked, and set a short TTL as a backup if nobody opens it."
+      "Combine with passphrase E2E so a guessed URL is still encrypted, and set a short TTL as a backup if nobody opens it."
     ],
     "benefits": [
       "Automatic deletion after a single view",
-      "Combine with PIN protection for sensitive secrets",
+      "Combine with passphrase E2E for sensitive secrets",
       "Configurable TTL as a fallback expiry",
       "No permanent copies left behind"
     ],
@@ -184,26 +188,26 @@
       "Deliver a recovery code that cannot be re-read"
     ],
     "relatedSlugs": [
-      "secure-clipboard",
+      "share-password",
       "encrypted-clipboard",
-      "share-text-between-devices"
+      "onetimesecret-alternative"
     ]
   },
   {
     "slug": "encrypted-clipboard",
     "title": "End-to-End Encrypted Clipboard | Webklip",
-    "description": "End-to-end encrypted clipboard. Content encrypted in your browser — the server never sees plaintext.",
+    "description": "End-to-end encrypted clipboard. Content encrypted in your browser with a passphrase — the server never sees plaintext.",
     "h1": "End-to-End Encrypted Clipboard",
-    "intro": "Encrypt your content in the browser before it leaves your device. Only people with the key can read it.",
+    "intro": "Encrypt your content in the browser before it leaves your device. Only people with the passphrase can read it.",
     "paragraphs": [
-      "Standard clipboard sharing trusts the server with your content. With end-to-end encryption, text is encrypted in your browser before upload — the server stores ciphertext only and cannot read your data even if compelled.",
-      "The decryption key lives in the URL fragment (after #), which browsers never send to the server. Share the full URL including the key; recipients decrypt locally in their browser. E2E replaces PIN protection — choose one protect mode in Settings."
+      "Standard clipboard sharing trusts the server with your content. With passphrase end-to-end encryption, text is encrypted in your browser before upload — the server stores ciphertext, a public salt, and a wrapped content key only, and cannot read your data even if compelled.",
+      "Share a clean URL plus the passphrase separately. Recipients enter the passphrase in the browser to decrypt locally — the passphrase is never sent to Webklip. Combine with auto-expiry or burn-after-read for single-use secrets."
     ],
     "benefits": [
       "Encryption happens in your browser before upload",
       "Server stores ciphertext only — no plaintext access",
-      "Decryption key stays in the URL fragment",
-      "Choose E2E instead of a PIN; combine with auto-expiry or burn-after-read"
+      "Memorable passphrase by default; clean share URLs",
+      "Combine with auto-expiry or burn-after-read"
     ],
     "useCases": [
       "Share credentials that the server cannot read",
@@ -211,9 +215,393 @@
       "Transfer encrypted content between your own devices"
     ],
     "relatedSlugs": [
-      "secure-clipboard",
+      "share-password",
       "burn-after-read",
-      "share-text-between-devices"
+      "privatebin-alternative"
+    ]
+  },
+  {
+    "slug": "pastebin-vs-webklip",
+    "title": "Pastebin vs Webklip — Temporary Paste Sharing | Webklip",
+    "description": "Pastebin vs Webklip: compare permanent pastes with an ephemeral clipboard that syncs live, attaches files, and expires by default.",
+    "h1": "Pastebin vs Webklip",
+    "intro": "Pastebin is built for pastes that stick around. Webklip is built for sharing that disappears — with live sync across every open device.",
+    "paragraphs": [
+      "Pastebin has been the default place to dump code and text for years: create a paste, get a URL, leave it online. That works when you want a long-lived public snippet. It is a weaker fit when you are moving a secret, a one-off config, or a draft between your phone and laptop — the paste often outlives the need, and nothing updates live while you edit.",
+      "Webklip takes the opposite default. Paste into a temporary clip, share the link, and every open browser stays in sync until the TTL ends (15 minutes by default). Add passphrase end-to-end encryption or burn-after-read when the content should not linger. You still get syntax highlighting and an API — without treating every paste as something that should live forever."
+    ],
+    "compare": {
+      "leftLabel": "Pastebin",
+      "rightLabel": "Webklip",
+      "rows": [
+        {
+          "feature": "Default lifetime",
+          "left": "Pastes can stay online indefinitely",
+          "right": "Expires in 15 minutes by default"
+        },
+        {
+          "feature": "Real-time sync",
+          "left": "Static paste — refresh to re-check",
+          "right": "Live updates across open devices"
+        },
+        {
+          "feature": "File attachments",
+          "left": "Text pastes",
+          "right": "Text, files with preview, and pasted screenshots (Ctrl+V)"
+        },
+        {
+          "feature": "Account for basic use",
+          "left": "Optional (needed for some features)",
+          "right": "No account — the link is the key"
+        },
+        {
+          "feature": "End-to-end encryption",
+          "left": "Server-side privacy options",
+          "right": "Passphrase E2E in the browser"
+        },
+        {
+          "feature": "Burn after read",
+          "left": "Not available",
+          "right": "Deletes after the first real view"
+        },
+        {
+          "feature": "Syntax highlighting",
+          "left": "Yes",
+          "right": "Yes"
+        },
+        {
+          "feature": "Best for",
+          "left": "Long-lived public pastes and archives",
+          "right": "Temporary sharing and cross-device sync"
+        }
+      ],
+      "footnote": "Pastebin remains a solid choice when you want a paste to stay public and discoverable. Choose Webklip when the content should sync live and then go away."
+    },
+    "benefitsHeading": "Why choose Webklip over Pastebin?",
+    "benefits": [
+      "Ephemeral by default — abandoned clips are deleted, not archived forever",
+      "Real-time sync so phone and desktop stay on the same draft",
+      "Passphrase E2E and burn-after-read for one-time secrets",
+      "Attach files to the same temporary link as your text — including screenshots via Ctrl+V, with in-browser preview"
+    ],
+    "useCases": [
+      "Move a code snippet between laptops without leaving a permanent paste",
+      "Share a config or API key that should expire or burn after one view",
+      "Paste a draft on desktop and keep editing it from your phone",
+      "Paste a screenshot plus notes in one link that deletes itself"
+    ],
+    "relatedSlugs": [
+      "share-code-snippets",
+      "online-clipboard",
+      "burn-after-read",
+      "privatebin-alternative"
+    ]
+  },
+  {
+    "slug": "privatebin-alternative",
+    "title": "PrivateBin Alternative — Ephemeral Encrypted Sharing | Webklip",
+    "description": "Looking for a PrivateBin alternative? Webklip adds live sync, file and screenshot paste, burn-after-read, and expiry by default — with optional passphrase E2E.",
+    "h1": "PrivateBin Alternative",
+    "intro": "PrivateBin encrypts pastes in the browser. Webklip does that too — and keeps every open device in sync until the clip expires.",
+    "paragraphs": [
+      "PrivateBin is a well-known zero-knowledge paste tool: content is encrypted client-side, and you can burn a paste after it is read. That model is excellent for dumping a secret into a static page. It is less ideal when you are actively moving text between phone and laptop, or when you want attachments and live edits on the same link.",
+      "Webklip is a temporary workspace instead of a one-shot paste. Paste or type into a clip, share the URL (or scan a QR code), and every open tab stays in sync. Turn on passphrase end-to-end encryption when you need zero-knowledge storage, or burn-after-read for single-use secrets — then let the default short TTL clean up what nobody needs anymore."
+    ],
+    "compare": {
+      "leftLabel": "PrivateBin",
+      "rightLabel": "Webklip",
+      "rows": [
+        {
+          "feature": "Client-side encryption",
+          "left": "Yes (zero-knowledge pastes)",
+          "right": "Optional passphrase E2E in the browser"
+        },
+        {
+          "feature": "Real-time sync",
+          "left": "Static paste after create",
+          "right": "Live updates across open devices"
+        },
+        {
+          "feature": "Default lifetime",
+          "left": "Configurable; often longer-lived",
+          "right": "Expires in 15 minutes by default"
+        },
+        {
+          "feature": "Burn after read",
+          "left": "Yes",
+          "right": "Yes"
+        },
+        {
+          "feature": "Files & screenshots",
+          "left": "Depends on instance / setup",
+          "right": "Attach files or paste screenshots (Ctrl+V)"
+        },
+        {
+          "feature": "Best for",
+          "left": "Encrypted one-shot pastes",
+          "right": "Live ephemeral workspace + optional E2E"
+        }
+      ],
+      "footnote": "PrivateBin remains a strong choice for classic encrypted pastes. Choose Webklip when you also need live sync, QR handoff, or files on the same temporary link."
+    },
+    "benefitsHeading": "Why choose Webklip as a PrivateBin alternative?",
+    "benefits": [
+      "Live sync so drafts stay aligned across devices",
+      "Passphrase E2E when you want zero-knowledge storage",
+      "Burn-after-read plus short default expiry",
+      "Text, files, and Ctrl+V screenshots on one link"
+    ],
+    "useCases": [
+      "Share an encrypted note that still updates while both of you have it open",
+      "Move a secret from desktop to phone with QR + optional E2E",
+      "Replace a static encrypted paste with a short-lived collaborative clip"
+    ],
+    "relatedSlugs": [
+      "onetimesecret-alternative",
+      "encrypted-clipboard",
+      "burn-after-read",
+      "share-password"
+    ]
+  },
+  {
+    "slug": "onetimesecret-alternative",
+    "title": "One-Time Secret Alternative — Burn-After-Read Links | Webklip",
+    "description": "One-Time Secret alternative with burn-after-read, passphrase E2E, live sync, and automatic expiry. Share a secret once — or keep editing until it disappears.",
+    "h1": "One-Time Secret Alternative",
+    "intro": "One-Time Secret is built for a single reveal. Webklip can burn after one view too — and also works as a live temporary workspace when you need more than a one-shot link.",
+    "paragraphs": [
+      "One-Time Secret (OTS) popularized the idea of a link that self-destructs after it is read. That is perfect for handing someone a password once. The tradeoff is that the page is usually a single retrieval: no ongoing sync, limited room for notes and files, and little help when you are bouncing the same draft between your own devices.",
+      "Webklip supports burn-after-read for true one-time secrets, and passphrase end-to-end encryption so the server never sees plaintext. When you do not need a single reveal, use a short TTL instead and keep every open browser in sync — including screenshots pasted with Ctrl+V — until the clip expires."
+    ],
+    "compare": {
+      "leftLabel": "One-Time Secret",
+      "rightLabel": "Webklip",
+      "rows": [
+        {
+          "feature": "Burn after read",
+          "left": "Core workflow",
+          "right": "Supported (plus TTL fallback)"
+        },
+        {
+          "feature": "Live multi-device sync",
+          "left": "No — one retrieval model",
+          "right": "Yes — while the clip is open"
+        },
+        {
+          "feature": "Passphrase / E2E",
+          "left": "Passphrase options",
+          "right": "Browser passphrase E2E"
+        },
+        {
+          "feature": "Files & screenshots",
+          "left": "Text-focused secrets",
+          "right": "Files + Ctrl+V screenshot paste"
+        },
+        {
+          "feature": "Default if unread",
+          "left": "Expires on a schedule",
+          "right": "Burn clips still expire after 7 days"
+        },
+        {
+          "feature": "Best for",
+          "left": "Single-reveal secrets",
+          "right": "One-time secrets or live ephemeral sharing"
+        }
+      ],
+      "footnote": "Use One-Time Secret when you only need a classic single reveal. Use Webklip when you want burn-after-read plus live sync, QR handoff, or attachments."
+    },
+    "benefitsHeading": "Why choose Webklip over One-Time Secret?",
+    "benefits": [
+      "Burn-after-read for single-use passwords and codes",
+      "Optional passphrase E2E so ciphertext is all we store",
+      "Live sync when the secret is still being drafted across devices",
+      "Same product for notes, files, and screenshots — not only one-shot text"
+    ],
+    "useCases": [
+      "Send a password that deletes after the recipient opens it",
+      "Draft a recovery code on laptop and burn it after phone retrieval",
+      "Share a one-time credential with a short TTL if nobody opens it"
+    ],
+    "relatedSlugs": [
+      "share-password",
+      "burn-after-read",
+      "privatebin-alternative",
+      "encrypted-clipboard"
+    ]
+  },
+  {
+    "slug": "share-password",
+    "title": "Share a Password Securely — Temporary Encrypted Link | Webklip",
+    "description": "Send a password securely with a temporary link. Passphrase end-to-end encryption, burn-after-read, and automatic expiry — no chat history left behind.",
+    "h1": "Share a Password Securely",
+    "intro": "Do not drop passwords into Slack or email. Put them in a temporary link that can encrypt in the browser and delete itself after one view.",
+    "paragraphs": [
+      "Messaging apps keep permanent copies of whatever you paste — including the password you meant to share once. A Webklip clip gives you a private URL for the secret, optional passphrase end-to-end encryption (we never receive the passphrase), and burn-after-read so the clip deletes after the first real view.",
+      "Share the clean link and the passphrase through different channels when you use E2E. Set a short TTL as a backup if nobody opens it. The same flow works for API keys, Wi-Fi passwords, and recovery codes."
+    ],
+    "benefitsHeading": "Why use Webklip to send a password?",
+    "benefits": [
+      "Passphrase E2E — encrypt in the browser before upload",
+      "Burn after read for true one-time delivery",
+      "Short default expiry so abandoned secrets do not linger",
+      "No account required for the basic share flow"
+    ],
+    "useCases": [
+      "Send a colleague a temporary login without putting it in chat",
+      "Hand off a Wi-Fi password that burns after one open",
+      "Deliver an API key for a one-time setup, then let it expire"
+    ],
+    "relatedSlugs": [
+      "burn-after-read",
+      "encrypted-clipboard",
+      "onetimesecret-alternative",
+      "secure-clipboard"
+    ]
+  },
+  {
+    "slug": "qr-clipboard",
+    "title": "QR Code Clipboard — Scan to Open on Your Phone | Webklip",
+    "description": "Create a web clipboard and open it on your phone with a QR code. Paste on desktop, scan, and keep both devices in sync until the clip expires.",
+    "h1": "QR Code Clipboard",
+    "intro": "Start a clip on your computer, show the QR code, and open the same live clipboard on your phone — no typing long URLs.",
+    "paragraphs": [
+      "Moving text between desktop and phone usually means emailing yourself or hunting for a chat thread. With Webklip, create a clip on one device, open the Share menu (or visit the clip QR page), and scan the code with your phone camera. Both browsers open the same temporary workspace.",
+      "Keep the tabs open and edits sync in real time — including files and screenshots pasted with Ctrl+V on desktop. When you are done, the clip expires so the bridge between devices does not become another permanent inbox."
+    ],
+    "benefitsHeading": "Why use a QR clipboard?",
+    "benefits": [
+      "Scan to open — no retyping the URL on your phone",
+      "Live sync after the scan so both screens stay aligned",
+      "Works in the browser — no app install",
+      "Automatic expiry when the handoff is finished"
+    ],
+    "useCases": [
+      "Paste a long URL on desktop and open it on your phone via QR",
+      "Start notes on a laptop and continue on mobile after a scan",
+      "Show a QR so a colleague can join the same temporary clip"
+    ],
+    "relatedSlugs": [
+      "share-text-between-devices",
+      "live-sync",
+      "share-screenshot",
+      "online-clipboard"
+    ]
+  },
+  {
+    "slug": "temporary-notes",
+    "title": "Temporary Notes Online — Disposable Notepad | Webklip",
+    "description": "Online disposable notepad for temporary notes. No account, real-time sync across devices, Markdown preview, and automatic deletion when the TTL ends.",
+    "h1": "Temporary Notes Online",
+    "intro": "A disposable notepad on the web: write, share the link, sync across devices, then let the page delete itself.",
+    "paragraphs": [
+      "Scratch notes do not belong in permanent docs or chat history. Webklip gives you a temporary page that behaves like a shared notepad — type or paste, open the same URL elsewhere, and keep editing live until the clip expires (15 minutes by default, or longer if you choose).",
+      "Use plain text for quick scraps, or switch to Markdown when you want lightweight formatting and preview. Attach a file or paste a screenshot when the note needs more than words. Nothing is meant to become an archive."
+    ],
+    "benefitsHeading": "Why use Webklip as a disposable notepad?",
+    "benefits": [
+      "No sign-up — open a URL and start writing",
+      "Real-time sync across phone and desktop",
+      "Markdown preview when notes need light structure",
+      "Automatic deletion after expiry"
+    ],
+    "useCases": [
+      "Jot a packing list on your laptop and read it on your phone",
+      "Keep meeting scribbles on a link that disappears afterward",
+      "Draft a short Markdown note and share it for quick feedback"
+    ],
+    "relatedSlugs": [
+      "markdown-paste",
+      "online-clipboard",
+      "share-text-between-devices",
+      "live-sync"
+    ]
+  },
+  {
+    "slug": "clipboard-api",
+    "title": "Clipboard API — REST Web Clipboard | Webklip",
+    "description": "REST clipboard API for creating, reading, and deleting ephemeral clips. Automate temporary text sharing with TTL, burn-after-read, and webhooks — no account required for anonymous clips.",
+    "h1": "Clipboard API",
+    "intro": "A simple REST API for an ephemeral web clipboard — create a clip, read it later, or burn it after one retrieval.",
+    "paragraphs": [
+      "When scripts, CI jobs, or internal tools need to pass a short-lived string, a chat app is the wrong transport. Webklip exposes a JSON HTTP API under <a href=\"/docs/api\">/api/v1</a>: create a clip by slug, set a TTL or burn-after-read, read content once, and optionally receive webhooks when a clip is read, burned, or expired.",
+      "Anonymous clips need no account. Pair the API with the web UI when humans also need to open the same link — including live sync in the browser — or keep the flow fully automated. Passphrase E2E clips store ciphertext only; decrypt on the client with the passphrase the API never receives."
+    ],
+    "benefitsHeading": "Why use the Webklip clipboard API?",
+    "benefits": [
+      "Plain HTTP JSON — easy to call from curl, CI, or any language",
+      "TTL, burn-after-read, view limits, and webhooks built in",
+      "No account required for anonymous clips",
+      "Same clips humans can open in the browser with live sync"
+    ],
+    "useCases": [
+      "Push a deploy token to a temporary clip your laptop reads once",
+      "Hand a CI job a short-lived config blob via HTTP",
+      "Notify a webhook when a shared secret has been consumed"
+    ],
+    "relatedSlugs": [
+      "share-code-snippets",
+      "burn-after-read",
+      "share-password",
+      "online-clipboard"
+    ]
+  },
+  {
+    "slug": "markdown-paste",
+    "title": "Markdown Paste — Preview Markdown Online | Webklip",
+    "description": "Paste Markdown into a temporary link with live preview. Share notes and docs between devices, sync in real time, and let the clip expire when you are done.",
+    "h1": "Markdown Paste",
+    "intro": "Paste Markdown into a temporary page, preview it in the browser, and share a link that syncs until it expires.",
+    "paragraphs": [
+      "Dropping Markdown into Slack or email usually flattens formatting and leaves a permanent copy. Webklip lets you set the clip language to Markdown, paste your notes, and use preview when you want to read rendered output — then send one URL to another device or a teammate.",
+      "Keep both sides open to edit live. When the review is over, the clip expires instead of living forever in a channel. Add files or a Ctrl+V screenshot beside the Markdown when the note needs an image."
+    ],
+    "benefitsHeading": "Why paste Markdown in Webklip?",
+    "benefits": [
+      "Markdown mode with in-browser preview",
+      "Real-time sync while you refine the draft",
+      "Automatic expiry — no permanent chat paste",
+      "Optional files and screenshots on the same link"
+    ],
+    "useCases": [
+      "Share a README fragment for quick review",
+      "Draft release notes on desktop and proofread on your phone",
+      "Pass a formatted checklist without creating a doc"
+    ],
+    "relatedSlugs": [
+      "temporary-notes",
+      "share-code-snippets",
+      "online-clipboard",
+      "live-sync"
+    ]
+  },
+  {
+    "slug": "share-screenshot",
+    "title": "Share a Screenshot Link — Paste with Ctrl+V | Webklip",
+    "description": "Share a screenshot with a temporary link. Paste from the clipboard with Ctrl+V or Cmd+V, send the URL, and let the image expire automatically.",
+    "h1": "Share a Screenshot Link",
+    "intro": "Capture a screenshot, paste it with Ctrl+V, and share one temporary link — no chat upload, no permanent cloud album.",
+    "heroVariant": "file",
+    "paragraphs": [
+      "The fastest path is often already on your keyboard: copy a screenshot to the clipboard, open a Webklip clip, and press Ctrl+V (Cmd+V on Mac). The image attaches like a normal file — no saving to disk and hunting for the PNG first. You can also drop or browse files when the shot is already on disk.",
+      "Send the clip URL (or scan the QR code) to your phone or a teammate. Recipients preview the image in the browser. When the TTL ends, the screenshot is deleted with the clip — better than leaving it in WhatsApp or an everlasting drive folder. Add a short text note on the same page if the picture needs context."
+    ],
+    "benefitsHeading": "Why share screenshots with Webklip?",
+    "benefits": [
+      "Paste screenshots straight from the clipboard (Ctrl+V / Cmd+V)",
+      "In-browser image preview for recipients",
+      "Optional note on the same temporary link",
+      "Automatic deletion when the clip expires"
+    ],
+    "useCases": [
+      "Paste an error dialog and send it to support without Slack upload friction",
+      "Move a phone screenshot to desktop via a short-lived link",
+      "Share a UI capture for review that should not stay online"
+    ],
+    "relatedSlugs": [
+      "temporary-file-sharing",
+      "qr-clipboard",
+      "share-text-between-devices",
+      "online-clipboard"
     ]
   }
 ]

@@ -38,8 +38,9 @@
         filename, MIME type, size, language, visibility, and view counts
       </li>
       <li>
-        <strong>Optional security settings</strong> — PIN and owner-password hashes
-        (bcrypt; we never store these in plaintext), and optional webhook URLs you configure
+        <strong>Optional security settings</strong> — owner-password hashes (bcrypt; we never
+        store these in plaintext), E2E salt and wrapped keys for passphrase-protected clips,
+        optional legacy PIN hashes, and optional webhook URLs you configure
       </li>
       <li>
         <strong>Version history</strong> — prior clip content saved while editing, deleted
@@ -47,13 +48,14 @@
       </li>
       <li>
         <strong>Technical signals</strong> — IP address used only in memory for rate limits
-        and lockouts after failed PIN or owner-password attempts (not stored as a profile)
+        and lockouts after failed legacy PIN or owner-password attempts (not stored as a profile)
       </li>
     </ul>
     <p>
       By default, clip content is stored so the service can serve it. If you enable
-      end-to-end encryption, the browser encrypts content before upload and we store
-      ciphertext only; we cannot read that content.
+      passphrase end-to-end encryption, the browser encrypts content before upload and we store
+      ciphertext, a public salt, and a wrapped content key only — never your passphrase. We cannot
+      read that content.
     </p>
 
     <h3>Optional accounts</h3>
@@ -126,8 +128,8 @@
     <p>We use essential cookies required for the product to work:</p>
     <ul>
       <li>
-        <strong>PIN unlock cookies</strong> — after a correct PIN, grants access to that clip
-        for about 24 hours
+        <strong>Legacy PIN unlock cookies</strong> — for older PIN-gated clips, after a correct
+        PIN grants access to that clip for about 24 hours
       </li>
       <li>
         <strong>Owner cookies</strong> — after proving clip ownership, remembers owner access
@@ -135,8 +137,9 @@
       </li>
     </ul>
     <p>
-      These cookies are httpOnly where applicable, use <code>SameSite=Lax</code>, and are
-      marked Secure on HTTPS.{{COOKIE_CONSENT_NOTE}}
+      Passphrase E2E unlock happens only in your browser (session storage on your device); we never
+      receive the passphrase. Essential cookies are httpOnly where applicable, use
+      <code>SameSite=Lax</code>, and are marked Secure on HTTPS.{{COOKIE_CONSENT_NOTE}}
     </p>
 
     <h2>Analytics</h2>
@@ -165,7 +168,7 @@
       To exercise these rights for the public Webklip service, email
       <a href="mailto:{{CONTACT_EMAIL}}">{{CONTACT_EMAIL}}</a>.
       Clip content shared via link is available to anyone with that link until the clip
-      expires or is deleted; choose PIN protection or end-to-end encryption for sensitive material.
+      expires or is deleted; choose passphrase end-to-end encryption for sensitive material.
     </p>
 
     <h2>Children</h2>

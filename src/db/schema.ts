@@ -17,6 +17,12 @@ export const clips = sqliteTable(
     webhookUrl: text("webhook_url"),
     language: text("language"),
     encrypted: integer("encrypted", { mode: "boolean" }).notNull().default(false),
+    /** Public PBKDF2 salt (base64url) for passphrase-protected E2E. */
+    e2eSalt: text("e2e_salt"),
+    /** DEK wrapped with passphrase-derived KEK (base64url). */
+    e2eWrappedKey: text("e2e_wrapped_key"),
+    /** JSON KDF params, e.g. {"alg":"PBKDF2","hash":"SHA-256","iters":600000}. */
+    e2eKdf: text("e2e_kdf"),
     visibility: text("visibility").notNull().default("private"),
     ownerId: text("owner_id"),
     teamId: text("team_id"),
@@ -57,6 +63,25 @@ export const users = sqliteTable("users", {
     .notNull()
     .$defaultFn(() => Math.floor(Date.now() / 1000)),
 });
+
+export const oauthAccounts = sqliteTable(
+  "oauth_accounts",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    provider: text("provider").notNull(),
+    providerUserId: text("provider_user_id").notNull(),
+    createdAt: integer("created_at")
+      .notNull()
+      .$defaultFn(() => Math.floor(Date.now() / 1000)),
+  },
+  (table) => [
+    uniqueIndex("oauth_provider_user_unique").on(table.provider, table.providerUserId),
+    index("idx_oauth_accounts_user").on(table.userId),
+  ]
+);
 
 export const apiKeys = sqliteTable("api_keys", {
   id: text("id").primaryKey(),
@@ -121,6 +146,8 @@ export const teamMembers = sqliteTable(
 export type Clip = typeof clips.$inferSelect;
 export type NewClip = typeof clips.$inferInsert;
 export type User = typeof users.$inferSelect;
+export type OauthAccount = typeof oauthAccounts.$inferSelect;
+export type OauthProvider = "google" | "github";
 export type Team = typeof teams.$inferSelect;
 export type TeamMember = typeof teamMembers.$inferSelect;
 export type ClipVersion = typeof clipVersions.$inferSelect;

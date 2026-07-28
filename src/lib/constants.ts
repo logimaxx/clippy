@@ -149,8 +149,13 @@ export const clipSettingsSchema = z.object({
     .optional()
     .transform((v) => v === true || v === "on" || v === "true" || v === "1"),
   webhook: z.string().max(2048).optional(),
-  /** Mutual-exclusive protect mode: none clears PIN+E2E; e2e enables encryption (clears PIN). */
-  protect: z.enum(["none", "e2e"]).optional(),
+  /** Protect mode: none clears E2E; passphrase enables client-side E2E (requires e2e fields). */
+  protect: z.enum(["none", "passphrase", "e2e"]).optional(),
+  e2eSalt: z.string().max(128).optional(),
+  e2eWrappedKey: z.string().max(512).optional(),
+  e2eKdf: z.string().max(256).optional(),
+  /** Ciphertext (or plaintext when clearing protect) saved with settings. */
+  content: z.string().max(1_000_000).optional(),
   encrypted: z.preprocess((v) => {
     if (v === undefined || v === null || v === "") return undefined;
     const values = Array.isArray(v) ? v : [v];
@@ -200,10 +205,10 @@ export function settingsToastMessage(
     return `Syntax: ${label}`;
   }
   if (parsed.protect === "none") return "Protection removed";
-  if (parsed.protect === "e2e") {
+  if (parsed.protect === "passphrase" || parsed.protect === "e2e") {
     return demotedFromKlipwall
-      ? "Encryption enabled - removed from Klipwall"
-      : "End-to-end encryption enabled";
+      ? "Passphrase E2E enabled - removed from Klipwall"
+      : "Passphrase end-to-end encryption enabled";
   }
   if (parsed.clearPin) return "PIN removed";
   if (parsed.pin && parsed.pin.length > 0) {
@@ -270,6 +275,14 @@ export const RESERVED_SLUGS = new Set([
   "clipboard-api",
   "burn-after-read",
   "encrypted-clipboard",
+  "pastebin-vs-webklip",
+  "privatebin-alternative",
+  "onetimesecret-alternative",
+  "share-password",
+  "qr-clipboard",
+  "temporary-notes",
+  "markdown-paste",
+  "share-screenshot",
 ]);
 
 export const RESERVED_CLIP_SUFFIXES = new Set([

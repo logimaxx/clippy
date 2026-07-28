@@ -17,12 +17,12 @@ Webklip does one job: **share for a moment, then disappear.** No account is requ
 ## How it works
 
 1. Open any URL like `webklip.com/my-clip`, or create a clip from the homepage.
-2. Paste text, write notes, or attach files.
+2. Paste text, write notes, or attach files (including screenshots via Ctrl+V / Cmd+V).
 3. Share the link (or scan a QR code) on another device or with someone else.
 4. Content syncs in real time across every open browser tab.
 5. When the TTL ends — or after burn-after-read — the clip and its files are deleted.
 
-Anonymous clips use a **link-as-secret** model: anyone who knows the URL can read and edit unless you add PIN protection or end-to-end encryption.
+Anonymous clips use a **link-as-secret** model: anyone who knows the URL can read and edit unless you add passphrase end-to-end encryption.
 
 ---
 
@@ -31,7 +31,7 @@ Anonymous clips use a **link-as-secret** model: anyone who knows the URL can rea
 A **clip** is a short-lived shared page identified by a slug (for example `/my-clip`). Clips hold:
 
 - **Text content** — plain text, code, or Markdown
-- **Optional file attachments** — images, PDFs, and documents (up to 10 files per clip)
+- **Optional file attachments** — images, PDFs, and documents with in-browser preview (up to 10 files per clip)
 - **Settings** — expiry, protect mode, language, visibility, webhooks, and more
 
 ### Real-time sync
@@ -59,22 +59,20 @@ Public (Klipwall) clips require a timed expiry and cannot use burn-after-read.
 
 ## Privacy and protection
 
-Webklip is ephemeral by design. Protect modes are optional and **mutually exclusive**: choose PIN **or** E2E, not both. Public Klipwall clips cannot use PIN, E2E, or burn-after-read.
+Webklip is ephemeral by design. Protection is optional **passphrase end-to-end encryption**. Public Klipwall clips cannot use E2E or burn-after-read.
 
-### PIN protection
-
-- Set a PIN in clip settings.
-- Recipients unlock via a web form, or clients send `X-Clip-Pin` (or `?pin=`).
-- PINs are stored as bcrypt hashes, never in plain text.
-- Failed attempts are rate-limited (lockout after repeated failures).
-- File downloads and WebSocket upgrades require a valid unlock when the clip is PIN-locked.
-
-### End-to-end encryption (E2E)
+### Passphrase end-to-end encryption (E2E)
 
 - Content is encrypted in the browser with **AES-256-GCM** before upload.
-- The server stores **ciphertext only**.
-- The decryption key lives in the URL fragment (`#key=...`), which browsers do not send to the server.
-- Share the **full URL including the hash** so recipients can decrypt locally.
+- A random content key (DEK) is wrapped with a key derived from your passphrase (PBKDF2).
+- The server stores **ciphertext**, public salt, and the wrapped key — never the passphrase.
+- Share a clean URL plus the passphrase separately. Recipients unlock in the browser only.
+- Auto-generated memorable phrases are the default; shorter custom secrets are allowed with an explicit offline-crack warning.
+- File uploads are disabled while a clip is E2E encrypted.
+
+### Legacy PIN protection
+
+Older clips may still use a server-side PIN gate (bcrypt hash, unlock cookie / `X-Clip-Pin`). That mode does **not** encrypt content at rest. New protection from the UI is always true E2E.
 
 ### Owner recovery
 
@@ -82,10 +80,10 @@ Optional owner password (or a logged-in account) can recover edit access if the 
 
 ### What “private” means
 
-- **Private** (default): not listed publicly; access is by knowing the URL (plus optional PIN/E2E).
+- **Private** (default): not listed publicly; access is by knowing the URL (plus optional passphrase E2E).
 - **Public**: listed on **Klipwall** (`/klipwall`) for discovery; must remain unprotected by design.
 
-Clips are not encrypted at rest by default. Use E2E when you need zero-knowledge storage relative to the server.
+Clips are not encrypted at rest by default. Use passphrase E2E when you need zero-knowledge storage relative to the server.
 
 ---
 
@@ -97,8 +95,8 @@ The editor (CodeMirror) supports language modes including JavaScript, TypeScript
 
 ### File attachments
 
-- Multipart upload from the clip UI
-- Inline image preview
+- Multipart upload from the clip UI — drop, browse, or paste images from the clipboard (Ctrl+V / Cmd+V)
+- In-browser preview modal for images, PDFs, text, audio, and video (download still available)
 - Individual download via the UI or `GET /api/v1/files/:slug/:id`
 - Size limits configurable (`MAX_FILE_SIZE_MB` per file, `MAX_TOTAL_FILES_MB` per clip)
 - Files are deleted with the clip on expiry or burn
@@ -175,7 +173,7 @@ Webhook targets are validated to reduce SSRF risk (private/loopback addresses re
 
 ## Klipwall (public explore)
 
-**Klipwall** (`/klipwall`) lists clips that owners marked **public**. It is a browseable catalog of intentionally shared content — recipes, notes, demos — not a dump of private clips. Public clips cannot use PIN, E2E, or burn-after-read; they always have a timed expiry.
+**Klipwall** (`/klipwall`) lists clips that owners marked **public**. It is a browseable catalog of intentionally shared content — recipes, notes, demos — not a dump of private clips. Public clips cannot use E2E or burn-after-read; they always have a timed expiry.
 
 ---
 
@@ -183,9 +181,9 @@ Webhook targets are validated to reduce SSRF risk (private/loopback addresses re
 
 | Audience | Typical use |
 |----------|-------------|
-| **Everyone** | Move text or a photo between phone and desktop in seconds without a chat app |
+| **Everyone** | Move text or paste a screenshot between phone and desktop in seconds without a chat app |
 | **Developers** | Snippets with syntax highlighting, live pair-edit, REST/CLI in pipelines |
-| **IT & support** | One-time passwords or recovery codes with PIN or E2E and burn-after-read |
+| **IT & support** | One-time passwords or recovery codes with passphrase E2E and burn-after-read |
 | **Teams** | Named vanity URLs and shared workspaces for recurring clip names |
 
 It is **not** a permanent cloud drive, a full chat product, or a system-wide clipboard that captures every Ctrl+C. It is a temporary shared page you open when you need it.
@@ -197,7 +195,7 @@ It is **not** a permanent cloud drive, a full chat product, or a system-wide cli
 - **No account required** for basic sharing
 - **Short default lifetime** (15 minutes)
 - **Automatic deletion** after expiry or burn
-- **Optional PIN or E2E** for sensitive content (not both)
+- **Optional passphrase E2E** for sensitive content
 - **Link-as-secret** for unprotected clips — stated plainly
 - **No ads**; site analytics (Umami) only when configured, and not for tracking clipboard content itself
 - Operated by [LogiMaxx Systems](https://logimaxx.ro/) for the public instance

@@ -251,11 +251,6 @@ test.describe("Webklip E2E", () => {
       await expect(page.locator("#clip-content")).toHaveValue("first visit edit");
     });
 
-    test("demo clip loads", async ({ page }) => {
-      await page.goto("/demo");
-      await expect(page.locator("#clip-content")).toBeVisible();
-      await expect(page.locator("#clip-content")).not.toHaveValue("");
-    });
   });
 
   test.describe("Editor and settings", () => {
@@ -374,8 +369,8 @@ test.describe("Webklip E2E", () => {
       await expect(page.locator(".header-cluster .chip--public")).toHaveCount(0);
     });
 
-    test("publishing with PIN asks to clear protections first", async ({ page }) => {
-      const slug = uniqueSlug("pubpin");
+    test("publishing with passphrase E2E asks to clear protections first", async ({ page }) => {
+      const slug = uniqueSlug("pubpass");
       await createClipViaApi(page.request, slug, "protected then public", {
         burnOnRead: false,
         ttl: 3600,
@@ -383,21 +378,22 @@ test.describe("Webklip E2E", () => {
       await page.goto(`/${slug}`);
 
       await openMoreSettings(page);
-      await page.locator('[data-protect-option="pin"]').check({ force: true });
-      await page.fill("#m-pin", "secretpin");
-      await page.locator("#settings-form-mobile .settings-pin-save").click();
-      await expect(page.getByRole("button", { name: "Remove PIN" })).toBeVisible({
-        timeout: 5_000,
+      await page.locator('[data-protect-option="passphrase"]').check({ force: true });
+      const setupModal = page.locator("[data-e2e-setup-modal]");
+      await expect(setupModal).toBeVisible();
+      await setupModal.locator("[data-e2e-setup-confirm]").click();
+      await expect(page.getByText(/End-to-end encryption is active/i)).toBeVisible({
+        timeout: 15_000,
       });
 
       await page.locator("#settings-form-mobile [data-public-toggle]").click({ force: true });
       const clearModal = page.locator("#public-clear-protections-modal");
       await expect(clearModal).toBeVisible();
-      await expect(clearModal).toContainText(/PIN/i);
+      await expect(clearModal).toContainText(/E2E|passphrase/i);
       await clearModal.getByRole("button", { name: "Cancel" }).click();
       await expect(clearModal).toBeHidden();
       await expect(page.locator("#settings-form-mobile [data-public-toggle]")).not.toBeChecked();
-      await expect(page.getByRole("button", { name: "Remove PIN" })).toBeVisible();
+      await expect(page.getByText(/End-to-end encryption is active/i)).toBeVisible();
 
       await page.locator("#settings-form-mobile [data-public-toggle]").click({ force: true });
       await expect(clearModal).toBeVisible();
@@ -415,8 +411,8 @@ test.describe("Webklip E2E", () => {
       await expect(page.locator(".header-cluster .chip--public")).toBeVisible();
     });
 
-    test("PIN and E2E are mutually exclusive", async ({ page }) => {
-      const slug = uniqueSlug("xorprot");
+    test("passphrase setup enables E2E chip", async ({ page }) => {
+      const slug = uniqueSlug("passe2e");
       await createClipViaApi(page.request, slug, "one protection", {
         burnOnRead: false,
         ttl: 3600,
@@ -424,20 +420,16 @@ test.describe("Webklip E2E", () => {
       await page.goto(`/${slug}`);
       await openMoreSettings(page);
 
-      await page.locator('[data-protect-option="pin"]').check({ force: true });
-      await page.fill("#m-pin", "secretpin");
-      await page.locator("#settings-form-mobile .settings-pin-save").click();
-      await expect(page.getByRole("button", { name: "Remove PIN" })).toBeVisible({
-        timeout: 5_000,
+      await page.locator('[data-protect-option="passphrase"]').check({ force: true });
+      const setupModal = page.locator("[data-e2e-setup-modal]");
+      await expect(setupModal).toBeVisible();
+      const phrase = await setupModal.locator("[data-e2e-setup-passphrase]").inputValue();
+      expect(phrase.split("-").length).toBeGreaterThanOrEqual(4);
+      await setupModal.locator("[data-e2e-setup-confirm]").click();
+      await expect(page.getByText(/Passphrase end-to-end encryption enabled|End-to-end encryption is active/i)).toBeVisible({
+        timeout: 15_000,
       });
-
-      await page.locator('[data-protect-option="e2e"]').click({ force: true });
-      const switchModal = page.locator("#protect-switch-modal");
-      await expect(switchModal).toBeVisible();
-      await switchModal.getByRole("button", { name: "Continue" }).click();
-      await expect(page.getByText(/encryption enabled/i)).toBeVisible();
-      await expect(page.locator('[data-protect-option="e2e"]')).toBeChecked();
-      await expect(page.getByRole("button", { name: "Remove PIN" })).toHaveCount(0);
+      await expect(page.locator('[data-protect-option="passphrase"]')).toBeChecked();
       await expect(page.locator(".header-cluster .chip--secure")).toBeVisible();
     });
 
@@ -682,6 +674,37 @@ test.describe("Webklip E2E", () => {
       }
     });
 
+    test("pastes a clipboard screenshot as an attachment", async ({ page }) => {
+      const slug = uniqueSlug("pasteimg");
+      await createClipViaApi(page.request, slug);
+      await page.goto(`/${slug}`);
+
+      // 1x1 PNG
+      const ok = await page.evaluate(() => {
+        const b64 =
+          "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        const file = new File([bytes], "image.png", { type: "image/png" });
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        const event = new Event("paste", { bubbles: true, cancelable: true });
+        Object.defineProperty(event, "clipboardData", { value: dt });
+        return document.dispatchEvent(event);
+      });
+      expect(ok).toBe(false); // preventDefault was called
+
+      await expect(page.locator(".upload-status .success")).toContainText(
+        "Uploaded",
+        { timeout: 10_000 }
+      );
+      await expect(page.locator(".file-attachment, .file-card")).toHaveCount(1);
+      await expect(page.locator(".file-attachment, .file-card")).toContainText(
+        /screenshot-/i
+      );
+    });
+
     test("creates clip with file from temporary-file-sharing landing", async ({
       page,
     }) => {
@@ -714,31 +737,37 @@ test.describe("Webklip E2E", () => {
     });
   });
 
-  test.describe("PIN protection", () => {
-    test("PIN gate blocks access and unlock works", async ({ browser }) => {
-      const slug = uniqueSlug("pin");
-      const pin = "test1234";
-
+  test.describe("Passphrase E2E protection", () => {
+    test("passphrase gate unlocks encrypted clip", async ({ browser }) => {
+      const slug = uniqueSlug("e2epass");
       const setup = await browser.newContext();
       const setupPage = await setup.newPage();
-      await createClipViaApi(setupPage.request, slug);
+      await createClipViaApi(setupPage.request, slug, "secret clipboard text");
       await setupPage.goto(`/${slug}`);
       await openMoreSettings(setupPage);
-      await setupPage.locator('[data-protect-option="pin"]').check({ force: true });
-      await setupPage.fill("#m-pin", pin);
-      await setupPage.locator("#settings-form-mobile .settings-pin-save").click();
-      await expect(setupPage.getByRole("button", { name: "Remove PIN" })).toBeVisible({
-        timeout: 5_000,
+      await setupPage.locator('[data-protect-option="passphrase"]').check({ force: true });
+      const modal = setupPage.locator("[data-e2e-setup-modal]");
+      await expect(modal).toBeVisible();
+      const passphrase = await setupPage.locator("[data-e2e-setup-passphrase]").inputValue();
+      expect(passphrase.length).toBeGreaterThan(7);
+      await setupPage.locator("[data-e2e-setup-confirm]").click();
+      await expect(setupPage.getByText(/End-to-end encryption is active/i)).toBeVisible({
+        timeout: 15_000,
       });
       await setup.close();
 
       const locked = await browser.newContext();
       const lockedPage = await locked.newPage();
       await lockedPage.goto(`/${slug}`);
-      await expect(lockedPage.getByRole("heading", { name: /PIN required/i })).toBeVisible();
-      await lockedPage.fill('input[name="pin"]', pin);
+      await expect(lockedPage.getByRole("heading", { name: /Passphrase required/i })).toBeVisible();
+      await lockedPage.fill('input[name="e2e-passphrase"]', "wrong-passphrase");
       await lockedPage.getByRole("button", { name: "Unlock" }).click();
-      await expect(lockedPage.locator("#clip-content")).toBeVisible();
+      await expect(lockedPage.locator("[data-e2e-gate-error]")).toContainText(/Wrong/i);
+      await lockedPage.fill('input[name="e2e-passphrase"]', passphrase);
+      await lockedPage.getByRole("button", { name: "Unlock" }).click();
+      await expect(lockedPage.locator("#clip-content")).toHaveValue("secret clipboard text", {
+        timeout: 15_000,
+      });
       await locked.close();
     });
   });

@@ -59,7 +59,7 @@ clipsApi.get("/api/v1/clips/:slug", async (c) => {
   const clip = await getClip(slug);
   if (!clip) return c.json({ error: "Not found" }, 404);
 
-  if (!(await requirePin(c, clip.pinHash))) {
+  if (!(await requirePin(c, clip.encrypted ? null : clip.pinHash))) {
     return c.json({ error: "PIN required", pinRequired: true }, 401);
   }
 
@@ -84,6 +84,10 @@ clipsApi.get("/api/v1/clips/:slug", async (c) => {
       contentType: clip.contentType,
       burned: true,
       viewCount: viewed.viewCount,
+      encrypted: clip.encrypted,
+      e2eSalt: clip.e2eSalt,
+      e2eWrappedKey: clip.e2eWrappedKey,
+      e2eKdf: clip.e2eKdf,
     });
   }
 
@@ -97,6 +101,10 @@ clipsApi.get("/api/v1/clips/:slug", async (c) => {
     viewCount: viewed.viewCount,
     webhookUrl: clip.webhookUrl,
     visibility: clip.visibility,
+    encrypted: clip.encrypted,
+    e2eSalt: clip.e2eSalt,
+    e2eWrappedKey: clip.e2eWrappedKey,
+    e2eKdf: clip.e2eKdf,
   });
 });
 
@@ -190,7 +198,7 @@ clipsApi.put("/api/v1/clips/:slug", async (c) => {
   const clip = await getClip(slug);
   if (!clip) return c.json({ error: "Not found" }, 404);
 
-  if (!(await requirePin(c, clip.pinHash))) {
+  if (!(await requirePin(c, clip.encrypted ? null : clip.pinHash))) {
     return c.json({ error: "PIN required", pinRequired: true }, 401);
   }
 
@@ -221,7 +229,7 @@ clipsApi.delete("/api/v1/clips/:slug", async (c) => {
   const clip = await getClip(slug);
   if (!clip) return c.json({ error: "Not found" }, 404);
 
-  if (!(await requirePin(c, clip.pinHash))) {
+  if (!(await requirePin(c, clip.encrypted ? null : clip.pinHash))) {
     return c.json({ error: "PIN required", pinRequired: true }, 401);
   }
 

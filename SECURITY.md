@@ -4,16 +4,16 @@ This document is for operators deploying Webklip in production and for security 
 
 ## Threat model
 
-Webklip is an **ephemeral web clipboard**. Access control for anonymous clips relies on the **link-as-secret** model: anyone who knows the URL can read and edit unless you add a PIN **or** client-side end-to-end encryption (mutually exclusive protect modes). Public Klipwall clips cannot use PIN, E2E, or burn-after-read.
+Webklip is an **ephemeral web clipboard**. Access control for anonymous clips relies on the **link-as-secret** model: anyone who knows the URL can read and edit unless you add **passphrase end-to-end encryption**. Public Klipwall clips cannot use E2E or burn-after-read.
 
 | Asset | Risk if compromised |
 |-------|---------------------|
 | Clip content & files | Exposure of pasted data |
 | `SESSION_SECRET` | Forged unlock/session cookies |
-| SQLite database | All stored clips, PIN hashes, user accounts |
+| SQLite database | All stored clips (ciphertext for E2E clips), legacy PIN hashes, user accounts |
 | Webhook URLs | SSRF if misconfigured (mitigated server-side) |
 
-Clips are **not encrypted at rest** by default. E2E encryption keeps plaintext only in the browser.
+Clips are **not encrypted at rest** by default. Passphrase E2E keeps plaintext only in the browser; the server stores ciphertext, public salt, and a wrapped content key — never the passphrase.
 
 ## Required environment variables
 
@@ -36,6 +36,7 @@ Clips are **not encrypted at rest** by default. E2E encryption keeps plaintext o
 - [ ] Set `CONTACT_EMAIL` for legal and security contact
 - [ ] Review `RATE_LIMIT_CLIPS_PER_HOUR` and `RATE_LIMIT_API_PER_HOUR` for expected traffic
 - [ ] Keep `ENABLE_AUTH_API=false` unless you need programmatic registration/API-key creation
+- [ ] If using OAuth, set `GOOGLE_*` / `GITHUB_*` client credentials and register redirect URIs under `{SITE_URL}/auth/{provider}/callback`
 - [ ] Set `CORS_ORIGIN` only if a specific external origin must call the API
 
 ## Reverse proxy example (nginx)
@@ -69,12 +70,13 @@ When `UMAMI_WEBSITE_ID` is set, CSP also allows the Umami script origin for `scr
 
 ### Access control
 
-- **Protect modes**: choose **PIN** or **E2E** (not both); public/Klipwall clips cannot use either
-- **PIN protection**: bcrypt hashes, 5-attempt lockout per IP/slug (15 min)
-- **Unlock cookies**: HMAC-signed, httpOnly, SameSite=Lax, optional Secure flag
-- **File downloads**: require PIN unlock cookie or `X-Clip-Pin` header when clip is PIN-protected
-- **WebSocket**: upgrade rejected for PIN-protected clips without valid unlock cookie
+- **Passphrase E2E**: client-side AES-256-GCM; DEK wrapped with PBKDF2-derived key from the passphrase; passphrase never POSTed to the server
+- **Short passphrases**: allowed with an explicit UI warning — stolen ciphertext + a weak PIN is offline-brute-forceable
+- **Legacy PIN**: older clips may still use bcrypt PIN + unlock cookie / `X-Clip-Pin` (plaintext at rest)
+- **File downloads**: require legacy PIN unlock when applicable; new uploads are blocked on E2E-encrypted clips
+- **WebSocket**: upgrade rejected for legacy PIN-locked clips without a valid unlock cookie; E2E clips sync ciphertext only
 - **Team clips**: restricted to team members when owned by a team
+- **Burn / max views**: page load still counts when ciphertext is served; failing the passphrase gate does not undo a burn
 
 ### Abuse prevention
 
@@ -92,9 +94,10 @@ When `UMAMI_WEBSITE_ID` is set, CSP also allows the Umami script origin for `scr
 
 ## Known limitations
 
-- Rate limits and PIN attempt counters are **in-memory** (per process)
+- Rate limits and legacy PIN attempt counters are **in-memory** (per process)
 - WebSocket rooms are **single-instance** (no cross-node sync without additional infrastructure)
-- SQLite data is **plaintext at rest**
+- SQLite data is **plaintext at rest** unless the clip uses passphrase E2E (ciphertext only)
+- Short E2E passphrases can be cracked **offline** from stolen ciphertext despite PBKDF2
 - Deleted data may persist in SQLite WAL until vacuum
 - In-memory clip cache may briefly retain content after DB deletion
 

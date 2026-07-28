@@ -227,6 +227,19 @@ export async function attachFileToClip(
 export async function handleUpload(c: Context, slug: string) {
   const wantsJson = c.req.header("Accept")?.includes("application/json");
 
+  const clip = await getClip(slug);
+  if (clip?.encrypted) {
+    if (wantsJson) {
+      return c.json(
+        { ok: false, error: "File uploads are disabled for E2E encrypted clips" },
+        400
+      );
+    }
+    return c.html(
+      '<span class="error">File uploads are disabled for E2E encrypted clips</span>'
+    );
+  }
+
   const body = await c.req.parseBody();
   const file = body.file;
 
@@ -347,7 +360,7 @@ filesApi.get("/api/v1/files/:slug/:id", async (c) => {
   const filePath = getClipFilePath(slug, id);
   if (!existsSync(filePath)) return c.text("Not found", 404);
 
-  if (clip.pinHash) {
+  if (clip.pinHash && !clip.encrypted) {
     const pin =
       c.req.header("X-Clip-Pin") ??
       c.req.header("x-clip-pin") ??

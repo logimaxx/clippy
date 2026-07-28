@@ -1,12 +1,40 @@
 /** @jsxImportSource hono/jsx */
 import { Layout } from "./Layout";
+import type { OauthProvider } from "../db/schema";
 
 interface LoginPageProps {
   mode?: "login" | "register";
   error?: string;
+  oauthProviders?: OauthProvider[];
 }
 
-export function LoginPage({ mode = "login", error }: LoginPageProps) {
+function OauthButtons({ providers }: { providers: OauthProvider[] }) {
+  if (providers.length === 0) return null;
+
+  return (
+    <div class="oauth-buttons">
+      {providers.includes("google") && (
+        <a href="/auth/google" class="btn btn-oauth btn-oauth-google">
+          Continue with Google
+        </a>
+      )}
+      {providers.includes("github") && (
+        <a href="/auth/github" class="btn btn-oauth btn-oauth-github">
+          Continue with GitHub
+        </a>
+      )}
+      <p class="oauth-divider">
+        <span>or</span>
+      </p>
+    </div>
+  );
+}
+
+export function LoginPage({
+  mode = "login",
+  error,
+  oauthProviders = [],
+}: LoginPageProps) {
   const isRegister = mode === "register";
 
   return (
@@ -14,6 +42,7 @@ export function LoginPage({ mode = "login", error }: LoginPageProps) {
       <main class="home account-page">
         <h1>{isRegister ? "Create account" : "Sign in"}</h1>
         {error && <p class="pin-error">{error}</p>}
+        <OauthButtons providers={oauthProviders} />
         <form
           method="post"
           action={isRegister ? "/register" : "/login"}

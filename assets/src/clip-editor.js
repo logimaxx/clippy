@@ -136,7 +136,9 @@ function webklipTheme() {
 
   function shouldUseEditor() {
     const ta = getTextarea();
-    return ta && !ta.disabled && !isEncrypted();
+    if (!ta || ta.disabled) return false;
+    if (!isEncrypted()) return true;
+    return ta.dataset.decrypted === "true";
   }
 
   function updatePreview(text) {

@@ -17,10 +17,10 @@ Open http://localhost:3000
 
 ## Phase 3 features
 
-- **Accounts** — register/login at `/register`, `/login`, dashboard at `/account`
+- **Accounts** — register/login at `/register`, `/login`, dashboard at `/account`; optional Google/GitHub OAuth
 - **API keys** — create via account UI or `POST /api/v1/auth/api-keys` (Bearer session)
 - **Teams** — create workspace, vanity URLs `/{team}/{clip-name}`
-- **E2E encryption** — AES-256-GCM client-side; key in URL `#key=`; server stores ciphertext only
+- **E2E encryption** — AES-256-GCM client-side; passphrase wraps the key (never sent to the server)
 - **Version history** — auto-saved every 5s while editing; restore from sidebar
 
 ### Vanity URLs
@@ -29,20 +29,21 @@ Open http://localhost:3000
 2. Open `/teams/{team-slug}` and create a clip
 3. Share `https://webklip.com/{team}/{clip-name}`
 
-### E2E encryption
+### Passphrase E2E encryption
 
-1. In clip settings → Protect, choose **E2E** (clears any PIN — protect modes are mutually exclusive)
-2. Click "Get Key" — adds `#key=...` to the URL
-3. Share the **full URL including the hash** — recipients can decrypt in the browser
+1. In clip settings → Protect, choose **Passphrase**
+2. Keep the auto-generated memorable phrase, or set your own (short secrets require acknowledging offline-crack risk)
+3. Share the **clean clip URL** and the passphrase **separately** — recipients unlock in the browser; Webklip never receives the passphrase
 
-Public Klipwall clips cannot use E2E or PIN.
+Public Klipwall clips cannot use passphrase E2E. File uploads are disabled while a clip is encrypted.
+
+Legacy server PIN clips (pre-passphrase) still unlock via the PIN form / `X-Clip-Pin`. New protection from the UI is always true E2E.
 
 ## Phase 2 features
 
-- **PIN protection** — choose PIN in Protect settings (mutually exclusive with E2E); unlock via web form or `X-Clip-Pin` header
 - **View limits** — 1, 3, 10 reads or unlimited (API reads only)
 - **Webhooks** — `POST` JSON to your URL on `read`, `burned`, `expired` events
-- **File/image upload** — HTMX multipart, image preview inline
+- **File/image upload** — drop, browse, or paste a screenshot (Ctrl+V / Cmd+V); preview images, PDFs, text, and media in a modal (not available on E2E-encrypted clips)
 
 ### Webhook payload
 
@@ -77,8 +78,10 @@ Public Klipwall clips cannot use E2E or PIN.
 | `SESSION_SECRET` | — | **Required in production.** HMAC signing for cookies |
 | `SECURE_COOKIES` | `false` | Set `true` behind HTTPS reverse proxy |
 | `CONTACT_EMAIL` | `contact@logimaxx.ro` | Legal/security contact on public pages |
-| `SITE_URL` | `https://webklip.com` | Public site URL (no trailing slash) — writes `sitemap.xml` at build time |
+| `SITE_URL` | `https://webklip.com` | Public site URL (no trailing slash) — writes `sitemap.xml` at build time; OAuth redirect base |
 | `ENABLE_AUTH_API` | `false` | Enable `POST /api/v1/auth/register` and API key API |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | — | Enable “Continue with Google” (redirect: `{SITE_URL}/auth/google/callback`) |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | — | Enable “Continue with GitHub” (redirect: `{SITE_URL}/auth/github/callback`) |
 | `UMAMI_WEBSITE_ID` | — | Umami website ID — enables analytics when set |
 | `UMAMI_SCRIPT_URL` | — | Full URL to `script.js` (or set `UMAMI_URL` instead) |
 | `CORS_ORIGIN` | — | Allow cross-origin API access from this origin |

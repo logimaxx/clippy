@@ -3,8 +3,10 @@
 
 <p>
   Automate Webklip with plain HTTP — no account required for anonymous clips.
-  All clip endpoints accept and return JSON unless noted. PIN-protected clips require
-  the <code>X-Clip-Pin</code> header or a <code>?pin=</code> query parameter.
+  All clip endpoints accept and return JSON unless noted. Legacy server-PIN clips
+  require the <code>X-Clip-Pin</code> header or a <code>?pin=</code> query parameter.
+  Passphrase E2E clips return ciphertext; decrypt locally with the passphrase (the API never
+  receives it).
 </p>
 
 <h2>Quick start</h2>
@@ -40,10 +42,19 @@ curl -s https://webklip.com/api/v1/clips/my-clip</code></pre>
   "burnOnRead": false,
   "maxViews": null,
   "viewCount": 1,
-  "webhookUrl": null
+  "webhookUrl": null,
+  "encrypted": false,
+  "e2eSalt": null,
+  "e2eWrappedKey": null,
+  "e2eKdf": null
 }</code></pre>
 <p>After a burn-on-read clip is consumed, the final response includes <code>"burned": true</code>.</p>
-<p>Errors: <code>400</code> invalid slug, <code>401</code> PIN required, <code>404</code> not found, <code>429</code> rate limited.</p>
+<p>
+  When <code>encrypted</code> is <code>true</code>, <code>content</code> is ciphertext and
+  <code>e2eSalt</code> / <code>e2eWrappedKey</code> / <code>e2eKdf</code> let a client unwrap the
+  content key from the passphrase.
+</p>
+<p>Errors: <code>400</code> invalid slug, <code>401</code> legacy PIN required, <code>404</code> not found, <code>429</code> rate limited.</p>
 
 <h2>Create a clip</h2>
 <div class="docs-endpoint">
@@ -66,7 +77,7 @@ curl -s https://webklip.com/api/v1/clips/my-clip</code></pre>
   <li><code>burnOnRead</code> — defaults to <code>false</code>. Set <code>true</code> for burn-after-read (deletes on first read; unread clips still expire after 7 days).</li>
   <li><code>ttl</code> — seconds until expiry (default <code>900</code> = 15 min; max 1 year).</li>
   <li><code>maxViews</code> — delete after N API reads (<code>0</code> = unlimited).</li>
-  <li><code>pin</code> — lock the clip; stored as a bcrypt hash.</li>
+  <li><code>pin</code> — <strong>legacy</strong> server PIN gate (plaintext at rest). Prefer passphrase E2E in the web UI for true encryption.</li>
   <li><code>webhook</code> — URL notified on read, burn, or expiry (see <a href="/docs/webhooks">Webhooks</a>).</li>
   <li><code>visibility</code> — <code>private</code> (default) or <code>public</code> (listed on Klipwall; requires <code>ownerPassword</code>).</li>
   <li><code>ownerPassword</code> — recovers edit access on a new device (min 8 characters; required for public clips).</li>
@@ -105,8 +116,10 @@ curl -s https://webklip.com/api/v1/clips/my-clip</code></pre>
   <code>/api/v1/files/:slug/:fileId</code>
 </div>
 <p>
-  Returns the raw file bytes. Requires PIN header/query when the clip is locked.
-  File IDs are shown in the clip UI after upload.
+  Returns the raw file bytes (<code>Content-Disposition: inline</code>) so the clip UI can preview images, PDFs, text, and media in a modal, or download them.
+  Requires legacy PIN header/query when the clip uses a server PIN.
+  Attach files from the clip UI by dropping, browsing, or pasting an image from the clipboard (Ctrl+V / Cmd+V).
+  File uploads are disabled on passphrase E2E clips. File IDs are shown in the clip UI after upload.
 </p>
 
 <h2>Rate limits</h2>

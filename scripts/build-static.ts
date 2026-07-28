@@ -11,6 +11,19 @@ const STATIC = join(ROOT, "static");
 const OUT = join(ROOT, "dist", "pages");
 const STRUCTURED_DATA_DIR = join(OUT, "structured-data");
 
+interface LandingCompareRow {
+  feature: string;
+  left: string;
+  right: string;
+}
+
+interface LandingCompare {
+  leftLabel: string;
+  rightLabel: string;
+  rows: LandingCompareRow[];
+  footnote?: string;
+}
+
 interface LandingPage {
   slug: string;
   title: string;
@@ -23,6 +36,10 @@ interface LandingPage {
   relatedSlugs: string[];
   /** Hero CTA: paste textarea (default) or file upload drop zone */
   heroVariant?: "paste" | "file";
+  /** Optional side-by-side comparison table (e.g. competitor vs Webklip) */
+  compare?: LandingCompare;
+  /** Override for the benefits section heading */
+  benefitsHeading?: string;
 }
 
 interface BuildContext {
@@ -255,8 +272,8 @@ function buildLandingPasteForm(id: string): string {
 function buildLandingFileForm(id: string): string {
   return `<form action="/new" method="post" enctype="multipart/form-data" class="home-form landing-cta landing-hero-paste landing-hero-upload">
   <label class="drop-zone landing-drop-zone" for="${id}-file">
-    <span class="landing-drop-zone-title">Drop files here or browse</span>
-    <span class="landing-drop-zone-hint">Images, PDFs, text, zip, JSON, Markdown</span>
+    <span class="landing-drop-zone-title">Drop, paste (Ctrl+V), or browse</span>
+    <span class="landing-drop-zone-hint">Images, PDFs, text, zip, JSON, Markdown — paste a screenshot</span>
     <input
       type="file"
       id="${id}-file"
@@ -280,6 +297,47 @@ function buildLandingFileForm(id: string): string {
 </form>`;
 }
 
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function buildCompareSection(compare: LandingCompare): string {
+  const rows = compare.rows
+    .map(
+      (row) => `      <tr>
+        <td>${escapeHtml(row.feature)}</td>
+        <td>${escapeHtml(row.left)}</td>
+        <td>${escapeHtml(row.right)}</td>
+      </tr>`
+    )
+    .join("\n");
+  const footnote = compare.footnote
+    ? `\n  <p class="compare-footnote">${escapeHtml(compare.footnote)}</p>`
+    : "";
+
+  return `<section class="landing-section compare-section">
+  <h2>Side-by-side</h2>
+  <div class="compare-table-wrap">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th scope="col">Feature</th>
+          <th scope="col">${escapeHtml(compare.leftLabel)}</th>
+          <th scope="col">${escapeHtml(compare.rightLabel)}</th>
+        </tr>
+      </thead>
+      <tbody>
+${rows}
+      </tbody>
+    </table>
+  </div>${footnote}
+</section>`;
+}
+
 function buildLandingBody(page: LandingPage, allPages: LandingPage[]): string {
   const related = page.relatedSlugs
     .map((slug) => allPages.find((p) => p.slug === slug))
@@ -299,8 +357,11 @@ function buildLandingBody(page: LandingPage, allPages: LandingPage[]): string {
       : buildLandingPasteForm(formId);
   const ctaText =
     page.heroVariant === "file"
-      ? "Upload above, or create an empty clip to attach files later."
+      ? "Upload or paste a screenshot above, or create an empty clip to attach files later."
       : "Paste above, or create an empty clip to start sharing.";
+  const benefitsHeading =
+    page.benefitsHeading ?? `Why use Webklip for ${page.h1.toLowerCase()}?`;
+  const compareSection = page.compare ? `\n\n${buildCompareSection(page.compare)}` : "";
 
   return `<section class="seo-landing-hero">
   <h1>${page.h1}</h1>
@@ -310,10 +371,10 @@ function buildLandingBody(page: LandingPage, allPages: LandingPage[]): string {
 
 <section class="landing-section seo-landing-prose">
   ${paragraphs}
-</section>
+</section>${compareSection}
 
 <section class="landing-section">
-  <h2>Why use Webklip for ${page.h1.toLowerCase()}?</h2>
+  <h2>${escapeHtml(benefitsHeading)}</h2>
   <ul class="trust-list">
     ${benefits}
   </ul>
@@ -442,7 +503,7 @@ const legalPages = [
     src: "security.html",
     title: "Security — Webklip",
     description:
-      "How Webklip protects your data: ephemeral storage, PINs, rate limits, and encryption options.",
+      "How Webklip protects your data: ephemeral storage, passphrase E2E, rate limits, and encryption options.",
   },
 ] as const;
 

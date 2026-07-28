@@ -17,10 +17,13 @@ import { listUserTeams } from "../lib/teams";
 import { apiKeys } from "../db/schema";
 import { AccountPage, LoginPage } from "../views/Account";
 import { Layout } from "../views/Layout";
+import { enabledOauthProviders } from "../lib/oauth";
 
 const account = new Hono();
 
-account.get("/login", (c) => c.html(<LoginPage />));
+account.get("/login", (c) =>
+  c.html(<LoginPage oauthProviders={enabledOauthProviders()} />)
+);
 
 account.post("/login", async (c) => {
   const body = await c.req.parseBody();
@@ -29,14 +32,18 @@ account.post("/login", async (c) => {
 
   const user = await getUserByEmail(email);
   if (!user?.passwordHash || !(await verifyPassword(password, user.passwordHash))) {
-    return c.html(<LoginPage error="Invalid email or password" />);
+    return c.html(
+      <LoginPage error="Invalid email or password" oauthProviders={enabledOauthProviders()} />
+    );
   }
 
   setSessionCookie(c, user.id);
   return c.redirect("/account", 302);
 });
 
-account.get("/register", (c) => c.html(<LoginPage mode="register" />));
+account.get("/register", (c) =>
+  c.html(<LoginPage mode="register" oauthProviders={enabledOauthProviders()} />)
+);
 
 account.post("/register", async (c) => {
   const body = await c.req.parseBody();
@@ -46,12 +53,22 @@ account.post("/register", async (c) => {
 
   if (!email.includes("@") || password.length < 8) {
     return c.html(
-      <LoginPage mode="register" error="Valid email and password (8+ chars) required" />
+      <LoginPage
+        mode="register"
+        error="Valid email and password (8+ chars) required"
+        oauthProviders={enabledOauthProviders()}
+      />
     );
   }
 
   if (await getUserByEmail(email)) {
-    return c.html(<LoginPage mode="register" error="Email already registered" />);
+    return c.html(
+      <LoginPage
+        mode="register"
+        error="Email already registered"
+        oauthProviders={enabledOauthProviders()}
+      />
+    );
   }
 
   const id = crypto.randomUUID();

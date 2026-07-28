@@ -8,13 +8,13 @@ import { getAdminPath, isAdminEnabled } from "./lib/admin";
 import { injectLiveReloadHtml, liveReloadPort } from "./lib/dev-live-reload";
 import { pages } from "./routes/pages";
 import { staticPages } from "./routes/static";
-import { seedDemoClip } from "./lib/demo-clip";
 import { seedPublicClips } from "./lib/seed-public-clips";
 import { clipsApi } from "./routes/clips";
 import { filesApi } from "./routes/files";
 import { qr } from "./routes/qr";
 import { auth } from "./routes/auth";
 import { account } from "./routes/account";
+import { oauth } from "./routes/oauth";
 import { admin } from "./routes/admin";
 import { scheduleVersionSave } from "./store/versions";
 import { validateProductionSecrets, securityHeaders } from "./lib/security-headers";
@@ -29,6 +29,7 @@ import {
   ensureClip,
   schedulePersist,
   getClip,
+  needsLegacyPinGate,
 } from "./store/clips";
 import type { WsData } from "./ws/rooms";
 
@@ -39,7 +40,6 @@ const port = Number(process.env.PORT ?? 3000);
 runMigrations();
 startCleanupJob();
 startStatsSnapshotJob();
-seedDemoClip().catch((err) => console.error("Demo clip seed failed:", err));
 seedPublicClips().catch((err) => console.error("Public clips seed failed:", err));
 
 const manifest = loadAssetManifest();
@@ -111,6 +111,7 @@ app.use("*", async (c, next) => {
 
 app.route("/", auth);
 app.route("/", account);
+app.route("/", oauth);
 if (isAdminEnabled()) {
   app.route(getAdminPath(), admin);
 }
@@ -128,7 +129,7 @@ const server = Bun.serve<WsData>({
     if (url.pathname.startsWith("/ws/")) {
       const slug = url.pathname.slice(4);
       const clip = (await getClip(slug)) ?? (await ensureClip(slug));
-      if (clip.pinHash && !isUnlockedFromRequest(req, slug)) {
+      if (needsLegacyPinGate(clip) && !isUnlockedFromRequest(req, slug)) {
         return new Response("PIN required", { status: 401 });
       }
       const userId = getSessionUserIdFromRequest(req);

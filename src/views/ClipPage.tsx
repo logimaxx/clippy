@@ -97,10 +97,10 @@ export function ClipPage({
               <span class={`chip ${isPublic ? "chip--public" : "chip--private"}`}>
                 {isPublic ? "Public" : "Private"}
               </span>
-              {hasPin ? (
-                <span class="chip chip--pin">PIN</span>
-              ) : encrypted ? (
+              {encrypted ? (
                 <span class="chip chip--secure">E2E</span>
+              ) : hasPin ? (
+                <span class="chip chip--pin">PIN</span>
               ) : (
                 <span class="chip chip--open">Unprotected</span>
               )}
@@ -273,7 +273,10 @@ export function ClipPage({
                   data-ws-room={readOnly ? undefined : slug}
                   data-ws-url={readOnly ? undefined : `/ws/${slug}`}
                   data-encrypted={encrypted ? "true" : "false"}
-                  disabled={readOnly}
+                  data-e2e-salt={clip.e2eSalt ?? undefined}
+                  data-e2e-wrapped-key={clip.e2eWrappedKey ?? undefined}
+                  data-e2e-kdf={clip.e2eKdf ?? undefined}
+                  disabled={readOnly || encrypted}
                   readonly={readOnly}
                 >{content}</textarea>
               </div>
@@ -287,10 +290,10 @@ export function ClipPage({
                 </span>
               </div>
               <div class="files-panel__body">
-                {!readOnly && (
+                {!readOnly && !encrypted && (
                   <form class="upload-form" data-upload-url={`/${slug}/upload`}>
                     <label class="drop-zone" id="drop-zone">
-                      Drop files here or tap to browse
+                      Drop, paste (Ctrl+V), or tap to browse
                       <input
                         type="file"
                         name="file"
@@ -301,6 +304,9 @@ export function ClipPage({
                     </label>
                     <span id="upload-status" class="upload-status"></span>
                   </form>
+                )}
+                {!readOnly && encrypted && (
+                  <p class="empty-state">File uploads are disabled while the clip is E2E encrypted.</p>
                 )}
                 <div class="file-list" id="clip-files-list">
                   {files.length > 0 ? (
@@ -450,6 +456,49 @@ export function ClipPage({
           </div>
         )}
 
+        <div
+          class="modal-backdrop file-preview-backdrop"
+          id="file-preview-backdrop"
+          hidden
+          data-file-preview-modal
+        >
+          <div
+            class="modal file-preview-modal"
+            id="file-preview-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="file-preview-title"
+            hidden
+          >
+            <div class="modal__header file-preview-modal__header">
+              <h2 class="modal__title" id="file-preview-title">
+                Preview
+              </h2>
+              <div class="file-preview-modal__header-actions">
+                <a
+                  href="#"
+                  class="btn btn--ghost btn--sm"
+                  id="file-preview-download"
+                  download
+                >
+                  Download
+                </a>
+                <button
+                  type="button"
+                  class="btn btn--ghost btn--icon"
+                  data-close-file-preview
+                  aria-label="Close preview"
+                >
+                  <CloseIcon />
+                </button>
+              </div>
+            </div>
+            <div class="modal__body file-preview-modal__body" id="file-preview-body">
+              <p class="file-preview-modal__loading">Loading preview…</p>
+            </div>
+          </div>
+        </div>
+
         <div class="modal-backdrop docs-modal-backdrop" id="docs-modal-backdrop" hidden data-docs-modal>
           <div
             class="modal docs-modal"
@@ -501,6 +550,46 @@ export function ClipPage({
             </div>
           </div>
         </div>
+      </div>
+
+      <div
+        id="e2e-passphrase-gate"
+        class="confirm-modal"
+        hidden
+        data-e2e-gate
+      >
+        <div class="confirm-modal__backdrop"></div>
+        <form
+          class="confirm-modal__panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="e2e-gate-title"
+        >
+          <h2 class="confirm-modal__title" id="e2e-gate-title">
+            Passphrase required
+          </h2>
+          <p class="confirm-modal__body">
+            This clip is end-to-end encrypted. Enter the passphrase — it stays in your browser and is
+            never sent to Webklip.
+          </p>
+          <p class="pin-error" data-e2e-gate-error hidden></p>
+          <input
+            type="password"
+            name="e2e-passphrase"
+            class="slug-input confirm-modal__input"
+            placeholder="Passphrase"
+            autocomplete="off"
+            required
+          />
+          <div class="confirm-modal__actions">
+            <a href="/" class="btn btn--ghost">
+              Cancel
+            </a>
+            <button type="submit" class="btn btn--primary">
+              Unlock
+            </button>
+          </div>
+        </form>
       </div>
 
       <script src={asset("clip-mobile.js")} defer></script>

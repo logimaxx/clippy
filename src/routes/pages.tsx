@@ -53,6 +53,8 @@ import {
   getClipFiles,
   isListablePublic,
   clonePublicClip,
+  needsLegacyPinGate,
+  clearE2eFields,
 } from "../store/clips";
 import { listVersions, getVersion } from "../store/versions";
 import { ClipPage } from "../views/ClipPage";
@@ -79,6 +81,9 @@ function settingsPanelProps(slug: string, clip: Clip, versions: Awaited<ReturnTy
     hasOwnerPassword: !!clip.ownerPasswordHash,
     webhookUrl: clip.webhookUrl,
     encrypted: clip.encrypted,
+    e2eSalt: clip.e2eSalt,
+    e2eWrappedKey: clip.e2eWrappedKey,
+    e2eKdf: clip.e2eKdf,
     visibility: clip.visibility === "public" ? ("public" as const) : ("private" as const),
     devices: 1,
     versions,
@@ -119,7 +124,7 @@ async function renderClipPage(c: Context, slug: string) {
     return c.text("Forbidden", 403);
   }
 
-  if (clip.pinHash && !isUnlocked(c, slug)) {
+  if (needsLegacyPinGate(clip) && !isUnlocked(c, slug)) {
     if (crawler) return c.html(<ClipLinkPreview slug={slug} />);
     return c.html(<PinGate slug={slug} />);
   }
@@ -135,9 +140,9 @@ async function renderClipPage(c: Context, slug: string) {
     createdNow || isClipOwner(c, slug, authUser?.id ?? null, clip.ownerId);
   const canWrite = await canWriteClip(clip, authUser?.id ?? null, owner);
 
-  // Heal legacy PIN+E2E (prefer E2E).
+  // Heal legacy PIN+E2E → keep E2E, drop server PIN.
   if (owner && clip.pinHash && clip.encrypted) {
-    const healed = await updateSettings(slug, {});
+    const healed = await updateSettings(slug, { pinHash: null });
     if (healed) clip = healed;
   }
 
@@ -218,8 +223,6 @@ pages.get("/klipwall", async (c) => {
 });
 
 pages.get("/explore", (c) => c.redirect("/klipwall", 301));
-
-pages.get("/demo", async (c) => renderClipPage(c, "demo"));
 
 function collectUploadFiles(body: Record<string, unknown>): File[] {
   const raw = body.file;
@@ -503,7 +506,7 @@ pages.post("/:slug/unlock", async (c) => {
   if (!isValidSlug(slug)) return c.text("Invalid slug", 400);
 
   const clip = await getClip(slug);
-  if (!clip?.pinHash) return c.redirect(`/${slug}`, 302);
+  if (!clip?.pinHash || clip.encrypted) return c.redirect(`/${slug}`, 302);
 
   const ip = getClientIp(c.req.raw.headers);
   if (!checkPinAttempts(ip, slug)) {
@@ -539,7 +542,7 @@ pages.post("/:slug/settings", async (c) => {
     return c.text("Forbidden", 403);
   }
 
-  if (clip.pinHash && !isUnlocked(c, slug)) {
+  if (needsLegacyPinGate(clip) && !isUnlocked(c, slug)) {
     return c.text("PIN required", 401);
   }
 
@@ -615,6 +618,16 @@ pages.post("/:slug/settings", async (c) => {
 
     setOwnerCookie(c, slug);
     updates.visibility = "public";
+    // When publishing an E2E clip, client may send decrypted plaintext + protect=none.
+    if (parsed.data.protect === "none" && parsed.data.content !== undefined) {
+      const contentParsed = clipContentSchema.safeParse({ content: parsed.data.content });
+      if (!contentParsed.success) {
+        c.header("HX-Trigger", toastHeader("Content too large"));
+        return c.html(<SettingsPanel {...settingsPanelProps(slug, clip, versions)} />);
+      }
+      Object.assign(updates, clearE2eFields());
+      updates.content = contentParsed.data.content;
+    }
   } else if (parsed.data.visibility === "private") {
     updates.visibility = "private";
   }
@@ -648,22 +661,62 @@ pages.post("/:slug/settings", async (c) => {
   }
   if (parsed.data.language !== undefined) updates.language = parsed.data.language || null;
   if (parsed.data.protect === "none") {
-    updates.pinHash = null;
-    updates.encrypted = false;
-  } else if (parsed.data.protect === "e2e") {
+    Object.assign(updates, clearE2eFields());
+    if (parsed.data.content !== undefined) {
+      const contentParsed = clipContentSchema.safeParse({ content: parsed.data.content });
+      if (!contentParsed.success) {
+        c.header("HX-Trigger", toastHeader("Content too large"));
+        return c.html(<SettingsPanel {...settingsPanelProps(slug, clip, versions)} />);
+      }
+      updates.content = contentParsed.data.content;
+    }
+  } else if (
+    parsed.data.protect === "passphrase" ||
+    parsed.data.protect === "e2e"
+  ) {
+    const salt = parsed.data.e2eSalt?.trim() || "";
+    const wrapped = parsed.data.e2eWrappedKey?.trim() || "";
+    const kdf = parsed.data.e2eKdf?.trim() || "";
+    if (!salt || !wrapped) {
+      c.header(
+        "HX-Trigger",
+        toastHeader("Passphrase protection requires client-side encryption material")
+      );
+      return c.html(<SettingsPanel {...settingsPanelProps(slug, clip, versions)} />);
+    }
     updates.encrypted = true;
     updates.pinHash = null;
+    updates.e2eSalt = salt;
+    updates.e2eWrappedKey = wrapped;
+    updates.e2eKdf = kdf || JSON.stringify({ alg: "PBKDF2", hash: "SHA-256", iters: 600000 });
+    if (parsed.data.content !== undefined) {
+      const contentParsed = clipContentSchema.safeParse({ content: parsed.data.content });
+      if (!contentParsed.success) {
+        c.header("HX-Trigger", toastHeader("Content too large"));
+        return c.html(<SettingsPanel {...settingsPanelProps(slug, clip, versions)} />);
+      }
+      updates.content = contentParsed.data.content;
+    }
   } else if (parsed.data.clearPin) {
     updates.pinHash = null;
   } else if (parsed.data.pin && parsed.data.pin.length > 0) {
+    // Legacy API/UI path — server PIN without E2E.
     updates.pinHash = await hashPin(parsed.data.pin);
+    updates.encrypted = false;
+    updates.e2eSalt = null;
+    updates.e2eWrappedKey = null;
+    updates.e2eKdf = null;
     setUnlockCookie(c, slug);
   }
   if (parsed.data.webhook !== undefined) {
     const url = parsed.data.webhook.trim();
     updates.webhookUrl = url.length > 0 ? url : null;
   }
-  if ("encrypted" in body && parsed.data.protect === undefined) {
+  if (
+    "encrypted" in body &&
+    parsed.data.protect === undefined &&
+    parsed.data.e2eSalt === undefined
+  ) {
     updates.encrypted = parsed.data.encrypted ?? false;
   }
 
@@ -687,7 +740,7 @@ pages.post("/:slug/upload", async (c) => {
   if (clip && !(await viewerCanWrite(c, clip, authUser?.id ?? null))) {
     return c.html('<span class="error">Forbidden</span>');
   }
-  if (clip?.pinHash && !isUnlocked(c, slug)) {
+  if (clip && needsLegacyPinGate(clip) && !isUnlocked(c, slug)) {
     return c.html('<span class="error">PIN required</span>');
   }
   const { handleUpload } = await import("./files");
@@ -702,7 +755,7 @@ pages.delete("/:slug/files/:fileId", async (c) => {
   if (clip && !(await viewerCanWrite(c, clip, authUser?.id ?? null))) {
     return c.json({ ok: false, error: "Forbidden" }, 403);
   }
-  if (clip?.pinHash && !isUnlocked(c, slug)) {
+  if (clip && needsLegacyPinGate(clip) && !isUnlocked(c, slug)) {
     return c.json({ ok: false, error: "PIN required" }, 401);
   }
   const { handleDelete } = await import("./files");
@@ -726,7 +779,7 @@ pages.delete("/:slug", async (c) => {
   if (!(await viewerCanWrite(c, clip, authUser?.id ?? null))) {
     return c.text("Forbidden", 403);
   }
-  if (clip.pinHash && !isUnlocked(c, slug)) {
+  if (needsLegacyPinGate(clip) && !isUnlocked(c, slug)) {
     return c.text("PIN required", 401);
   }
 

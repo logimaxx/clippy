@@ -3,8 +3,6 @@
   const MAX_TTL_SEC = 31536000;
   const EXPIRES_CUSTOM = "custom";
 
-  let pendingProtect = null;
-
   function publicModal() {
     return document.querySelector("[data-public-modal]");
   }
@@ -13,8 +11,8 @@
     return document.querySelector("[data-public-clear-modal]");
   }
 
-  function protectSwitchModal() {
-    return document.querySelector("[data-protect-switch-modal]");
+  function e2eSetupModal() {
+    return document.querySelector("[data-e2e-setup-modal]");
   }
 
   function publicErrorEl() {
@@ -64,8 +62,8 @@
 
   function protectionLabels(toggle) {
     const labels = [];
-    if (toggle.dataset.hasPin === "true") labels.push("PIN");
-    if (toggle.dataset.encrypted === "true") labels.push("E2E encryption");
+    if (toggle.dataset.hasPin === "true") labels.push("legacy PIN");
+    if (toggle.dataset.encrypted === "true") labels.push("passphrase E2E");
     if (toggle.dataset.burnOnRead === "true") labels.push("burn-after-read");
     return labels;
   }
@@ -110,115 +108,267 @@
     openPublicModal(slug, hasOwnerPassword);
   }
 
-  function publish(slug, password) {
+  async function publish(slug, password) {
     if (typeof htmx === "undefined") return;
+    const values = {
+      visibility: "public",
+      ownerPassword: password,
+    };
+    const ta = document.getElementById("clip-content");
+    if (
+      ta?.dataset.encrypted === "true" &&
+      window.WebklipE2E?.hasKey() &&
+      ta.dataset.decrypted === "true"
+    ) {
+      values.content = ta.value;
+      values.protect = "none";
+    } else if (ta?.dataset.encrypted === "true" && !window.WebklipE2E?.hasKey()) {
+      window.WebklipE2E?.showPassphraseGate?.({
+        error: "Unlock with your passphrase before publishing",
+      });
+      return;
+    }
     htmx.ajax("POST", `/${slug}/settings`, {
       target: "#settings-root",
       swap: "outerHTML",
-      values: {
-        visibility: "public",
-        ownerPassword: password,
-      },
+      values,
     });
+    if (ta?.dataset.encrypted === "true") {
+      window.WebklipE2E?.clearSession?.(slug);
+      ta.dataset.encrypted = "false";
+      delete ta.dataset.e2eSalt;
+      delete ta.dataset.e2eWrappedKey;
+      delete ta.dataset.e2eKdf;
+      delete ta.dataset.decrypted;
+      const wrap = document.getElementById("clip-editor-wrap");
+      if (wrap) {
+        wrap.dataset.encrypted = "false";
+        delete wrap.dataset.decrypted;
+      }
+      window.WebklipEditor?.refresh?.();
+    }
   }
 
   function currentProtectMode() {
-    const pin = document.querySelector('[data-protect-option="pin"]');
-    const e2e = document.querySelector('[data-protect-option="e2e"]');
-    if (pin instanceof HTMLInputElement && pin.dataset.hasPin === "true") return "pin";
-    if (e2e instanceof HTMLInputElement && e2e.dataset.encrypted === "true") return "e2e";
+    const pass = document.querySelector('[data-protect-option="passphrase"]');
+    if (pass instanceof HTMLInputElement && pass.dataset.encrypted === "true") {
+      return "passphrase";
+    }
+    if (pass instanceof HTMLInputElement && pass.dataset.hasPin === "true") {
+      return "pin";
+    }
     return "none";
   }
 
   function syncProtectRadios(mode) {
     document.querySelectorAll("[data-protect-option]").forEach((el) => {
       if (!(el instanceof HTMLInputElement)) return;
-      el.checked = el.value === mode;
+      if (mode === "passphrase" || mode === "pin") {
+        el.checked = el.value === "passphrase";
+      } else {
+        el.checked = el.value === mode;
+      }
     });
   }
 
-  function showPinFields() {
-    const fields = document.querySelector("[data-protect-pin-fields]");
-    if (fields instanceof HTMLElement) {
-      fields.hidden = false;
-      const input = fields.querySelector("input[name='pin']");
-      if (input instanceof HTMLInputElement) input.focus();
+  function clipSlug() {
+    return (
+      document.querySelector("[data-public-toggle]")?.dataset?.slug ||
+      document.querySelector("[data-e2e-setup-modal]")?.dataset?.slug ||
+      document.getElementById("clip-content")?.dataset?.wsRoom ||
+      ""
+    );
+  }
+
+  function setSetupError(message) {
+    const el = document.querySelector("[data-e2e-setup-error]");
+    if (!(el instanceof HTMLElement)) return;
+    if (!message) {
+      el.hidden = true;
+      el.textContent = "";
+      return;
+    }
+    el.hidden = false;
+    el.textContent = message;
+  }
+
+  function syncWeakWarning() {
+    const input = document.querySelector("[data-e2e-setup-passphrase]");
+    const warn = document.querySelector("[data-e2e-setup-weak]");
+    const ackWrap = document.querySelector("[data-e2e-setup-weak-ack]");
+    if (!(input instanceof HTMLInputElement)) return;
+    const weak = window.WebklipE2E?.isWeakPassphrase?.(input.value) ?? false;
+    if (warn instanceof HTMLElement) warn.hidden = !weak;
+    if (ackWrap instanceof HTMLElement) ackWrap.hidden = !weak;
+    if (!weak) {
+      const ack = document.querySelector("[data-e2e-setup-ack]");
+      if (ack instanceof HTMLInputElement) ack.checked = false;
     }
   }
 
-  function closeProtectSwitchModal() {
-    const el = protectSwitchModal();
+  function fillGeneratedPhrase() {
+    const input = document.querySelector("[data-e2e-setup-passphrase]");
+    if (!(input instanceof HTMLInputElement) || !window.WebklipE2E) return;
+    input.value = window.WebklipE2E.generateMemorablePhrase();
+    syncWeakWarning();
+  }
+
+  function closeE2eSetupModal() {
+    const el = e2eSetupModal();
     if (!el) return;
     el.hidden = true;
+    el.dataset.mode = "";
     document.body.style.overflow = "";
-    pendingProtect = null;
+    setSetupError("");
+    syncProtectRadios(currentProtectMode());
   }
 
-  function openProtectSwitchModal(slug, target, message) {
-    const el = protectSwitchModal();
-    if (!el) return;
-    pendingProtect = { slug, target };
-    el.dataset.slug = slug;
-    const body = el.querySelector("[data-protect-switch-body]");
-    if (body) body.textContent = message;
+  function openE2eSetupModal(mode) {
+    const el = e2eSetupModal();
+    if (!el || !window.WebklipE2E) return;
+    el.dataset.mode = mode || "enable";
+    const title = el.querySelector("#e2e-setup-title");
+    const confirm = el.querySelector("[data-e2e-setup-confirm]");
+    if (title) {
+      title.textContent = mode === "change" ? "Change passphrase" : "Set passphrase";
+    }
+    if (confirm) {
+      confirm.textContent = mode === "change" ? "Save passphrase" : "Enable E2E";
+    }
+    fillGeneratedPhrase();
     el.hidden = false;
     document.body.style.overflow = "hidden";
-    const confirmBtn = el.querySelector("[data-protect-switch-confirm]");
-    if (confirmBtn instanceof HTMLElement) confirmBtn.focus();
+    const input = document.querySelector("[data-e2e-setup-passphrase]");
+    if (input instanceof HTMLInputElement) input.focus();
   }
 
-  function enableE2e(slug) {
+  function applyE2eMetaToEditor(salt, wrapped, kdfJson) {
+    const ta = document.getElementById("clip-content");
+    const wrap = document.getElementById("clip-editor-wrap");
+    if (ta) {
+      ta.dataset.encrypted = "true";
+      ta.dataset.e2eSalt = salt;
+      ta.dataset.e2eWrappedKey = wrapped;
+      ta.dataset.e2eKdf = kdfJson;
+      ta.dataset.decrypted = "true";
+      ta.disabled = false;
+    }
+    if (wrap) {
+      wrap.dataset.encrypted = "true";
+      wrap.dataset.decrypted = "true";
+    }
+    window.WebklipEditor?.refresh?.();
+  }
+
+  async function enablePassphraseProtect(passphrase, mode) {
+    const slug = clipSlug();
+    if (!slug || !window.WebklipE2E) return;
+    const ta = document.getElementById("clip-content");
+    const plaintext = ta ? ta.value : "";
+
+    if (mode === "change" && !window.WebklipE2E.hasKey()) {
+      setSetupError("Unlock the clip with the current passphrase first");
+      return;
+    }
+
+    const enabled = await window.WebklipE2E.enablePassphraseProtection(passphrase);
+    const { saltB64, wrappedKeyB64, kdf, dek } = enabled;
+
+    window.WebklipE2E.writeSessionDek(slug, dek, passphrase);
+    const ciphertext = plaintext.trim()
+      ? await window.WebklipE2E.encrypt(plaintext)
+      : "";
+    const kdfJson = JSON.stringify(kdf);
+
     if (typeof htmx === "undefined") return;
     htmx.ajax("POST", `/${slug}/settings`, {
       target: "#settings-root",
       swap: "outerHTML",
-      values: { protect: "e2e" },
+      values: {
+        protect: "passphrase",
+        e2eSalt: saltB64,
+        e2eWrappedKey: wrappedKeyB64,
+        e2eKdf: kdfJson,
+        content: ciphertext,
+      },
     });
+
+    if (ta) {
+      ta.value = plaintext;
+      applyE2eMetaToEditor(saltB64, wrappedKeyB64, kdfJson);
+    }
+  }
+
+  async function removePassphraseProtect() {
+    const slug = clipSlug();
+    if (!slug || !window.WebklipE2E) return;
+    const ta = document.getElementById("clip-content");
+
+    if (!window.WebklipE2E.hasKey()) {
+      window.WebklipE2E.showPassphraseGate({
+        error: "Unlock with your passphrase before removing protection",
+      });
+      syncProtectRadios(currentProtectMode());
+      return;
+    }
+
+    const plaintext = ta ? ta.value : "";
+    window.WebklipE2E.clearSession(slug);
+
+    if (typeof htmx === "undefined") return;
+    htmx.ajax("POST", `/${slug}/settings`, {
+      target: "#settings-root",
+      swap: "outerHTML",
+      values: {
+        protect: "none",
+        content: plaintext,
+      },
+    });
+
+    if (ta) {
+      ta.dataset.encrypted = "false";
+      delete ta.dataset.e2eSalt;
+      delete ta.dataset.e2eWrappedKey;
+      delete ta.dataset.e2eKdf;
+      delete ta.dataset.decrypted;
+      ta.disabled = false;
+    }
+    const wrap = document.getElementById("clip-editor-wrap");
+    if (wrap) {
+      wrap.dataset.encrypted = "false";
+      delete wrap.dataset.decrypted;
+    }
+    window.WebklipEditor?.refresh?.();
   }
 
   function handleProtectChange(input) {
     const option = input.dataset.protectOption;
-    if (!option || option === "none") return false;
-
-    const hasPin = input.dataset.hasPin === "true";
-    const encrypted = input.dataset.encrypted === "true";
-    const slug =
-      document.querySelector("[data-public-toggle]")?.dataset?.slug ||
-      document.querySelector("[data-protect-switch-modal]")?.dataset?.slug;
+    const slug = clipSlug();
     if (!slug) return true;
 
-    if (option === "pin") {
-      if (hasPin) {
-        syncProtectRadios("pin");
-        showPinFields();
-        return true;
-      }
-      if (encrypted) {
+    if (option === "none") {
+      if (input.dataset.encrypted === "true") {
         syncProtectRadios(currentProtectMode());
-        openProtectSwitchModal(
-          slug,
-          "pin",
-          "Enabling PIN turns off E2E encryption. Continue?"
-        );
+        removePassphraseProtect();
         return true;
       }
-      syncProtectRadios("pin");
-      showPinFields();
+      if (typeof htmx !== "undefined") {
+        htmx.ajax("POST", `/${slug}/settings`, {
+          target: "#settings-root",
+          swap: "outerHTML",
+          values: { protect: "none" },
+        });
+      }
       return true;
     }
 
-    if (option === "e2e") {
-      if (encrypted) return true;
-      syncProtectRadios(currentProtectMode());
-      if (hasPin) {
-        openProtectSwitchModal(
-          slug,
-          "e2e",
-          "Enabling E2E encryption clears the PIN. Continue?"
-        );
+    if (option === "passphrase") {
+      if (input.dataset.encrypted === "true") {
+        syncProtectRadios("passphrase");
         return true;
       }
-      enableE2e(slug);
+      syncProtectRadios(currentProtectMode());
+      openE2eSetupModal("enable");
       return true;
     }
 
@@ -339,9 +489,16 @@
         toggle instanceof HTMLInputElement &&
         toggle.matches("[data-protect-option]")
       ) {
-        if (toggle.dataset.protectOption === "none") return;
         e.stopImmediatePropagation();
         handleProtectChange(toggle);
+        return;
+      }
+
+      if (
+        toggle instanceof HTMLInputElement &&
+        toggle.matches("[data-e2e-setup-passphrase]")
+      ) {
+        syncWeakWarning();
         return;
       }
 
@@ -364,28 +521,76 @@
     true
   );
 
+  document.body.addEventListener("input", (e) => {
+    const target = e.target;
+    if (
+      target instanceof HTMLInputElement &&
+      target.matches("[data-e2e-setup-passphrase]")
+    ) {
+      syncWeakWarning();
+    }
+  });
+
   document.body.addEventListener("click", (e) => {
     const target = e.target;
     if (!(target instanceof Element)) return;
 
-    if (target.closest("[data-protect-switch-cancel]")) {
-      closeProtectSwitchModal();
-      syncProtectRadios(currentProtectMode());
+    if (target.closest("[data-e2e-setup-cancel]")) {
+      closeE2eSetupModal();
       return;
     }
 
-    if (target.closest("[data-protect-switch-confirm]")) {
-      const pending = pendingProtect;
-      closeProtectSwitchModal();
-      if (!pending) return;
-      if (pending.target === "pin") {
-        syncProtectRadios("pin");
-        showPinFields();
+    if (target.closest("[data-e2e-setup-regenerate]")) {
+      fillGeneratedPhrase();
+      return;
+    }
+
+    if (target.closest("[data-e2e-setup-confirm]")) {
+      const input = document.querySelector("[data-e2e-setup-passphrase]");
+      if (!(input instanceof HTMLInputElement)) return;
+      const passphrase = input.value.trim();
+      if (!passphrase) {
+        setSetupError("Enter a passphrase");
         return;
       }
-      if (pending.target === "e2e") {
-        enableE2e(pending.slug);
+      const weak = window.WebklipE2E?.isWeakPassphrase?.(passphrase);
+      const ack = document.querySelector("[data-e2e-setup-ack]");
+      if (weak && (!(ack instanceof HTMLInputElement) || !ack.checked)) {
+        setSetupError("Acknowledge the short-passphrase risk to continue");
+        return;
       }
+      setSetupError("");
+      const mode = e2eSetupModal()?.dataset?.mode || "enable";
+      const confirmBtn = target.closest("[data-e2e-setup-confirm]");
+      if (confirmBtn instanceof HTMLButtonElement) confirmBtn.disabled = true;
+      enablePassphraseProtect(passphrase, mode)
+        .then(() => closeE2eSetupModal())
+        .catch((err) => {
+          setSetupError(err?.message || "Could not enable encryption");
+        })
+        .finally(() => {
+          if (confirmBtn instanceof HTMLButtonElement) confirmBtn.disabled = false;
+        });
+      return;
+    }
+
+    if (target.closest("[data-e2e-copy-passphrase]")) {
+      const pass = window.WebklipE2E?.readSessionPassphrase?.(clipSlug());
+      if (!pass) {
+        alert("Passphrase is only available in this browser session after unlock.");
+        return;
+      }
+      navigator.clipboard.writeText(pass).catch(() => {});
+      return;
+    }
+
+    if (target.closest("[data-e2e-change-passphrase]")) {
+      openE2eSetupModal("change");
+      return;
+    }
+
+    if (target.closest("[data-e2e-remove-protect]")) {
+      removePassphraseProtect();
       return;
     }
 
@@ -469,11 +674,10 @@
   });
 
   document.body.addEventListener("keydown", (e) => {
-    const protect = protectSwitchModal();
-    if (protect && !protect.hidden && e.key === "Escape") {
+    const setup = e2eSetupModal();
+    if (setup && !setup.hidden && e.key === "Escape") {
       e.preventDefault();
-      closeProtectSwitchModal();
-      syncProtectRadios(currentProtectMode());
+      closeE2eSetupModal();
       return;
     }
     const clear = publicClearModal();
@@ -497,7 +701,7 @@
 
   document.body.addEventListener("htmx:afterSwap", (e) => {
     if (e.detail.target?.id === "settings-root") {
-      closeProtectSwitchModal();
+      closeE2eSetupModal();
       closePublicClearModal();
       closePublicModal();
       closeExpiresModal();

@@ -95,6 +95,9 @@ export async function createClip(
     ownerPasswordHash: normalized.ownerPasswordHash ?? null,
     webhookUrl: normalized.webhookUrl ?? null,
     encrypted: normalized.encrypted ?? false,
+    e2eSalt: normalized.e2eSalt ?? null,
+    e2eWrappedKey: normalized.e2eWrappedKey ?? null,
+    e2eKdf: normalized.e2eKdf ?? null,
     visibility: normalized.visibility ?? "private",
     ownerId: normalized.ownerId ?? null,
     teamId: normalized.teamId ?? null,
@@ -177,9 +180,35 @@ export interface ClipSettingsUpdate {
   ownerPasswordHash?: string | null;
   webhookUrl?: string | null;
   encrypted?: boolean;
+  e2eSalt?: string | null;
+  e2eWrappedKey?: string | null;
+  e2eKdf?: string | null;
+  /** Optional content update (e.g. ciphertext when enabling E2E). */
+  content?: string;
   visibility?: ClipVisibility;
   ownerId?: string | null;
   teamId?: string | null;
+}
+
+/** Clear all E2E passphrase material. */
+export function clearE2eFields(): Pick<
+  ClipSettingsUpdate,
+  "encrypted" | "e2eSalt" | "e2eWrappedKey" | "e2eKdf" | "pinHash"
+> {
+  return {
+    encrypted: false,
+    e2eSalt: null,
+    e2eWrappedKey: null,
+    e2eKdf: null,
+    pinHash: null,
+  };
+}
+
+/** Legacy server PIN gate (plaintext at rest) — not passphrase E2E. */
+export function needsLegacyPinGate(
+  clip: Pick<Clip, "pinHash" | "encrypted">
+): boolean {
+  return !!clip.pinHash && !clip.encrypted;
 }
 
 /** Logged-in account or owner password can recover access if the owner cookie is lost. */
@@ -201,8 +230,7 @@ export function publicListingUpdates(
     visibility: "public",
     burnOnRead: false,
     maxViews: null,
-    pinHash: null,
-    encrypted: false,
+    ...clearE2eFields(),
     expiresAt,
   };
 }
@@ -218,11 +246,11 @@ export function isListablePublic(clip: Clip, now = Math.floor(Date.now() / 1000)
 }
 
 /**
- * PIN and E2E are mutually exclusive. Prefer E2E when both would be active
- * (enabling encryption clears PIN; setting a PIN clears encryption; heal legacy both).
+ * Passphrase protect always means encrypted. Enabling E2E clears legacy pinHash.
+ * Clearing encryption clears E2E material. Legacy pinHash alone stays unencrypted.
  */
 export function applyProtectionConstraints(
-  clip: Pick<Clip, "pinHash" | "encrypted">,
+  clip: Pick<Clip, "pinHash" | "encrypted" | "e2eSalt" | "e2eWrappedKey" | "e2eKdf">,
   updates: ClipSettingsUpdate
 ): ClipSettingsUpdate {
   const next: ClipSettingsUpdate = { ...updates };
@@ -230,13 +258,35 @@ export function applyProtectionConstraints(
   if (next.encrypted === true) {
     next.pinHash = null;
   }
-  if (next.pinHash !== undefined && next.pinHash !== null) {
-    next.encrypted = false;
+
+  if (next.encrypted === false) {
+    next.e2eSalt = null;
+    next.e2eWrappedKey = null;
+    next.e2eKdf = null;
   }
 
-  const pinHash = next.pinHash !== undefined ? next.pinHash : clip.pinHash;
+  // Passphrase material implies encryption.
+  if (next.e2eSalt || next.e2eWrappedKey) {
+    next.encrypted = true;
+    next.pinHash = null;
+  }
+
+  // Legacy: setting a server PIN without E2E fields turns off encryption.
+  if (
+    next.pinHash !== undefined &&
+    next.pinHash !== null &&
+    next.encrypted !== true &&
+    !next.e2eSalt &&
+    !next.e2eWrappedKey
+  ) {
+    next.encrypted = false;
+    next.e2eSalt = null;
+    next.e2eWrappedKey = null;
+    next.e2eKdf = null;
+  }
+
   const encrypted = next.encrypted !== undefined ? next.encrypted : clip.encrypted;
-  if (pinHash && encrypted) {
+  if (encrypted && (next.pinHash === undefined ? clip.pinHash : next.pinHash)) {
     next.pinHash = null;
   }
 
@@ -247,7 +297,6 @@ export function applyProtectionConstraints(
  * Enforce: public clips cannot use burn-after-read, PIN, or E2E.
  * - Publishing clears those and sets a TTL if needed.
  * - Enabling burn / PIN / E2E on a public clip demotes it to private.
- * Also enforces PIN XOR E2E.
  */
 export function applyVisibilityConstraints(
   clip: Clip,
@@ -285,6 +334,9 @@ function normalizeNewClipPublic(
   if (next.encrypted && next.pinHash) {
     next = { ...next, pinHash: null };
   }
+  if (next.e2eSalt || next.e2eWrappedKey) {
+    next = { ...next, encrypted: true, pinHash: null };
+  }
 
   if ((next.visibility ?? "private") !== "public") return next;
 
@@ -299,6 +351,9 @@ function normalizeNewClipPublic(
     maxViews: null,
     pinHash: null,
     encrypted: false,
+    e2eSalt: null,
+    e2eWrappedKey: null,
+    e2eKdf: null,
     expiresAt: listing.expiresAt ?? now + DEFAULT_TTL,
   };
 }
@@ -316,7 +371,16 @@ export async function updateSettings(slug: string, settings: ClipSettingsUpdate)
       constrained.expiresAt !== undefined ? constrained.expiresAt : current.expiresAt;
     constrained.expiresAt = applyBurnExpiryCap(true, mergedExpires, now);
   }
-  await db.update(clips).set(constrained).where(eq(clips.slug, slug));
+  const { content: contentUpdate, ...settingsOnly } = constrained;
+  await db.update(clips).set(settingsOnly).where(eq(clips.slug, slug));
+  if (contentUpdate !== undefined) {
+    await db.update(clips).set({ content: contentUpdate }).where(eq(clips.slug, slug));
+    const cached = memory.getCached(slug);
+    if (cached) {
+      cached.content = contentUpdate;
+      cached.dirty = false;
+    }
+  }
   memory.deleteCached(slug);
   return getClip(slug);
 }

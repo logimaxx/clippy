@@ -1,5 +1,5 @@
 /** @jsxImportSource hono/jsx */
-import { DocFileIcon, DownloadIcon, ImageFileIcon } from "./ClipIcons";
+import { DocFileIcon, DownloadIcon, ImageFileIcon, PreviewIcon } from "./ClipIcons";
 
 interface FileAttachmentProps {
   slug: string;
@@ -18,6 +18,71 @@ function formatSizeKb(size: number) {
   return `${(kb / 1024).toFixed(1)} MB`;
 }
 
+/** MIME types / extensions the browser can show in a preview modal. */
+export function isPreviewableFile(mimeType: string, filename = ""): boolean {
+  const mime = (mimeType || "").toLowerCase();
+  if (
+    mime.startsWith("image/") ||
+    mime.startsWith("video/") ||
+    mime.startsWith("audio/") ||
+    mime.startsWith("text/") ||
+    mime === "application/pdf" ||
+    mime === "application/json" ||
+    mime === "application/xml" ||
+    mime === "application/javascript" ||
+    mime === "application/xhtml+xml" ||
+    mime === "application/yaml" ||
+    mime === "application/x-yaml" ||
+    mime === "application/toml" ||
+    mime === "application/sql"
+  ) {
+    return true;
+  }
+
+  const ext = filename.includes(".")
+    ? filename.slice(filename.lastIndexOf(".") + 1).toLowerCase()
+    : "";
+  return [
+    "png",
+    "jpg",
+    "jpeg",
+    "gif",
+    "webp",
+    "svg",
+    "bmp",
+    "ico",
+    "avif",
+    "pdf",
+    "txt",
+    "md",
+    "markdown",
+    "csv",
+    "tsv",
+    "json",
+    "xml",
+    "html",
+    "htm",
+    "css",
+    "js",
+    "mjs",
+    "cjs",
+    "ts",
+    "tsx",
+    "jsx",
+    "yaml",
+    "yml",
+    "toml",
+    "sql",
+    "log",
+    "mp4",
+    "webm",
+    "ogg",
+    "mp3",
+    "wav",
+    "m4a",
+  ].includes(ext);
+}
+
 export function FileAttachment({
   slug,
   fileId,
@@ -29,9 +94,18 @@ export function FileAttachment({
 }: FileAttachmentProps) {
   const url = `/api/v1/files/${slug}/${fileId}`;
   const isImage = mimeType.startsWith("image/");
+  const canPreview = isPreviewableFile(mimeType, filename);
 
   return (
-    <div class="file-card file-attachment" data-file-id={fileId}>
+    <div
+      class="file-card file-attachment"
+      data-file-id={fileId}
+      data-file-url={url}
+      data-file-name={filename}
+      data-file-mime={mimeType}
+      data-file-size={String(size)}
+      data-previewable={canPreview ? "true" : undefined}
+    >
       {isImage ? (
         <div class="file-card__icon" aria-hidden="true">
           <ImageFileIcon />
@@ -42,11 +116,32 @@ export function FileAttachment({
         </div>
       )}
       <div class="file-card__info">
-        <div class="file-card__name">{filename}</div>
+        {canPreview ? (
+          <button
+            type="button"
+            class="file-card__name file-card__name--preview"
+            data-preview-file
+            aria-label={`Preview ${filename}`}
+          >
+            {filename}
+          </button>
+        ) : (
+          <div class="file-card__name">{filename}</div>
+        )}
         <div class="file-card__meta">
           {compact ? formatSizeKb(size) : `${formatSizeKb(size)} · ${mimeType}`}
         </div>
       </div>
+      {canPreview && (
+        <button
+          type="button"
+          class="btn btn--ghost btn--icon btn--sm"
+          data-preview-file
+          aria-label={`Preview ${filename}`}
+        >
+          <PreviewIcon />
+        </button>
+      )}
       <a
         href={url}
         class="btn btn--ghost btn--icon btn--sm"

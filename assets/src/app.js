@@ -128,21 +128,6 @@
     showToast(message);
   });
 
-  document.addEventListener("click", (e) => {
-    const e2eBtn = e.target.closest("#e2e-generate-key");
-    if (e2eBtn && window.WebklipE2E) {
-      window.WebklipE2E.enableEncryption();
-      const ta = document.getElementById("clip-content");
-      if (ta && ta.value.trim()) {
-        ta.dispatchEvent(new Event("input", { bubbles: true }));
-      }
-      navigator.clipboard.writeText(window.WebklipE2E.shareUrl()).catch(() => {});
-      alert(
-        "Encryption key added to URL and copied to clipboard. Share this full link to decrypt."
-      );
-    }
-  });
-
   function escapeHtml(s) {
     return String(s)
       .replace(/&/g, "&amp;")
@@ -151,31 +136,353 @@
       .replace(/"/g, "&quot;");
   }
 
+  const PREVIEW_EXT = new Set([
+    "png",
+    "jpg",
+    "jpeg",
+    "gif",
+    "webp",
+    "svg",
+    "bmp",
+    "ico",
+    "avif",
+    "pdf",
+    "txt",
+    "md",
+    "markdown",
+    "csv",
+    "tsv",
+    "json",
+    "xml",
+    "html",
+    "htm",
+    "css",
+    "js",
+    "mjs",
+    "cjs",
+    "ts",
+    "tsx",
+    "jsx",
+    "yaml",
+    "yml",
+    "toml",
+    "sql",
+    "log",
+    "mp4",
+    "webm",
+    "ogg",
+    "mp3",
+    "wav",
+    "m4a",
+  ]);
+
+  const TEXT_PREVIEW_MIMES = new Set([
+    "application/json",
+    "application/xml",
+    "application/javascript",
+    "application/xhtml+xml",
+    "application/yaml",
+    "application/x-yaml",
+    "application/toml",
+    "application/sql",
+  ]);
+
+  const MAX_TEXT_PREVIEW_BYTES = 2 * 1024 * 1024;
+
+  function fileExtension(filename) {
+    const i = String(filename || "").lastIndexOf(".");
+    return i >= 0 ? String(filename).slice(i + 1).toLowerCase() : "";
+  }
+
+  function isPreviewableFile(mimeType, filename) {
+    const mime = String(mimeType || "").toLowerCase();
+    if (
+      mime.startsWith("image/") ||
+      mime.startsWith("video/") ||
+      mime.startsWith("audio/") ||
+      mime.startsWith("text/") ||
+      mime === "application/pdf" ||
+      TEXT_PREVIEW_MIMES.has(mime)
+    ) {
+      return true;
+    }
+    return PREVIEW_EXT.has(fileExtension(filename));
+  }
+
+  function previewKind(mimeType, filename) {
+    const mime = String(mimeType || "").toLowerCase();
+    const ext = fileExtension(filename);
+    if (mime.startsWith("image/") || ["png", "jpg", "jpeg", "gif", "webp", "svg", "bmp", "ico", "avif"].includes(ext)) {
+      return "image";
+    }
+    if (mime.startsWith("video/") || ["mp4", "webm"].includes(ext)) {
+      return "video";
+    }
+    if (mime.startsWith("audio/") || ["mp3", "wav", "m4a", "ogg"].includes(ext)) {
+      return "audio";
+    }
+    if (mime === "application/pdf" || ext === "pdf") {
+      return "pdf";
+    }
+    if (mime.startsWith("text/") || TEXT_PREVIEW_MIMES.has(mime) || PREVIEW_EXT.has(ext)) {
+      return "text";
+    }
+    return null;
+  }
+
   function renderAttachment(data) {
     const name = escapeHtml(data.filename);
     const fileId = escapeHtml(data.fileId);
     const url = escapeHtml(data.url);
     const deleteUrl = escapeHtml(data.deleteUrl ?? "");
-    const mime = escapeHtml(data.mimeType ?? "application/octet-stream");
-    const size = Math.max(1, Math.round(data.size / 1024));
+    const mimeRaw = data.mimeType ?? "application/octet-stream";
+    const mime = escapeHtml(mimeRaw);
+    const sizeBytes = Number(data.size) || 0;
+    const size = Math.max(1, Math.round(sizeBytes / 1024));
     const isImage = data.isImage;
+    const canPreview = isPreviewableFile(mimeRaw, data.filename);
 
     const icon = isImage
       ? `<div class="file-card__icon" aria-hidden="true">🖼</div>`
       : `<div class="file-card__icon" aria-hidden="true">📄</div>`;
 
+    const nameEl = canPreview
+      ? `<button type="button" class="file-card__name file-card__name--preview" data-preview-file aria-label="Preview ${name}">${name}</button>`
+      : `<div class="file-card__name">${name}</div>`;
+
+    const previewBtn = canPreview
+      ? `<button type="button" class="btn btn--ghost btn--icon btn--sm" data-preview-file aria-label="Preview ${name}">👁</button>`
+      : "";
+
     return (
-      `<div class="file-card file-attachment" data-file-id="${fileId}">` +
+      `<div class="file-card file-attachment" data-file-id="${fileId}" data-file-url="${url}" data-file-name="${name}" data-file-mime="${mime}" data-file-size="${sizeBytes}"${canPreview ? ' data-previewable="true"' : ""}>` +
       `${icon}` +
       `<div class="file-card__info">` +
-      `<div class="file-card__name">${name}</div>` +
+      `${nameEl}` +
       `<div class="file-card__meta">${size} KB · ${mime}</div>` +
       `</div>` +
+      `${previewBtn}` +
       `<a href="${url}" class="btn btn--ghost btn--icon btn--sm" download="${name}" aria-label="Download ${name}">↓</a>` +
       `<button type="button" class="btn btn--ghost btn--icon btn--sm file-delete-btn" data-delete-url="${deleteUrl}" aria-label="Remove ${name}">×</button>` +
       `</div>`
     );
   }
+
+  let previewObjectUrl = null;
+  let previewLoadToken = 0;
+
+  function getPreviewModal() {
+    return document.querySelector("[data-file-preview-modal]");
+  }
+
+  function isFilePreviewOpen() {
+    const backdrop = getPreviewModal();
+    return Boolean(backdrop && !backdrop.hidden);
+  }
+
+  function revokePreviewObjectUrl() {
+    if (previewObjectUrl) {
+      URL.revokeObjectURL(previewObjectUrl);
+      previewObjectUrl = null;
+    }
+  }
+
+  function syncFilePreviewScrollLock() {
+    if (typeof window.WebklipMobile?.syncBodyScrollLock === "function") {
+      window.WebklipMobile.syncBodyScrollLock();
+      return;
+    }
+    document.body.style.overflow = isFilePreviewOpen() ? "hidden" : "";
+  }
+
+  function closeFilePreview() {
+    const backdrop = getPreviewModal();
+    const modal = document.getElementById("file-preview-modal");
+    const body = document.getElementById("file-preview-body");
+    if (!backdrop || !modal || backdrop.hidden) return false;
+    previewLoadToken += 1;
+    backdrop.classList.remove("is-open");
+    window.setTimeout(() => {
+      backdrop.hidden = true;
+      modal.hidden = true;
+      revokePreviewObjectUrl();
+      if (body) {
+        body.replaceChildren();
+        const loading = document.createElement("p");
+        loading.className = "file-preview-modal__loading";
+        loading.textContent = "Loading preview…";
+        body.append(loading);
+      }
+      syncFilePreviewScrollLock();
+    }, 220);
+    return true;
+  }
+
+  function setPreviewLoading(body) {
+    body.replaceChildren();
+    const loading = document.createElement("p");
+    loading.className = "file-preview-modal__loading";
+    loading.textContent = "Loading preview…";
+    body.append(loading);
+  }
+
+  function setPreviewMessage(body, message, downloadUrl, filename) {
+    body.replaceChildren();
+    const wrap = document.createElement("div");
+    wrap.className = "file-preview-modal__fallback";
+    const p = document.createElement("p");
+    p.textContent = message;
+    wrap.append(p);
+    if (downloadUrl) {
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.className = "btn btn--primary btn--sm";
+      link.download = filename || "";
+      link.textContent = "Download file";
+      wrap.append(link);
+    }
+    body.append(wrap);
+  }
+
+  async function renderFilePreview(body, { url, filename, mimeType, size }) {
+    const kind = previewKind(mimeType, filename);
+    const token = previewLoadToken;
+
+    if (!kind) {
+      setPreviewMessage(body, "This file type can’t be previewed in the browser.", url, filename);
+      return;
+    }
+
+    if (kind === "image") {
+      const img = document.createElement("img");
+      img.className = "file-preview-modal__image";
+      img.src = url;
+      img.alt = filename || "Image preview";
+      body.replaceChildren(img);
+      return;
+    }
+
+    if (kind === "video") {
+      const video = document.createElement("video");
+      video.className = "file-preview-modal__video";
+      video.src = url;
+      video.controls = true;
+      video.playsInline = true;
+      body.replaceChildren(video);
+      return;
+    }
+
+    if (kind === "audio") {
+      const audio = document.createElement("audio");
+      audio.className = "file-preview-modal__audio";
+      audio.src = url;
+      audio.controls = true;
+      body.replaceChildren(audio);
+      return;
+    }
+
+    if (kind === "pdf") {
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Failed to load file");
+        if (token !== previewLoadToken) return;
+        const blob = await res.blob();
+        if (token !== previewLoadToken) return;
+        revokePreviewObjectUrl();
+        previewObjectUrl = URL.createObjectURL(blob);
+        const iframe = document.createElement("iframe");
+        iframe.className = "file-preview-modal__frame";
+        iframe.title = filename || "PDF preview";
+        iframe.src = previewObjectUrl;
+        body.replaceChildren(iframe);
+      } catch {
+        if (token !== previewLoadToken) return;
+        setPreviewMessage(body, "Couldn’t load PDF preview.", url, filename);
+      }
+      return;
+    }
+
+    // text
+    if (size > MAX_TEXT_PREVIEW_BYTES) {
+      setPreviewMessage(
+        body,
+        "This file is too large to preview. Download it to view the contents.",
+        url,
+        filename
+      );
+      return;
+    }
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Failed to load file");
+      if (token !== previewLoadToken) return;
+      const text = await res.text();
+      if (token !== previewLoadToken) return;
+      const pre = document.createElement("pre");
+      pre.className = "file-preview-modal__text";
+      pre.textContent = text;
+      body.replaceChildren(pre);
+    } catch {
+      if (token !== previewLoadToken) return;
+      setPreviewMessage(body, "Couldn’t load text preview.", url, filename);
+    }
+  }
+
+  async function openFilePreview(card) {
+    const backdrop = getPreviewModal();
+    const modal = document.getElementById("file-preview-modal");
+    const body = document.getElementById("file-preview-body");
+    const title = document.getElementById("file-preview-title");
+    const download = document.getElementById("file-preview-download");
+    if (!backdrop || !modal || !body || !(card instanceof HTMLElement)) return;
+
+    const url = card.dataset.fileUrl;
+    const filename = card.dataset.fileName || "file";
+    const mimeType = card.dataset.fileMime || "application/octet-stream";
+    const size = Number(card.dataset.fileSize) || 0;
+    if (!url) return;
+
+    previewLoadToken += 1;
+    revokePreviewObjectUrl();
+
+    if (title) title.textContent = filename;
+    if (download instanceof HTMLAnchorElement) {
+      download.href = url;
+      download.download = filename;
+    }
+
+    setPreviewLoading(body);
+    backdrop.hidden = false;
+    modal.hidden = false;
+    requestAnimationFrame(() => {
+      backdrop.classList.add("is-open");
+    });
+    syncFilePreviewScrollLock();
+
+    await renderFilePreview(body, { url, filename, mimeType, size });
+  }
+
+  function initFilePreviewModal() {
+    const backdrop = getPreviewModal();
+    if (!backdrop || backdrop.dataset.bound === "1") return;
+    backdrop.dataset.bound = "1";
+
+    backdrop.addEventListener("click", (e) => {
+      if (e.target === backdrop) closeFilePreview();
+    });
+
+    backdrop.querySelectorAll("[data-close-file-preview]").forEach((btn) => {
+      btn.addEventListener("click", closeFilePreview);
+    });
+  }
+
+  initFilePreviewModal();
+
+  window.WebklipFiles = {
+    closePreview: closeFilePreview,
+    isPreviewOpen: isFilePreviewOpen,
+  };
 
   function getFilesList() {
     return document.getElementById("clip-files-list") || document.querySelector(".clip-files-list");
@@ -260,7 +567,80 @@
     }
   });
 
+  /** Clipboard screenshots often arrive as image.png / empty name. */
+  function namedClipboardImage(file) {
+    const raw = (file.name || "").trim();
+    const generic =
+      !raw ||
+      raw === "blob" ||
+      /^image\.(png|jpe?g|webp|gif|bmp)$/i.test(raw);
+    if (!generic) return file;
+    const subtype = (file.type.split("/")[1] || "png").split("+")[0];
+    const ext = subtype === "jpeg" ? "jpg" : subtype;
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    return new File([file], `screenshot-${stamp}.${ext}`, {
+      type: file.type || "image/png",
+      lastModified: Date.now(),
+    });
+  }
+
+  function clipboardImageFiles(clipboardData) {
+    if (!clipboardData) return [];
+    const out = [];
+    const push = (file) => {
+      if (file && file.type.startsWith("image/")) out.push(namedClipboardImage(file));
+    };
+    for (const file of clipboardData.files || []) push(file);
+    if (out.length) return out;
+    for (const item of clipboardData.items || []) {
+      if (item.kind === "file" && item.type.startsWith("image/")) {
+        push(item.getAsFile());
+      }
+    }
+    return out;
+  }
+
+  function assignFilesToInput(input, files) {
+    const dt = new DataTransfer();
+    for (const file of files) dt.items.add(file);
+    input.files = dt.files;
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  // Ctrl/Cmd+V screenshot → attach as file (clip page) or select on landing upload hero
+  document.addEventListener("paste", (e) => {
+    const images = clipboardImageFiles(e.clipboardData);
+    if (!images.length) return;
+
+    const clipInput = document.querySelector(
+      "form.upload-form input[type='file']"
+    );
+    if (clipInput instanceof HTMLInputElement) {
+      e.preventDefault();
+      assignFilesToInput(clipInput, images);
+      return;
+    }
+
+    const landingInput = document.querySelector(
+      "form.landing-hero-upload input[type='file']"
+    );
+    if (landingInput instanceof HTMLInputElement) {
+      e.preventDefault();
+      assignFilesToInput(landingInput, images);
+    }
+  });
+
   document.addEventListener("click", async (e) => {
+    const previewTrigger = e.target.closest("[data-preview-file]");
+    if (previewTrigger) {
+      const card = previewTrigger.closest(".file-attachment");
+      if (card?.dataset.previewable === "true") {
+        e.preventDefault();
+        openFilePreview(card);
+        return;
+      }
+    }
+
     const btn = e.target.closest(".file-delete-btn");
     if (!btn) return;
 
@@ -322,6 +702,19 @@
       }
     });
   }
+
+  // Landing "Start now" → focus the hero paste box
+  document.querySelectorAll(".landing-start-now").forEach((link) => {
+    link.addEventListener("click", (e) => {
+      const paste = document.getElementById("home-paste");
+      if (!(paste instanceof HTMLTextAreaElement)) return;
+      e.preventDefault();
+      paste.scrollIntoView({ behavior: "smooth", block: "center" });
+      paste.focus({ preventScroll: true });
+      paste.classList.add("is-start-target");
+      window.setTimeout(() => paste.classList.remove("is-start-target"), 1200);
+    });
+  });
 
   // Landing page file upload drop zones (multipart create-from-hero)
   document.querySelectorAll(".landing-hero-upload").forEach((form) => {

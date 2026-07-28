@@ -72,7 +72,7 @@ export function securityHeaders(): Record<string, string> {
 
   return {
     "Content-Security-Policy":
-      `default-src 'self'; script-src ${scriptSrc}; script-src-elem ${scriptSrc}; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src ${connectSrc}; frame-ancestors 'none'`,
+      `default-src 'self'; script-src ${scriptSrc}; script-src-elem ${scriptSrc}; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; frame-src 'self' blob:; connect-src ${connectSrc}; frame-ancestors 'none'`,
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
     "Referrer-Policy": "strict-origin-when-cross-origin",

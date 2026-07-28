@@ -21,7 +21,7 @@ Usage:
   webklip -l <slug> -m <message>              Create/update clip
   webklip -l <slug> -f <file>                 Upload file to clip
   webklip -l <slug> -g                        Get clip content (API read)
-  webklip -l <slug> -m "text" -p <pin>        Set content with PIN
+  webklip -l <slug> -m "text" -p <pin>        Set content (legacy PIN)
   webklip -l <slug> -m "text" -w <url>        Set webhook URL
   webklip -l <slug> -m "text" --max-views 3   Limit to 3 reads
   webklip -l <slug> -m "text" --no-burn       Disable burn-on-read
@@ -31,7 +31,7 @@ Options:
   -l, --slug        Clip slug
   -m, --message     Message content
   -f, --file        File to upload
-  -p, --pin         PIN (for protected clips)
+  -p, --pin         Legacy server PIN (for old PIN-gated clips)
   -w, --webhook     Webhook URL (on create)
   --max-views N     Max API reads before delete (0 = unlimited)
   --no-burn         Disable burn-on-read on create

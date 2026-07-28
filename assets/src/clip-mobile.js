@@ -95,9 +95,18 @@
     return Boolean(backdrop && !backdrop.hidden);
   }
 
+  function isFilePreviewOpen() {
+    const backdrop = document.querySelector("[data-file-preview-modal]");
+    return Boolean(backdrop && !backdrop.hidden);
+  }
+
   function syncBodyScrollLock() {
     document.body.style.overflow =
-      openSheetName || isQrModalOpen() || isDocsModalOpen() || isCloneModalOpen()
+      openSheetName ||
+      isQrModalOpen() ||
+      isDocsModalOpen() ||
+      isCloneModalOpen() ||
+      isFilePreviewOpen()
         ? "hidden"
         : "";
   }
@@ -539,6 +548,10 @@
     window.__webklipModalEscapeBound = true;
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Escape") return;
+      if (isFilePreviewOpen()) {
+        window.WebklipFiles?.closePreview?.();
+        return;
+      }
       if (isDocsModalOpen()) {
         closeDocsModal();
         return;
@@ -575,5 +588,11 @@
     if (openSheetName) openSheet(openSheetName);
   });
 
-  window.WebklipMobile = { openSheet, closeSheets, openDocsModal, closeDocsModal };
+  window.WebklipMobile = {
+    openSheet,
+    closeSheets,
+    openDocsModal,
+    closeDocsModal,
+    syncBodyScrollLock,
+  };
 })();

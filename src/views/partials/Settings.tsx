@@ -23,6 +23,9 @@ interface SettingsProps {
   hasOwnerPassword: boolean;
   webhookUrl: string | null;
   encrypted: boolean;
+  e2eSalt?: string | null;
+  e2eWrappedKey?: string | null;
+  e2eKdf?: string | null;
   visibility: "private" | "public";
   devices: number;
   versions: ClipVersion[];
@@ -142,13 +145,12 @@ function ProtectSection({
   hasPin: boolean;
   encrypted: boolean;
 }) {
-  const mode = hasPin ? "pin" : encrypted ? "e2e" : "none";
-  const pinId = "m-pin";
+  const mode = encrypted ? "passphrase" : hasPin ? "pin" : "none";
 
   return (
     <div class="sheet__section" data-protect-section>
       <h3 class="sheet__section-title">Protect</h3>
-      <SettingHint text="Choose one: PIN gates access on the server, or E2E encrypts in the browser (key in the URL). Not available on Klipwall." />
+      <SettingHint text="Passphrase protects with true end-to-end encryption in your browser. Webklip never receives your passphrase. Not available on Klipwall. File uploads are disabled while encrypted." />
       <div class="protect-options" role="radiogroup" aria-label="Protection">
         <label class="protect-option">
           <input
@@ -157,11 +159,8 @@ function ProtectSection({
             value="none"
             checked={mode === "none"}
             data-protect-option="none"
-            hx-post={`/${slug}/settings`}
-            hx-vals='{"protect":"none"}'
-            hx-target="#settings-root"
-            hx-swap="outerHTML"
-            hx-trigger="change"
+            data-has-pin={hasPin ? "true" : "false"}
+            data-encrypted={encrypted ? "true" : "false"}
           />
           <span class="protect-option__label">None</span>
           <span class="protect-option__desc">Anyone with the link</span>
@@ -170,107 +169,64 @@ function ProtectSection({
           <input
             type="radio"
             name="protect"
-            value="pin"
-            checked={mode === "pin"}
-            data-protect-option="pin"
+            value="passphrase"
+            checked={mode === "passphrase" || mode === "pin"}
+            data-protect-option="passphrase"
             data-has-pin={hasPin ? "true" : "false"}
             data-encrypted={encrypted ? "true" : "false"}
           />
-          <span class="protect-option__label">PIN</span>
-          <span class="protect-option__desc">Visitors enter a PIN first</span>
-        </label>
-        <label class="protect-option">
-          <input
-            type="radio"
-            name="protect"
-            value="e2e"
-            checked={mode === "e2e"}
-            data-protect-option="e2e"
-            data-has-pin={hasPin ? "true" : "false"}
-            data-encrypted={encrypted ? "true" : "false"}
-          />
-          <span class="protect-option__label">E2E</span>
-          <span class="protect-option__desc">Encrypt in browser · key in URL</span>
+          <span class="protect-option__label">Passphrase</span>
+          <span class="protect-option__desc">E2E encrypt in browser</span>
         </label>
       </div>
 
-      <div
-        id="protect-pin-fields"
-        class="protect-pin-fields"
-        hidden={mode !== "pin"}
-        data-protect-pin-fields
-      >
-        {hasPin ? (
-          <div class="settings-pin-active">
-            <p class="settings-pin-status">PIN protection is active</p>
-            <div class="settings-pin-actions">
-              <button
-                type="button"
-                class="btn btn--ghost btn--sm settings-pin-remove"
-                hx-post={`/${slug}/settings`}
-                hx-vals='{"protect":"none"}'
-                hx-target="#settings-root"
-                hx-swap="outerHTML"
-              >
-                Remove PIN
-              </button>
-              <details class="settings-pin-change">
-                <summary class="settings-pin-change-trigger">Change PIN</summary>
-                <div class="settings-pin-row">
-                  <input
-                    type="password"
-                    id={pinId}
-                    name="pin"
-                    placeholder="New PIN"
-                    autocomplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    class="btn btn--ghost btn--sm settings-pin-save"
-                    hx-post={`/${slug}/settings`}
-                    hx-include={`#${pinId}`}
-                    hx-target="#settings-root"
-                    hx-swap="outerHTML"
-                  >
-                    Save
-                  </button>
-                </div>
-              </details>
-            </div>
-          </div>
-        ) : (
-          <div class="settings-pin-row">
-            <input
-              type="password"
-              id={pinId}
-              name="pin"
-              placeholder="Set PIN"
-              autocomplete="new-password"
-            />
-            <button
-              type="button"
-              class="btn btn--ghost btn--sm settings-pin-save"
-              hx-post={`/${slug}/settings`}
-              hx-include={`#${pinId}`}
-              hx-target="#settings-root"
-              hx-swap="outerHTML"
-            >
-              Save PIN
-            </button>
-          </div>
-        )}
-      </div>
-
-      {encrypted && (
-        <div class="settings-e2e-row protect-e2e-actions">
+      {hasPin && !encrypted && (
+        <div class="protect-pin-fields" data-legacy-pin-notice>
+          <p class="settings-pin-status">
+            Legacy server PIN is active (content is not E2E encrypted). Choose Passphrase to upgrade.
+          </p>
           <button
             type="button"
             class="btn btn--ghost btn--sm"
-            id="e2e-generate-key"
-            title="Generate & copy secure link"
+            hx-post={`/${slug}/settings`}
+            hx-vals='{"protect":"none"}'
+            hx-target="#settings-root"
+            hx-swap="outerHTML"
           >
-            Get Key
+            Remove legacy PIN
           </button>
+        </div>
+      )}
+
+      {encrypted && (
+        <div class="settings-e2e-row protect-e2e-actions" data-e2e-active>
+          <p class="settings-pin-status">
+            End-to-end encryption is active. Share the link and passphrase separately.
+          </p>
+          <div class="settings-pin-actions">
+            <button
+              type="button"
+              class="btn btn--ghost btn--sm"
+              data-e2e-copy-passphrase
+              title="Copy passphrase from this browser session"
+            >
+              Copy passphrase
+            </button>
+            <button
+              type="button"
+              class="btn btn--ghost btn--sm"
+              data-e2e-change-passphrase
+            >
+              Change passphrase
+            </button>
+            <button
+              type="button"
+              class="btn btn--ghost btn--sm settings-pin-remove"
+              data-e2e-remove-protect
+            >
+              Remove protection
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -324,16 +280,7 @@ export function SettingsPanel({
         >
           {isPublic ? "Public" : "Private"}
         </button>
-        {hasPin ? (
-          <button
-            type="button"
-            class="chip chip--action chip--pin"
-            data-open-sheet="settings"
-            title="Open settings"
-          >
-            PIN
-          </button>
-        ) : encrypted ? (
+        {encrypted ? (
           <button
             type="button"
             class="chip chip--action chip--secure"
@@ -341,6 +288,15 @@ export function SettingsPanel({
             title="Open settings"
           >
             E2E
+          </button>
+        ) : hasPin ? (
+          <button
+            type="button"
+            class="chip chip--action chip--pin"
+            data-open-sheet="settings"
+            title="Open settings"
+          >
+            PIN
           </button>
         ) : (
           <button
@@ -411,7 +367,7 @@ export function SettingsPanel({
           <fieldset class="settings-form-mobile" id="settings-form-mobile">
             <div class="sheet__section">
               <h3 class="sheet__section-title">Share</h3>
-              <SettingHint text="Private link for people you share with, or list on Klipwall for discovery. Public clears PIN, E2E, and burn-after-read." />
+              <SettingHint text="Private link for people you share with, or list on Klipwall for discovery. Public clears passphrase E2E, legacy PIN, and burn-after-read." />
               <div class="field">
                 <span class="field__label">Klipwall</span>
                 <div class="settings-e2e-row">
@@ -554,31 +510,57 @@ export function SettingsPanel({
       </div>
 
       <div
-        id="protect-switch-modal"
+        id="e2e-passphrase-setup-modal"
         class="confirm-modal"
         hidden
-        data-protect-switch-modal
+        data-e2e-setup-modal
         data-slug={slug}
       >
-        <div class="confirm-modal__backdrop" data-protect-switch-cancel></div>
+        <div class="confirm-modal__backdrop" data-e2e-setup-cancel></div>
         <div
           class="confirm-modal__panel"
           role="dialog"
           aria-modal="true"
-          aria-labelledby="protect-switch-title"
+          aria-labelledby="e2e-setup-title"
         >
-          <h2 class="confirm-modal__title" id="protect-switch-title">
-            Switch protection?
+          <h2 class="confirm-modal__title" id="e2e-setup-title">
+            Set passphrase
           </h2>
-          <p class="confirm-modal__body" data-protect-switch-body>
-            Enabling this clears the other protection method.
+          <p class="confirm-modal__body">
+            We generated a memorable phrase. You can change it. Your passphrase never leaves this
+            browser — Webklip cannot decrypt your clip.
           </p>
+          <label class="field__label" for="e2e-setup-passphrase">
+            Passphrase
+          </label>
+          <div class="settings-pin-row">
+            <input
+              type="text"
+              id="e2e-setup-passphrase"
+              class="slug-input confirm-modal__input"
+              autocomplete="off"
+              spellcheck={false}
+              data-e2e-setup-passphrase
+            />
+            <button type="button" class="btn btn--ghost btn--sm" data-e2e-setup-regenerate>
+              New phrase
+            </button>
+          </div>
+          <p class="pin-warning" data-e2e-setup-weak hidden>
+            Short or simple secrets can be cracked offline if someone gets the ciphertext. Continue
+            only if you accept that risk.
+          </p>
+          <label class="toggle" data-e2e-setup-weak-ack hidden>
+            <input type="checkbox" data-e2e-setup-ack />
+            <span>I understand the risk of a short passphrase</span>
+          </label>
+          <p class="pin-error" data-e2e-setup-error hidden></p>
           <div class="confirm-modal__actions">
-            <button type="button" class="btn btn--ghost" data-protect-switch-cancel>
+            <button type="button" class="btn btn--ghost" data-e2e-setup-cancel>
               Cancel
             </button>
-            <button type="button" class="btn btn--primary" data-protect-switch-confirm>
-              Continue
+            <button type="button" class="btn btn--primary" data-e2e-setup-confirm>
+              Enable E2E
             </button>
           </div>
         </div>
@@ -603,7 +585,7 @@ export function SettingsPanel({
             Clear protections to publish?
           </h2>
           <p class="confirm-modal__body" data-public-clear-modal-body>
-            Publishing on Klipwall clears PIN, E2E encryption, and burn-after-read.
+            Publishing on Klipwall clears passphrase E2E, legacy PIN, and burn-after-read.
           </p>
           <div class="confirm-modal__actions">
             <button type="button" class="btn btn--ghost" data-public-clear-modal-cancel>
