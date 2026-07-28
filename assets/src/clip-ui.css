@@ -993,6 +993,7 @@ a.chip--owner-claim:hover {
   outline: none;
 }
 
+#clip-editor-wrap.clip-editor--split,
 .clip-editor-wrap.clip-editor--split {
   flex-direction: row;
 }
@@ -1706,8 +1707,6 @@ button.file-card__name--preview:focus-visible {
   flex: 1;
   min-height: 220px;
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
 }
 
 @media (min-width: 768px) {
