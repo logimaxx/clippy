@@ -22,8 +22,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .app {
   display: flex;
   flex-direction: column;
-  min-height: 100dvh;
-  min-height: 100vh;
+  height: 100dvh;
+  height: 100vh;
+  max-height: 100dvh;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
 /* ── Header ── */
@@ -1583,7 +1586,10 @@ button.file-card__name--preview:focus-visible {
     max-width: 360px;
   }
 
-  .editor-wrap { min-height: 0; }
+  #clip-editor-wrap,
+  .editor-wrap {
+    min-height: 0;
+  }
 
   .bottom-nav,
   .sheet-backdrop:not(.is-open),
@@ -1700,6 +1706,15 @@ button.file-card__name--preview:focus-visible {
   flex: 1;
   min-height: 220px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  #clip-editor-wrap,
+  .editor-wrap {
+    min-height: 0;
+  }
 }
 
 .clip-editor-wrap.clip-editor--codemirror .clip-editor:not(.clip-editor--hidden) {

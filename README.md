@@ -80,8 +80,8 @@ Legacy server PIN clips (pre-passphrase) still unlock via the PIN form / `X-Clip
 | `CONTACT_EMAIL` | `contact@logimaxx.ro` | Legal/security contact on public pages |
 | `SITE_URL` | `https://webklip.com` | Public site URL (no trailing slash) — writes `sitemap.xml` at build time; OAuth redirect base |
 | `ENABLE_AUTH_API` | `false` | Enable `POST /api/v1/auth/register` and API key API |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | — | Enable “Continue with Google” (redirect: `{SITE_URL}/auth/google/callback`) |
-| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | — | Enable “Continue with GitHub” (redirect: `{SITE_URL}/auth/github/callback`) |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | — | Enable “Continue with Google” (redirect: `{SITE_URL}/auth/google/callback`) — see [docs/OAUTH.md](docs/OAUTH.md) |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | — | Enable “Continue with GitHub” (redirect: `{SITE_URL}/auth/github/callback`) — see [docs/OAUTH.md](docs/OAUTH.md) |
 | `UMAMI_WEBSITE_ID` | — | Umami website ID — enables analytics when set |
 | `UMAMI_SCRIPT_URL` | — | Full URL to `script.js` (or set `UMAMI_URL` instead) |
 | `CORS_ORIGIN` | — | Allow cross-origin API access from this origin |
