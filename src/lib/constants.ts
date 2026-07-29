@@ -251,6 +251,9 @@ export const RESERVED_SLUGS = new Set([
   "assets",
   "login",
   "register",
+  "forgot-password",
+  "reset-password",
+  "verify-email",
   "teams",
   "new",
   "ws",
@@ -332,6 +335,19 @@ export function ttlLabel(seconds: number): string {
 export function remainingSeconds(expiresAt: number | null): number | null {
   if (expiresAt === null) return null;
   return Math.max(0, expiresAt - Math.floor(Date.now() / 1000));
+}
+
+/**
+ * Only same-site relative paths may be used as a post-login destination, so a
+ * `next` parameter cannot be turned into an open redirect.
+ */
+export function safeNext(value: unknown): string | undefined {
+  if (typeof value !== "string" || !value) return undefined;
+  if (!value.startsWith("/") || value.startsWith("//")) return undefined;
+  if (value.includes("\\") || value.includes("\n") || value.includes("\r")) {
+    return undefined;
+  }
+  return value;
 }
 
 /** Public site origin from SITE_URL (no trailing slash). */

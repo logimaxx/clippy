@@ -12,6 +12,16 @@ import {
   hashApiKey,
   getUserByEmail,
 } from "../lib/session";
+import {
+  canAttemptLogin,
+  recordLoginFailure,
+  clearLoginFailures,
+  canRegister,
+} from "../lib/auth-throttle";
+import {
+  isEmailVerificationRequired,
+  sendVerificationEmail,
+} from "../lib/email-verification";
 
 const auth = new Hono();
 
@@ -23,6 +33,9 @@ auth.post("/api/v1/auth/register", async (c) => {
   if (!authApiEnabled()) {
     return c.json({ error: "Auth API disabled" }, 403);
   }
+  if (!canRegister(c.req.raw.headers)) {
+    return c.json({ error: "Too many registrations from this network" }, 429);
+  }
   const body = await c.req.json<{ email: string; password: string; name?: string }>();
   if (!body.email?.includes("@") || !body.password || body.password.length < 8) {
     return c.json({ error: "Valid email and password (8+ chars) required" }, 400);
@@ -33,26 +46,48 @@ auth.post("/api/v1/auth/register", async (c) => {
 
   const id = crypto.randomUUID();
   const passwordHash = await hashPassword(body.password);
+  const email = body.email.toLowerCase();
+  const needsVerification = isEmailVerificationRequired();
 
   await db.insert(users).values({
     id,
-    email: body.email.toLowerCase(),
+    email,
     name: body.name ?? null,
     passwordHash,
+    emailVerifiedAt: needsVerification ? null : Math.floor(Date.now() / 1000),
   });
 
+  if (needsVerification) {
+    const emailSent = await sendVerificationEmail(id, email);
+    return c.json({ id, email, emailVerified: false, emailSent }, 201);
+  }
+
   setSessionCookie(c, id);
-  return c.json({ id, email: body.email.toLowerCase() }, 201);
+  return c.json({ id, email }, 201);
 });
 
 auth.post("/api/v1/auth/login", async (c) => {
   const body = await c.req.json<{ email: string; password: string }>();
-  const user = await getUserByEmail(body.email?.toLowerCase() ?? "");
+  const email = body.email?.toLowerCase() ?? "";
+  const headers = c.req.raw.headers;
+
+  if (!canAttemptLogin(headers, email)) {
+    return c.json({ error: "Too many failed attempts" }, 429);
+  }
+
+  const user = await getUserByEmail(email);
   if (!user?.passwordHash || !(await verifyPassword(body.password, user.passwordHash))) {
+    recordLoginFailure(headers, email);
     return c.json({ error: "Invalid credentials" }, 401);
   }
 
-  setSessionCookie(c, user.id);
+  clearLoginFailures(headers, email);
+
+  if (isEmailVerificationRequired() && !user.emailVerifiedAt) {
+    return c.json({ error: "Email address not confirmed" }, 403);
+  }
+
+  setSessionCookie(c, user.id, user.sessionVersion);
   return c.json({ id: user.id, email: user.email, name: user.name });
 });
 

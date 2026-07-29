@@ -1,4 +1,10 @@
 import { cleanupExpired, listAllWithFiles, deleteClip, getClipFiles, getClipFilePath } from "../store/clips";
+import { purgeExpiredResetTokens } from "./password-reset";
+import {
+  purgeExpiredVerificationTokens,
+  purgeUnverifiedAccounts,
+} from "./email-verification";
+import { purgeExpiredInvites } from "./team-invites";
 import { existsSync } from "node:fs";
 import { readdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
@@ -17,6 +23,10 @@ export async function startCleanupJob() {
     try {
       await cleanupExpired();
       await cleanupOrphanFiles();
+      await purgeExpiredResetTokens();
+      await purgeExpiredVerificationTokens();
+      await purgeExpiredInvites();
+      await purgeUnverifiedAccounts();
     } catch (err) {
       console.error("Cleanup error:", err);
     }

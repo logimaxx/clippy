@@ -2,6 +2,7 @@
 import { Hono } from "hono";
 import { LoginPage } from "../views/Account";
 import { setSessionCookie } from "../lib/session";
+import { isMailerConfigured } from "../lib/mailer";
 import {
   buildAuthorizationUrl,
   clearOauthStateCookie,
@@ -19,7 +20,13 @@ import {
 const oauth = new Hono();
 
 function loginError(error: string) {
-  return <LoginPage error={error} oauthProviders={enabledOauthProviders()} />;
+  return (
+    <LoginPage
+      error={error}
+      oauthProviders={enabledOauthProviders()}
+      resetEnabled={isMailerConfigured()}
+    />
+  );
 }
 
 oauth.get("/auth/:provider", async (c) => {
@@ -79,7 +86,7 @@ oauth.get("/auth/:provider/callback", async (c) => {
 
   try {
     const user = await findOrCreateOauthUser(profile);
-    setSessionCookie(c, user.id);
+    setSessionCookie(c, user.id, user.sessionVersion);
     return c.redirect("/account", 302);
   } catch {
     return c.html(loginError("Could not complete sign-in"));

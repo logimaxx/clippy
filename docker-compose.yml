@@ -24,6 +24,9 @@ services:
       RATE_LIMIT_API_PER_HOUR: ${RATE_LIMIT_API_PER_HOUR:-200}      # all /api/* routes
       CLEANUP_INTERVAL_MS: ${CLEANUP_INTERVAL_MS:-60000}
       ENABLE_AUTH_API: ${ENABLE_AUTH_API:-false}
+      # Transactional email (Resend) — both required for password reset
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-}
       UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
       UMAMI_SCRIPT_URL: ${UMAMI_SCRIPT_URL:-}
       UMAMI_URL: ${UMAMI_URL:-}

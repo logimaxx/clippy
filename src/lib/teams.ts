@@ -1,6 +1,6 @@
 import { eq, and } from "drizzle-orm";
 import { db } from "../db/client";
-import { teams, teamMembers, type Team, type TeamRole } from "../db/schema";
+import { teams, teamMembers, users, type Team, type TeamRole } from "../db/schema";
 import type { Clip } from "../db/schema";
 
 const WRITE_ROLES: TeamRole[] = ["owner", "admin", "member"];
@@ -8,6 +8,11 @@ const ADMIN_ROLES: TeamRole[] = ["owner", "admin"];
 
 export async function getTeamBySlug(slug: string): Promise<Team | null> {
   const rows = await db.select().from(teams).where(eq(teams.slug, slug)).limit(1);
+  return rows[0] ?? null;
+}
+
+export async function getTeamById(id: string): Promise<Team | null> {
+  const rows = await db.select().from(teams).where(eq(teams.id, id)).limit(1);
   return rows[0] ?? null;
 }
 
@@ -71,6 +76,40 @@ export async function canAdminClip(
     return role !== null && ADMIN_ROLES.includes(role);
   }
   return false;
+}
+
+export function isAdminRole(role: TeamRole | null): boolean {
+  return role !== null && ADMIN_ROLES.includes(role);
+}
+
+export async function listTeamMembers(teamId: string) {
+  return db
+    .select({
+      userId: teamMembers.userId,
+      email: users.email,
+      name: users.name,
+      role: teamMembers.role,
+    })
+    .from(teamMembers)
+    .innerJoin(users, eq(teamMembers.userId, users.id))
+    .where(eq(teamMembers.teamId, teamId));
+}
+
+export async function addTeamMember(
+  teamId: string,
+  userId: string,
+  role: TeamRole
+): Promise<void> {
+  await db
+    .insert(teamMembers)
+    .values({ id: crypto.randomUUID(), teamId, userId, role })
+    .onConflictDoNothing();
+}
+
+export async function removeTeamMember(teamId: string, userId: string): Promise<void> {
+  await db
+    .delete(teamMembers)
+    .where(and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId)));
 }
 
 export async function listUserTeams(userId: string) {

@@ -6,7 +6,7 @@ import { db } from "../db/client";
 import { oauthAccounts, users, type OauthProvider, type User } from "../db/schema";
 import { siteUrl } from "./constants";
 import { shouldUseSecureCookies } from "./pin";
-import { getUserByEmail } from "./session";
+import { bumpSessionVersion, getUserByEmail } from "./session";
 
 const SECRET = process.env.SESSION_SECRET ?? "webklip-dev-secret-change-me";
 const OAUTH_STATE_COOKIE = "webklip_oauth_state";
@@ -268,11 +268,26 @@ export async function findOrCreateOauthUser(profile: OauthProfile): Promise<User
       email: profile.email,
       name: profile.name,
       passwordHash: null,
+      // The provider only hands us addresses it has verified itself.
+      emailVerifiedAt: Math.floor(Date.now() / 1000),
     });
     user = (await getUserByEmail(profile.email))!;
-  } else if (!user.name && profile.name) {
-    await db.update(users).set({ name: profile.name }).where(eq(users.id, user.id));
-    user = { ...user, name: profile.name };
+  } else {
+    if (!user.emailVerifiedAt) {
+      // Someone signed up with this address but never proved they own it, and
+      // the provider says the person in front of us does. Their password was
+      // never verified against anything, so it must not survive the takeover.
+      await db
+        .update(users)
+        .set({ emailVerifiedAt: Math.floor(Date.now() / 1000), passwordHash: null })
+        .where(eq(users.id, user.id));
+      await bumpSessionVersion(user.id);
+      user = (await getUserByEmail(profile.email))!;
+    }
+    if (!user.name && profile.name) {
+      await db.update(users).set({ name: profile.name }).where(eq(users.id, user.id));
+      user = { ...user, name: profile.name };
+    }
   }
 
   await db.insert(oauthAccounts).values({

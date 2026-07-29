@@ -59,6 +59,10 @@ export const users = sqliteTable("users", {
   email: text("email").notNull().unique(),
   name: text("name"),
   passwordHash: text("password_hash"),
+  /** Null until the address is proven, either by email link or by OAuth. */
+  emailVerifiedAt: integer("email_verified_at"),
+  /** Bumped to invalidate every session token issued before the change. */
+  sessionVersion: integer("session_version").notNull().default(0),
   createdAt: integer("created_at")
     .notNull()
     .$defaultFn(() => Math.floor(Date.now() / 1000)),
@@ -80,6 +84,47 @@ export const oauthAccounts = sqliteTable(
   (table) => [
     uniqueIndex("oauth_provider_user_unique").on(table.provider, table.providerUserId),
     index("idx_oauth_accounts_user").on(table.userId),
+  ]
+);
+
+export const passwordResets = sqliteTable(
+  "password_resets",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    /** SHA-256 of the token; the raw value only ever exists in the email. */
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    usedAt: integer("used_at"),
+    createdAt: integer("created_at")
+      .notNull()
+      .$defaultFn(() => Math.floor(Date.now() / 1000)),
+  },
+  (table) => [
+    uniqueIndex("password_resets_token_unique").on(table.tokenHash),
+    index("idx_password_resets_user").on(table.userId),
+  ]
+);
+
+export const emailVerifications = sqliteTable(
+  "email_verifications",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    usedAt: integer("used_at"),
+    createdAt: integer("created_at")
+      .notNull()
+      .$defaultFn(() => Math.floor(Date.now() / 1000)),
+  },
+  (table) => [
+    uniqueIndex("email_verifications_token_unique").on(table.tokenHash),
+    index("idx_email_verifications_user").on(table.userId),
   ]
 );
 
@@ -143,6 +188,35 @@ export const teamMembers = sqliteTable(
   ]
 );
 
+export type PasswordReset = typeof passwordResets.$inferSelect;
+export type EmailVerification = typeof emailVerifications.$inferSelect;
+export const teamInvites = sqliteTable(
+  "team_invites",
+  {
+    id: text("id").primaryKey(),
+    teamId: text("team_id")
+      .notNull()
+      .references(() => teams.id),
+    /** The address the invite is bound to; only that account can redeem it. */
+    email: text("email").notNull(),
+    role: text("role").notNull().default("member"),
+    tokenHash: text("token_hash").notNull(),
+    invitedBy: text("invited_by")
+      .notNull()
+      .references(() => users.id),
+    expiresAt: integer("expires_at").notNull(),
+    createdAt: integer("created_at")
+      .notNull()
+      .$defaultFn(() => Math.floor(Date.now() / 1000)),
+  },
+  (table) => [
+    uniqueIndex("team_invites_token_unique").on(table.tokenHash),
+    uniqueIndex("team_invites_team_email_unique").on(table.teamId, table.email),
+    index("idx_team_invites_team").on(table.teamId),
+  ]
+);
+
+export type TeamInvite = typeof teamInvites.$inferSelect;
 export type Clip = typeof clips.$inferSelect;
 export type NewClip = typeof clips.$inferInsert;
 export type User = typeof users.$inferSelect;

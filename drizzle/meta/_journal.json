@@ -64,6 +64,34 @@
       "when": 1730800000000,
       "tag": "0008_oauth_accounts",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1730900000000,
+      "tag": "0009_session_version",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1731000000000,
+      "tag": "0010_password_resets",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1731100000000,
+      "tag": "0011_email_verification",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1731200000000,
+      "tag": "0012_team_invites",
+      "breakpoints": true
     }
   ]
 }

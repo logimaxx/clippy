@@ -18,8 +18,13 @@ Open http://localhost:3000
 ## Phase 3 features
 
 - **Accounts** — register/login at `/register`, `/login`, dashboard at `/account`; optional Google/GitHub OAuth
+- **Account security** — login lockout after repeated failures, sessions that expire after 30 days and can be revoked ("sign out everywhere"), self-service account deletion, plus email confirmation and password reset when `RESEND_API_KEY` is set
+
+### Email confirmation
+
+With a mailer configured, a new email/password sign-up cannot sign in until the address is confirmed. The link is single-use and expires in 24 hours; accounts left unconfirmed for 7 days are deleted, so a squatted address frees itself up. Google/GitHub accounts arrive pre-confirmed because the provider only returns verified addresses, and completing a password reset also confirms the address. Without `RESEND_API_KEY` and `MAIL_FROM` the whole flow is skipped and sign-ups are usable immediately.
 - **API keys** — create via account UI or `POST /api/v1/auth/api-keys` (Bearer session)
-- **Teams** — create workspace, vanity URLs `/{team}/{clip-name}`
+- **Teams** — create workspace, invite members by email, vanity URLs `/{team}/{clip-name}`
 - **E2E encryption** — AES-256-GCM client-side; passphrase wraps the key (never sent to the server)
 - **Version history** — auto-saved every 5s while editing; restore from sidebar
 
@@ -28,6 +33,12 @@ Open http://localhost:3000
 1. Register and create a team at `/account`
 2. Open `/teams/{team-slug}` and create a clip
 3. Share `https://webklip.com/{team}/{clip-name}`
+
+### Team members
+
+Owners and admins invite by email from `/teams/{team-slug}`. The invite link is bound to that address, works once, and expires in 7 days; it is emailed when a mailer is configured and always shown in the UI so it can be shared by hand. Roles are **admin** (manage members), **member** (read and write clips), and **viewer** (read only) — ownership stays with the creator and cannot be granted through an invite.
+
+Team pages and member lists are visible to members only; everyone else gets a 404. Admins can revoke pending invites and remove members, members can leave, and the owner can only release the team by deleting their account.
 
 ### Passphrase E2E encryption
 
@@ -80,6 +91,7 @@ Legacy server PIN clips (pre-passphrase) still unlock via the PIN form / `X-Clip
 | `CONTACT_EMAIL` | `contact@logimaxx.ro` | Legal/security contact on public pages |
 | `SITE_URL` | `https://webklip.com` | Public site URL (no trailing slash) — writes `sitemap.xml` at build time; OAuth redirect base |
 | `ENABLE_AUTH_API` | `false` | Enable `POST /api/v1/auth/register` and API key API |
+| `RESEND_API_KEY` / `MAIL_FROM` | — | Resend API key and sender address — both required to enable password reset |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | — | Enable “Continue with Google” (redirect: `{SITE_URL}/auth/google/callback`) — see [docs/OAUTH.md](docs/OAUTH.md) |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | — | Enable “Continue with GitHub” (redirect: `{SITE_URL}/auth/github/callback`) — see [docs/OAUTH.md](docs/OAUTH.md) |
 | `UMAMI_WEBSITE_ID` | — | Umami website ID — enables analytics when set |
