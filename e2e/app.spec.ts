@@ -694,6 +694,49 @@ test.describe("Webklip E2E", () => {
       await contextA.close();
       await contextB.close();
     });
+
+    test("syncs file attachments between two tabs via WebSocket", async ({
+      browser,
+    }) => {
+      const slug = uniqueSlug("filesync");
+      const contextA = await browser.newContext();
+      const contextB = await browser.newContext();
+      const pageA = await contextA.newPage();
+      const pageB = await contextB.newPage();
+
+      await createClipViaApi(pageA.request, slug);
+      await pageA.goto(`/${slug}`);
+      await pageB.goto(`/${slug}`);
+
+      await expect(pageA.locator("#device-count-desktop")).toContainText("2 devices", {
+        timeout: 10_000,
+      });
+
+      const filePath = join(tmpdir(), `webklip-e2e-sync-${Date.now()}.txt`);
+      writeFileSync(filePath, `e2e file sync ${Date.now()}`);
+
+      try {
+        await pageA.locator("#drop-zone input[type='file']").setInputFiles(filePath);
+        await expect(pageA.locator(".upload-status .success")).toContainText(
+          "Uploaded",
+          { timeout: 10_000 }
+        );
+        await expect(pageA.locator(".file-attachment, .file-card")).toHaveCount(1);
+        await expect(pageB.locator(".file-attachment, .file-card")).toHaveCount(1, {
+          timeout: 5_000,
+        });
+
+        await pageA.locator(".file-delete-btn").click();
+        await expect(pageA.locator(".file-attachment, .file-card")).toHaveCount(0);
+        await expect(pageB.locator(".file-attachment, .file-card")).toHaveCount(0, {
+          timeout: 5_000,
+        });
+      } finally {
+        unlinkSync(filePath);
+        await contextA.close();
+        await contextB.close();
+      }
+    });
   });
 
   test.describe("File attachment", () => {

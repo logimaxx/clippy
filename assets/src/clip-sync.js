@@ -99,6 +99,18 @@
           textarea.value = await plainContent(data.content);
           isRemote = false;
           window.WebklipEditor?.refresh();
+        } else if (data.type === "file_added" && data.fileId) {
+          window.WebklipFiles?.appendAttachment?.({
+            fileId: data.fileId,
+            filename: data.filename,
+            size: data.size,
+            mimeType: data.mimeType,
+            isImage: data.isImage,
+            url: data.url,
+            deleteUrl: data.deleteUrl ?? `/${slug}/files/${data.fileId}`,
+          });
+        } else if (data.type === "file_removed" && data.fileId) {
+          window.WebklipFiles?.removeAttachment?.(data.fileId);
         } else if (data.type === "status") {
           const n = data.devices ?? 0;
           const label = `${n} device${n === 1 ? "" : "s"}`;

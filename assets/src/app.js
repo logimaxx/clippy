@@ -479,11 +479,6 @@
 
   initFilePreviewModal();
 
-  window.WebklipFiles = {
-    closePreview: closeFilePreview,
-    isPreviewOpen: isFilePreviewOpen,
-  };
-
   function getFilesList() {
     return document.getElementById("clip-files-list") || document.querySelector(".clip-files-list");
   }
@@ -498,17 +493,55 @@
     if (document.getElementById("clip-files-empty")) return;
     list.insertAdjacentHTML(
       "beforeend",
-      '<div id="clip-files-empty" class="file-attachment-empty"><p class="field-hint">No files attached yet.</p></div>'
+      '<div id="clip-files-empty" class="empty-state">No files attached yet.</div>'
     );
+  }
+
+  function updateFilesPanelMeta() {
+    const meta = document.getElementById("files-panel-meta");
+    if (!meta) return;
+    const cards = document.querySelectorAll("#clip-files-list .file-attachment, .clip-files-list .file-attachment");
+    if (cards.length === 0) {
+      meta.textContent = "0 files";
+      return;
+    }
+    let totalBytes = 0;
+    cards.forEach((card) => {
+      totalBytes += Number(card.dataset.fileSize) || 0;
+    });
+    const kb = Math.max(1, Math.round(totalBytes / 1024));
+    meta.textContent = `${cards.length} file${cards.length === 1 ? "" : "s"} · ${kb} KB`;
   }
 
   function appendAttachment(data) {
     const list = getFilesList();
     if (!list) return;
+    const fileId = data.fileId != null ? String(data.fileId) : "";
+    if (fileId && list.querySelector(`[data-file-id="${CSS.escape(fileId)}"]`)) {
+      updateFilesPanelMeta();
+      return;
+    }
     clearEmptyState();
     list.insertAdjacentHTML("beforeend", renderAttachment(data));
+    updateFilesPanelMeta();
     list.lastElementChild?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }
+
+  function removeAttachment(fileId) {
+    if (!fileId) return;
+    const list = getFilesList();
+    const card = list?.querySelector(`[data-file-id="${CSS.escape(String(fileId))}"]`);
+    if (card) card.remove();
+    showEmptyState();
+    updateFilesPanelMeta();
+  }
+
+  window.WebklipFiles = {
+    closePreview: closeFilePreview,
+    isPreviewOpen: isFilePreviewOpen,
+    appendAttachment,
+    removeAttachment,
+  };
 
   async function uploadFile(url, file, status) {
     const body = new FormData();
@@ -662,8 +695,7 @@
           typeof data?.error === "string" ? data.error : "Delete failed";
         throw new Error(message);
       }
-      attachment.remove();
-      showEmptyState();
+      removeAttachment(fileId);
     } catch (err) {
       btn.disabled = false;
       const message = err instanceof Error ? err.message : "Delete failed";

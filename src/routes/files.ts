@@ -15,6 +15,7 @@ import {
 } from "../store/clips";
 import { isUnlocked, verifyPin } from "../lib/pin";
 import * as memory from "../store/memory";
+import * as rooms from "../ws/rooms";
 
 const MAX_FILE_SIZE = Number(process.env.MAX_FILE_SIZE_MB ?? 10) * 1024 * 1024;
 const MAX_TOTAL_FILES_SIZE =
@@ -256,6 +257,19 @@ export async function handleUpload(c: Context, slug: string) {
 
   const statusHtml = `<span class="success">Uploaded <strong>${escapeHtml(result.file.filename)}</strong></span>`;
 
+  rooms.broadcast(slug, {
+    type: "file_added",
+    slug,
+    fileId: result.file.fileId,
+    filename: result.file.filename,
+    size: result.file.size,
+    mimeType: result.file.mimeType,
+    isImage: result.isImage,
+    url: result.fileUrl,
+    deleteUrl: `/${slug}/files/${result.file.fileId}`,
+    fileCount: result.fileCount,
+  });
+
   if (wantsJson) {
     return c.json({
       ok: true,
@@ -327,6 +341,12 @@ export async function handleDelete(c: Context, slug: string, fileId: string) {
     .where(eq(clips.slug, slug));
 
   memory.deleteCached(slug);
+
+  rooms.broadcast(slug, {
+    type: "file_removed",
+    fileId,
+    fileCount: remaining.length,
+  });
 
   if (wantsJson) {
     return c.json({ ok: true, fileId, fileCount: remaining.length });
