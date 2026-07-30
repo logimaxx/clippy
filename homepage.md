@@ -8,10 +8,10 @@
 
 Online clipboard
 
-# Stop sending yourself links through WhatsApp.
+# Stop using chat as your clipboard.
 
 A live online clipboard that acts like a temporary workspace: text, files, and tabs on one private link.
-No accounts. No conversations. Expires in 15 minutes by default.
+Share the link on Slack or WhatsApp — keep the data out of the thread. Expires in 15 minutes by default.
 
 **[Create a Clip]**
 Or open any URL like `webklip.com/my-clip` to start sharing.
@@ -58,11 +58,11 @@ Pastebin keeps pastes around. Webklip syncs live and expires by default — with
 
 ---
 
-## Why not WhatsApp, email, or Slack?
+## Why not dump it into Slack or WhatsApp?
 
-*(Trimmed to a short note instead of a full dedicated section with its own heading — the hero already made this point.)*
+*(Trimmed to a short note — the hero already made this point. Sharing a Webklip link in chat is expected; pasting the payload into chat is the anti-pattern.)*
 
-Classic pastebins leave static pastes online. Chat apps and email keep permanent copies and bury files in conversation history. A Webklip clip is a live online clipboard — share, sync across devices, then disappear. You can still send that link over WhatsApp: for burn-after-read clips, the chat’s link preview does not open or burn the content.
+Chat is fine for messages — not for dumping snippets, files, and secrets into the thread. Put the data in a Webklip clip, share the link on Slack or WhatsApp, sync across devices, then let it expire. For burn-after-read clips, chat link previews do not open or burn the content.
 
 ---
 
@@ -70,7 +70,7 @@ Classic pastebins leave static pastes online. Chat apps and email keep permanent
 
 *(Reduced from 8 personas to 3 — pick the strongest, most distinct use cases.)*
 
-**Developers** — Move snippets between machines with live sync and syntax highlighting — without a permanent pastebin or Slack thread.
+**Developers** — Move snippets between machines with live sync and syntax highlighting — without dumping them into Slack or a permanent pastebin.
 
 **IT & support** — Send one-time passwords or recovery codes with passphrase E2E, plus burn-after-read.
 
@@ -119,7 +119,7 @@ Ephemeral by design. No ads. Privacy-friendly site analytics when enabled. Expir
 
 1. Merged three overlapping feature sections ("Everything you need," "Features," parts of "Built for privacy") into one single feature list.
 2. Removed the standalone "What is Webklip?" paragraph — redundant with the hero.
-3. Cut the WhatsApp comparison table down to a short paragraph; the hero title already carries that argument.
+3. Cut the chat comparison table down to a short paragraph; hero frames chat-as-clipboard (not “don’t send links in chat”).
 4. Reduced "How people use Webklip" from 8 personas to 3.
 5. Moved the clip-creation box into the hero so the product is visible without a click.
 6. Removed "How it works" — redundant with the hero paste box.

@@ -50,7 +50,7 @@ test.describe("Webklip E2E", () => {
       await page.goto("/");
       await expect(page).toHaveTitle(/Webklip/);
       await expect(page.getByRole("heading", { level: 1 })).toContainText(
-        /WhatsApp/i
+        /clipboard/i
       );
       await expect(page.getByRole("banner").getByRole("link", { name: "Security" })).toBeVisible();
     });

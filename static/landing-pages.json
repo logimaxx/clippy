@@ -34,8 +34,8 @@
     "h1": "Live Sync Clipboard",
     "intro": "Type on one device. Watch it appear on every other open tab — live, over a private link.",
     "paragraphs": [
-      "Most \"share between devices\" tools are one-shot: paste, send a link, open it later. Live sync keeps every open clip connected. Edit on your laptop and the same text updates on your phone in real time — no refresh, no WhatsApp self-message, no waiting for someone to re-open the page.",
-      "Open the same Webklip link on two (or more) devices and you get a live online clipboard — a temporary shared workspace for text, files, and tabs. Paste a code snippet, tweak a note, drop a file or paste a screenshot — every connected browser stays in sync until the clip expires. Ideal when you are bouncing between screens or collaborating without creating a permanent chat thread or pastebin."
+      "Most \"share between devices\" tools are one-shot: paste, send a link, open it later. Live sync keeps every open clip connected. Edit on your laptop and the same text updates on your phone in real time — no refresh, no dumping the payload into Slack, no waiting for someone to re-open the page.",
+      "Open the same Webklip link on two (or more) devices and you get a live online clipboard — a temporary shared workspace for text, files, and tabs. Paste a code snippet, tweak a note, drop a file or paste a screenshot — every connected browser stays in sync until the clip expires. Ideal when you are bouncing between screens or collaborating without turning chat into a clipboard dump."
     ],
     "benefits": [
       "Real-time updates as you type or paste — no page reload",
@@ -46,7 +46,7 @@
     ],
     "useCases": [
       "Draft on desktop while reading the same clip on your phone",
-      "Pair on a snippet with a colleague without Slack history",
+      "Pair on a snippet with a colleague — share the link in Slack, keep the data out of the thread",
       "Paste a screenshot on one screen and review it on another"
     ],
     "relatedSlugs": [

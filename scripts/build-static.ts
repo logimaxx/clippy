@@ -463,9 +463,9 @@ writePage(
     description:
       "Free online clipboard with live sync. Share text and files between devices on a temporary private link that acts like a disposable workspace. No account, expires in 15 minutes by default.",
     canonical: "/",
-    ogTitle: "Webklip — Stop sending yourself links through WhatsApp",
+    ogTitle: "Webklip — Stop using chat as your clipboard",
     ogDescription:
-      "A live online clipboard for text, files, and tabs. No accounts. Expires in 15 minutes by default.",
+      "A live online clipboard for text, files, and tabs. Share the link on Slack or WhatsApp — keep the data out of the thread.",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "WebApplication",

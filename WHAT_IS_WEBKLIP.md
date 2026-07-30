@@ -1,6 +1,6 @@
 # What Webklip Does
 
-Webklip is an ephemeral online clipboard for sharing text and files over a private link. It acts like a temporary workspace: you paste content (or attach files), share a URL, and every open device stays in sync until the clip expires and is deleted.
+Webklip is an ephemeral **online clipboard** for sharing text and files over a private link. It acts like a temporary workspace: you paste content (or attach files), keep notes across multiple tabs on one link, share a URL, and every open device stays in sync until the clip expires and is deleted.
 
 The public service runs at [webklip.com](https://webklip.com). The same software is self-contained and can be self-hosted.
 
@@ -8,16 +8,16 @@ The public service runs at [webklip.com](https://webklip.com). The same software
 
 ## The problem it solves
 
-Moving a snippet, URL, password, screenshot, or short document between devices usually means messaging yourself in WhatsApp, Slack, or email. Those tools keep permanent copies, require accounts, and bury files in conversation history.
+Moving a snippet, URL, password, screenshot, or short document between devices usually means dumping it into WhatsApp, Slack, or email — using chat as a clipboard. Those threads keep permanent copies and bury files in conversation history. Classic pastebins leave static pastes online with no live sync.
 
-Webklip does one job: **share for a moment, then disappear.** No account is required for the basic flow. The link is the key. Clips expire after 15 minutes by default, and expired content is deleted — abandoned clips are not kept “just in case.”
+Webklip does one job: **hold the data for a moment, then disappear.** Share the link wherever you already talk (Slack, WhatsApp, email). No account is required for the basic flow. The link is the key. Clips expire after 15 minutes by default, and expired content is deleted — abandoned clips are not kept “just in case.”
 
 ---
 
 ## How it works
 
-1. Open any URL like `webklip.com/my-clip`, or create a clip from the homepage.
-2. Paste text, write notes, or attach files (including screenshots via Ctrl+V / Cmd+V).
+1. Open any URL like `webklip.com/my-clip`, or create a clip from the homepage paste box.
+2. Paste text, write notes across tabs, or attach files (including screenshots via Ctrl+V / Cmd+V).
 3. Share the link (or scan a QR code) on another device or with someone else.
 4. Content syncs in real time across every open browser tab.
 5. When the TTL ends — or after burn-after-read — the clip and its files are deleted.
@@ -30,13 +30,18 @@ Anonymous clips use a **link-as-secret** model: anyone who knows the URL can rea
 
 A **clip** is a short-lived shared page identified by a slug (for example `/my-clip`). Clips hold:
 
+- **Multi-tab workspace** — notes, code, and drafts on one link (up to 20 tabs; each tab has its own title, body, and language)
 - **Text content** — plain text, code, or Markdown
 - **Optional file attachments** — images, PDFs, and documents with in-browser preview (up to 10 files per clip)
 - **Settings** — expiry, protect mode, language, visibility, webhooks, and more
 
+### Multi-tab workspace
+
+A clip is more than a single paste. The editor stores a small workspace document (JSON in `clips.content`) with multiple tabs so you can keep related notes together — for example a README tab, a config tab, and a scratch pad — all syncing live on the same URL. Plain single-body clips still work; opening the UI upgrades them into a workspace. Caps: **20 tabs**, **64-character** titles, and **1,000,000 characters** for the whole stored blob (all tabs combined).
+
 ### Real-time sync
 
-Open the same clip on two or more devices and edits appear live over WebSockets. Presence shows how many devices are connected. Text and attachments stay in sync until the clip expires. This is the main alternative to “paste once and hope the other device still has the tab open.”
+Open the same clip on two or more devices and edits appear live over WebSockets — including tab metadata. Presence shows how many devices are connected. Text and attachments stay in sync until the clip expires. This is the main alternative to “paste once and hope the other device still has the tab open.”
 
 ### Simple URLs
 
@@ -51,9 +56,13 @@ Slugs are short and shareable. Reserved paths (legal pages, docs, account, etc.)
 |------|----------|
 | Timed TTL | Default **15 minutes**. Presets: 15 min, 1 hour, 24 hours, 7 days, 30 days, 90 days, 1 year. Custom datetime also supported. |
 | Burn after read | Deletes after the first real web visit or API read. Link-preview crawlers do not consume the read. Unread burn clips still expire after **7 days** as a safety cap. |
-| View limits | Optional cap of 1, 3, or 10 reads (API/web), then delete. |
+| View limits | Optional cap of 1, 3, or 10 reads (API / advanced), then delete. Burn-after-read is the primary one-shot control in the UI. |
 
 Public (Klipwall) clips require a timed expiry and cannot use burn-after-read.
+
+### Clone
+
+From the Share menu (or the burn banner on a public clip), **Clone** creates a private copy under a new slug — leave the name blank for a random link. Useful when you find something on Klipwall and want your own editable workspace without sharing the original.
 
 ---
 
@@ -69,6 +78,7 @@ Webklip is ephemeral by design. Protection is optional **passphrase end-to-end e
 - Share a clean URL plus the passphrase separately. Recipients unlock in the browser only.
 - Auto-generated memorable phrases are the default; shorter custom secrets are allowed with an explicit offline-crack warning.
 - File uploads are disabled while a clip is E2E encrypted.
+- E2E clips sync ciphertext only; multi-tab workspace editing applies after unlock in the browser.
 
 ### Legacy PIN protection
 
@@ -76,7 +86,7 @@ Older clips may still use a server-side PIN gate (bcrypt hash, unlock cookie / `
 
 ### Owner recovery
 
-Optional owner password (or a logged-in account) can recover edit access if the owner cookie is lost — useful for public clips and long-lived team clips.
+Optional owner password (or a logged-in account) can recover edit access if the owner cookie is lost — useful for public clips and long-lived team clips. Listing a clip on Klipwall prompts for an owner password.
 
 ### What “private” means
 
@@ -91,7 +101,7 @@ Clips are not encrypted at rest by default. Use passphrase E2E when you need zer
 
 ### Syntax highlighting and Markdown
 
-The editor (CodeMirror) supports language modes including JavaScript, TypeScript, Python, Bash, JSON, HTML, CSS, SQL, and Markdown, plus plain text. Markdown can be previewed in the UI.
+The editor (CodeMirror) supports language modes including JavaScript, TypeScript, Python, Bash, JSON, HTML, CSS, SQL, YAML, and Markdown, plus plain text. Language is per tab. Markdown can be previewed in the UI.
 
 ### File attachments
 
@@ -101,6 +111,7 @@ The editor (CodeMirror) supports language modes including JavaScript, TypeScript
 - Size limits: 10 files per clip, 10 MB per file, 50 MB total (`MAX_FILE_SIZE_MB` / `MAX_TOTAL_FILES_MB`)
 - Text content: max 1,000,000 characters per clip (stored blob, including multi-tab workspace JSON)
 - Files are deleted with the clip on expiry or burn
+- File uploads are not available on E2E-encrypted clips
 
 ### QR code
 
@@ -123,11 +134,15 @@ Anonymous use is the default. Accounts unlock longer-lived workflows:
 | Feature | Description |
 |---------|-------------|
 | Register / login | `/register`, `/login`, dashboard at `/account` |
+| OAuth | Optional Google / GitHub sign-in when configured (`docs/OAUTH.md`) |
+| Email flows | Confirmation and password reset when `RESEND_API_KEY` + `MAIL_FROM` are set |
+| Sessions | Expire after 30 days; “sign out everywhere”; login lockout after repeated failures |
 | API keys | Create in the account UI or via the auth API (when enabled) |
-| Teams | Create a workspace; team clips use vanity URLs `/{team}/{clip-name}` |
-| Roles | Members can be owner, admin, member, or **viewer** (read-only) |
+| Teams | Create a workspace; invite by email; team clips use vanity URLs `/{team}/{clip-name}` |
+| Roles | Members can be admin, member, or **viewer** (read-only); ownership stays with the creator |
+| Account deletion | Self-service deletion from the account UI |
 
-Team clips can be restricted to team members. This is for named, reusable clip spaces — not required for the everyday “send myself a link” flow.
+Team clips can be restricted to team members. Invite links are bound to an email, single-use, and expire in 7 days. This is for named, reusable clip spaces — not required for the everyday “send myself a link” flow.
 
 ---
 
@@ -146,7 +161,7 @@ Webklip is usable from scripts and automation without an account for anonymous c
 | `DELETE` | `/api/v1/clips/:slug` | Delete clip, files, and history |
 | `GET` | `/api/v1/files/:slug/:id` | Download an attachment |
 
-Create body can include content, TTL, burn-on-read, max views, PIN, webhook URL, visibility, and owner password. Content updates are capped (about 1 MB). Per-IP rate limits apply; responses expose `X-RateLimit-Remaining`.
+Create body can include content, TTL, burn-on-read, max views, PIN, webhook URL, visibility, and owner password. Content updates are capped (about 1 MB / 1,000,000 characters). Per-IP rate limits apply; responses expose `X-RateLimit-Remaining`.
 
 Docs live at `/docs`, `/docs/api`, and `/docs/webhooks`.
 
@@ -174,7 +189,9 @@ Webhook targets are validated to reduce SSRF risk (private/loopback addresses re
 
 ## Klipwall (public explore)
 
-**Klipwall** (`/klipwall`) lists clips that owners marked **public**. It is a browseable catalog of intentionally shared content — recipes, notes, demos — not a dump of private clips. Public clips cannot use E2E or burn-after-read; they always have a timed expiry.
+**Klipwall** (`/klipwall`) lists clips that owners marked **public**. It is a browseable catalog of intentionally shared content — recipes, notes, demos — not a dump of private clips. Public clips cannot use E2E or burn-after-read; they always have a timed expiry. Visitors can **clone** a listed clip into a private copy.
+
+The homepage “Explore” preview surfaces a few public clips and links to the full Klipwall.
 
 ---
 
@@ -183,7 +200,7 @@ Webhook targets are validated to reduce SSRF risk (private/loopback addresses re
 | Audience | Typical use |
 |----------|-------------|
 | **Everyone** | Move text or paste a screenshot between phone and desktop in seconds without a chat app |
-| **Developers** | Snippets with syntax highlighting, live pair-edit, REST/CLI in pipelines |
+| **Developers** | Snippets with syntax highlighting, multi-tab notes, live pair-edit, REST/CLI in pipelines |
 | **IT & support** | One-time passwords or recovery codes with passphrase E2E and burn-after-read |
 | **Teams** | Named vanity URLs and shared workspaces for recurring clip names |
 
@@ -210,10 +227,11 @@ See [SECURITY.md](SECURITY.md) for the threat model, deployment checklist, and r
 Webklip is a single deployable service (Bun + Hono) with:
 
 - SQLite persistence under `DATA_DIR` (clips, versions, users, teams, uploads)
-- HTMX-driven UI plus client JS for sync, editor, and encryption
+- HTMX-driven UI plus client JS for sync, multi-tab workspace, editor, and encryption
 - WebSocket rooms for live sync (single-instance by default)
 - Background cleanup of expired clips, versions, and orphan files
 - Optional Docker Compose, including a scale profile
+- Optional OAuth (Google/GitHub) and email (Resend) for accounts
 
 It is designed to be **self-contained**: one process (plus optional Redis/proxy in scaled setups), clear env vars, and a REST API that matches the web product.
 
@@ -225,9 +243,11 @@ It is designed to be **self-contained**: one process (plus optional Redis/proxy 
 |----------|---------|
 | [README.md](README.md) | Quick start, env vars, feature checklist |
 | [SECURITY.md](SECURITY.md) | Threat model and production hardening |
+| [docs/OAUTH.md](docs/OAUTH.md) | Google / GitHub OAuth setup |
+| [docs/MIGRATION.md](docs/MIGRATION.md) | Moving a Docker deployment |
 | [homepage.md](homepage.md) | Marketing homepage structure and copy |
 | `/docs` on a running instance | Live API and webhook documentation |
-| Landing pages (`/online-clipboard`, `/live-sync`, …) | SEO guides for specific use cases |
+| Landing pages | SEO guides: `/online-clipboard`, `/live-sync`, `/pastebin-vs-webklip`, `/temporary-file-sharing`, `/secure-clipboard`, `/burn-after-read`, `/e2e-encrypted-clipboard`, and others in `static/landing-pages.json` |
 
 ---
 

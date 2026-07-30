@@ -30,13 +30,15 @@ Utilizatorul nu cumpără un "clipboard", ci o soluție la un obicei enervant.
 
 ## Variante mai puternice
 
-### Varianta 1
+### Varianta 1 (poziționare actuală)
 
-**Stop sending yourself links through WhatsApp.**
+**Stop using chat as your clipboard.**
 
 Subheadline:
 
-Share text and files instantly between any devices using a temporary private link.
+Share the link on Slack or WhatsApp — keep the data out of the thread.
+
+Notă: anti-pattern-ul nu e „trimiți linkuri pe WhatsApp/Slack” (asta e așteptat), ci „folosești chat-ul ca dump/clipboard pentru date”.
 
 ---
 
@@ -149,15 +151,16 @@ Acestea merită iconițe proprii.
 
 Adaugă o secțiune:
 
-## Why not WhatsApp?
+## Why not dump it into Slack / WhatsApp?
 
-| WhatsApp                | Webklip           |
-| ----------------------- | ----------------- |
-| Permanent conversations | Temporary         |
-| Compresses files        | Original files    |
-| Hard to find later      | One URL           |
-| Needs account           | No account        |
-| Chat application        | Built for sharing |
+| Chat as clipboard              | Webklip                          |
+| ------------------------------ | -------------------------------- |
+| Data lives forever in the thread | Temporary — expires by default |
+| Hard to find later             | One URL                          |
+| Compresses / buries files      | Original files, in-browser preview |
+| Built for messages             | Built for ephemeral sharing      |
+
+Share the Webklip link in chat freely — don’t paste the payload into the thread.
 
 Același lucru poate fi făcut și pentru:
 
