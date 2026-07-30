@@ -36,6 +36,29 @@ export const BURN_MAX_TTL = 604800; // 7 days
 
 export const MAX_FILES_PER_CLIP = 10;
 
+/** Per-file upload cap (env `MAX_FILE_SIZE_MB`, default 10). */
+export const MAX_FILE_SIZE_MB = Number(process.env.MAX_FILE_SIZE_MB ?? 10);
+/** Total attachments per clip (env `MAX_TOTAL_FILES_MB`, default 50). */
+export const MAX_TOTAL_FILES_MB = Number(process.env.MAX_TOTAL_FILES_MB ?? 50);
+export const MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024;
+export const MAX_TOTAL_FILES_SIZE = MAX_TOTAL_FILES_MB * 1024 * 1024;
+
+/**
+ * Max stored clip text length (characters), including workspace JSON for tabs.
+ * Applies to the full `clips.content` blob, not per-tab body alone.
+ */
+export const MAX_CONTENT_LENGTH = 1_000_000;
+
+/** Short copy for upload UI (drop zones, docs). */
+export function fileLimitsSummary(): string {
+  return `Max ${MAX_FILES_PER_CLIP} files · ${MAX_FILE_SIZE_MB} MB each · ${MAX_TOTAL_FILES_MB} MB total`;
+}
+
+/** User-facing message when clip text exceeds {@link MAX_CONTENT_LENGTH}. */
+export function contentTooLargeMessage(): string {
+  return `Content too large (max ${MAX_CONTENT_LENGTH.toLocaleString()} characters)`;
+}
+
 export function formatExpiresAt(expiresAt: number): string {
   return new Date(expiresAt * 1000).toLocaleString(undefined, {
     dateStyle: "medium",
@@ -155,7 +178,7 @@ export const clipSettingsSchema = z.object({
   e2eWrappedKey: z.string().max(512).optional(),
   e2eKdf: z.string().max(256).optional(),
   /** Ciphertext (or plaintext when clearing protect) saved with settings. */
-  content: z.string().max(1_000_000).optional(),
+  content: z.string().max(MAX_CONTENT_LENGTH).optional(),
   encrypted: z.preprocess((v) => {
     if (v === undefined || v === null || v === "") return undefined;
     const values = Array.isArray(v) ? v : [v];
@@ -239,7 +262,7 @@ export function settingsToastMessage(
 }
 
 export const clipContentSchema = z.object({
-  content: z.string().max(1_000_000),
+  content: z.string().max(MAX_CONTENT_LENGTH),
 });
 
 export const SLUG_REGEX = /^[a-zA-Z0-9_-]{3,64}$/;

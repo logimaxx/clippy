@@ -120,7 +120,8 @@
       window.WebklipE2E?.hasKey() &&
       ta.dataset.decrypted === "true"
     ) {
-      values.content = ta.value;
+      values.content =
+        window.WebklipWorkspace?.getSerializedPlaintext?.() ?? ta.value;
       values.protect = "none";
     } else if (ta?.dataset.encrypted === "true" && !window.WebklipE2E?.hasKey()) {
       window.WebklipE2E?.showPassphraseGate?.({
@@ -264,7 +265,8 @@
     const slug = clipSlug();
     if (!slug || !window.WebklipE2E) return;
     const ta = document.getElementById("clip-content");
-    const plaintext = ta ? ta.value : "";
+    const plaintext =
+      window.WebklipWorkspace?.getSerializedPlaintext?.() ?? (ta ? ta.value : "");
 
     if (mode === "change" && !window.WebklipE2E.hasKey()) {
       setSetupError("Unlock the clip with the current passphrase first");
@@ -294,8 +296,12 @@
     });
 
     if (ta) {
-      ta.value = plaintext;
       applyE2eMetaToEditor(saltB64, wrappedKeyB64, kdfJson);
+      if (window.WebklipWorkspace?.loadPlaintext) {
+        window.WebklipWorkspace.loadPlaintext(plaintext);
+      } else {
+        ta.value = plaintext;
+      }
     }
   }
 
@@ -312,7 +318,8 @@
       return;
     }
 
-    const plaintext = ta ? ta.value : "";
+    const plaintext =
+      window.WebklipWorkspace?.getSerializedPlaintext?.() ?? (ta ? ta.value : "");
     window.WebklipE2E.clearSession(slug);
 
     if (typeof htmx === "undefined") return;
@@ -337,6 +344,11 @@
     if (wrap) {
       wrap.dataset.encrypted = "false";
       delete wrap.dataset.decrypted;
+    }
+    if (window.WebklipWorkspace?.loadPlaintext) {
+      window.WebklipWorkspace.loadPlaintext(plaintext);
+    } else if (ta) {
+      ta.value = plaintext;
     }
     window.WebklipEditor?.refresh?.();
   }

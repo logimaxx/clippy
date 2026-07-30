@@ -12,10 +12,79 @@ import {
   createClip,
   recordView,
 } from "../store/clips";
+import { workspaceApiFields } from "../store/workspace";
 import { isClipOwner, setOwnerCookie } from "../lib/owner";
 import { resolveAuth } from "../lib/session";
 import { canWriteClip } from "../lib/teams";
 
+function clipJsonPayload(clip: {
+  slug: string;
+  content: string;
+  contentType: string;
+  expiresAt: number | null;
+  burnOnRead: boolean;
+  maxViews: number | null;
+  viewCount: number;
+  webhookUrl: string | null;
+  visibility: string;
+  encrypted: boolean;
+  e2eSalt: string | null;
+  e2eWrappedKey: string | null;
+  e2eKdf: string | null;
+  language: string | null;
+  burned?: boolean;
+}) {
+  const base = {
+    slug: clip.slug,
+    contentType: clip.contentType,
+    encrypted: clip.encrypted,
+    e2eSalt: clip.e2eSalt,
+    e2eWrappedKey: clip.e2eWrappedKey,
+    e2eKdf: clip.e2eKdf,
+  };
+
+  if (clip.encrypted) {
+    return {
+      ...base,
+      content: clip.content,
+      ...(clip.burned
+        ? { burned: true, viewCount: clip.viewCount }
+        : {
+            expiresAt: clip.expiresAt,
+            burnOnRead: clip.burnOnRead,
+            maxViews: clip.maxViews,
+            viewCount: clip.viewCount,
+            webhookUrl: clip.webhookUrl,
+            visibility: clip.visibility,
+          }),
+    };
+  }
+
+  const fields = workspaceApiFields(clip.content, clip.language);
+  if (clip.burned) {
+    return {
+      ...base,
+      content: fields.content,
+      tabs: fields.tabs,
+      activeTabId: fields.activeTabId,
+      burned: true,
+      viewCount: clip.viewCount,
+    };
+  }
+
+  return {
+    ...base,
+    content: fields.content,
+    tabs: fields.tabs,
+    activeTabId: fields.activeTabId,
+    expiresAt: clip.expiresAt,
+    burnOnRead: clip.burnOnRead,
+    maxViews: clip.maxViews,
+    viewCount: clip.viewCount,
+    webhookUrl: clip.webhookUrl,
+    visibility: clip.visibility,
+  };
+}
 const CLIP_LIMIT = Number(process.env.RATE_LIMIT_CLIPS_PER_HOUR ?? 30);
 const API_LIMIT = Number(process.env.RATE_LIMIT_API_PER_HOUR ?? 200);
 
@@ -94,34 +163,21 @@ clipsApi.get("/api/v1/clips/:slug", async (c) => {
   const burned = !after && (clip.burnOnRead || (clip.maxViews !== null && clip.maxViews > 0));
 
   if (burned) {
-    return c.json({
-      slug: clip.slug,
-      content: clip.content,
-      contentType: clip.contentType,
-      burned: true,
-      viewCount: viewed.viewCount,
-      encrypted: clip.encrypted,
-      e2eSalt: clip.e2eSalt,
-      e2eWrappedKey: clip.e2eWrappedKey,
-      e2eKdf: clip.e2eKdf,
-    });
+    return c.json(
+      clipJsonPayload({
+        ...clip,
+        viewCount: viewed.viewCount,
+        burned: true,
+      })
+    );
   }
 
-  return c.json({
-    slug: clip.slug,
-    content: clip.content,
-    contentType: clip.contentType,
-    expiresAt: clip.expiresAt,
-    burnOnRead: clip.burnOnRead,
-    maxViews: clip.maxViews,
-    viewCount: viewed.viewCount,
-    webhookUrl: clip.webhookUrl,
-    visibility: clip.visibility,
-    encrypted: clip.encrypted,
-    e2eSalt: clip.e2eSalt,
-    e2eWrappedKey: clip.e2eWrappedKey,
-    e2eKdf: clip.e2eKdf,
-  });
+  return c.json(
+    clipJsonPayload({
+      ...clip,
+      viewCount: viewed.viewCount,
+    })
+  );
 });
 
 const createSchema = z.object({
@@ -194,14 +250,9 @@ clipsApi.post("/api/v1/clips/:slug", async (c) => {
 
   return c.json(
     {
-      slug: clip.slug,
-      content: clip.content,
-      maxViews: clip.maxViews,
-      burnOnRead: clip.burnOnRead,
-      webhookUrl: clip.webhookUrl,
+      ...clipJsonPayload({ ...clip, viewCount: clip.viewCount }),
       pinSet: !!clip.pinHash,
       ownerPasswordSet: !!clip.ownerPasswordHash,
-      visibility: clip.visibility,
     },
     201
   );
@@ -235,7 +286,9 @@ clipsApi.put("/api/v1/clips/:slug", async (c) => {
   }
 
   await updateContent(slug, content);
-  return c.json({ slug, content });
+  const updated = await getClip(slug);
+  if (!updated) return c.json({ error: "Not found" }, 404);
+  return c.json(clipJsonPayload({ ...updated }));
 });
 
 clipsApi.delete("/api/v1/clips/:slug", async (c) => {

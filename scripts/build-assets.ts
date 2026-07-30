@@ -73,6 +73,7 @@ if (!existsSync(htmxSrc)) {
 
 const jsFiles = [
   "htmx.min.js",
+  "clip-tabs.js",
   "e2e.js",
   "clip-sync.js",
   "clip-editor.js",

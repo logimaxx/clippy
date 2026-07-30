@@ -53,6 +53,7 @@
 
   --header-h: 56px;
   --toolbar-h: 52px;
+  --panel-header-h: calc(1.875rem + 0.5rem + 1px);
   --bottom-nav-h: 64px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 
@@ -2170,6 +2171,19 @@ a {
 .landing-drop-zone-hint {
   font-size: 0.8rem;
   color: var(--text-secondary);
+}
+
+.landing-drop-zone-limits {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  line-height: 1.35;
+}
+
+.landing-upload-status {
+  display: block;
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  text-align: left;
 }
 
 .landing-file-names {

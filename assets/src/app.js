@@ -36,11 +36,24 @@
     );
   }
 
+  function syncThemeToggle() {
+    const theme = getTheme();
+    const btn = document.getElementById("theme-toggle");
+    if (btn) updateThemeToggle(btn, theme);
+
+    const checkbox = document.querySelector("[data-theme-toggle]");
+    if (!(checkbox instanceof HTMLInputElement)) return;
+    checkbox.checked = theme === "dark";
+    const label = checkbox
+      .closest("label")
+      ?.querySelector("[data-theme-toggle-label]");
+    if (label) label.textContent = theme === "dark" ? "Dark" : "Light";
+  }
+
   function applyTheme(theme, persist) {
     document.documentElement.dataset.theme = theme;
     updateThemeColor(theme);
-    const toggle = document.getElementById("theme-toggle");
-    if (toggle) updateThemeToggle(toggle, theme);
+    syncThemeToggle();
     if (persist) {
       try {
         localStorage.setItem(THEME_KEY, theme);
@@ -55,11 +68,15 @@
 
   function initTheme() {
     applyTheme(getStoredTheme(), false);
-    const toggle = document.getElementById("theme-toggle");
-    if (!toggle) return;
-    updateThemeToggle(toggle, getTheme());
-    toggle.addEventListener("click", () => {
+    document.addEventListener("click", (e) => {
+      const toggle = e.target instanceof Element ? e.target.closest("#theme-toggle") : null;
+      if (!toggle) return;
       applyTheme(getTheme() === "light" ? "dark" : "light", true);
+    });
+    document.addEventListener("change", (e) => {
+      const el = e.target;
+      if (!(el instanceof HTMLInputElement) || !el.matches("[data-theme-toggle]")) return;
+      applyTheme(el.checked ? "dark" : "light", true);
     });
   }
 
@@ -67,6 +84,7 @@
 
   if (window.htmx) {
     window.htmx.config.allowScriptTags = false;
+    document.body.addEventListener("htmx:afterSwap", syncThemeToggle);
   }
 
   if ("serviceWorker" in navigator) {
@@ -513,6 +531,49 @@
     meta.textContent = `${cards.length} file${cards.length === 1 ? "" : "s"} · ${kb} KB`;
   }
 
+  function readUploadLimits(form) {
+    return {
+      maxFiles: Number(form?.dataset.maxFiles) || 10,
+      maxFileMb: Number(form?.dataset.maxFileSizeMb) || 10,
+      maxTotalMb: Number(form?.dataset.maxTotalFilesMb) || 50,
+    };
+  }
+
+  function existingAttachmentStats() {
+    const cards = document.querySelectorAll(
+      "#clip-files-list .file-attachment, .clip-files-list .file-attachment"
+    );
+    let bytes = 0;
+    cards.forEach((card) => {
+      bytes += Number(card.dataset.fileSize) || 0;
+    });
+    return { count: cards.length, bytes };
+  }
+
+  /** Client-side check before upload; returns an error string or null. */
+  function validateUploadBatch(files, form, existing) {
+    const { maxFiles, maxFileMb, maxTotalMb } = readUploadLimits(form);
+    const maxFileBytes = maxFileMb * 1024 * 1024;
+    const maxTotalBytes = maxTotalMb * 1024 * 1024;
+    const existingCount = existing?.count ?? 0;
+    const existingBytes = existing?.bytes ?? 0;
+
+    if (existingCount + files.length > maxFiles) {
+      return `Maximum ${maxFiles} files per clip`;
+    }
+    let batchBytes = 0;
+    for (const file of files) {
+      if (file.size > maxFileBytes) {
+        return `File too large (max ${maxFileMb} MB)`;
+      }
+      batchBytes += file.size;
+    }
+    if (existingBytes + batchBytes > maxTotalBytes) {
+      return `Total attachments too large (max ${maxTotalMb} MB)`;
+    }
+    return null;
+  }
+
   function appendAttachment(data) {
     const list = getFilesList();
     if (!list) return;
@@ -581,6 +642,12 @@
 
     const status = form.querySelector(".upload-status");
     const selected = Array.from(input.files);
+    const limitError = validateUploadBatch(selected, form, existingAttachmentStats());
+    if (limitError) {
+      if (status) status.innerHTML = `<span class="error">${escapeHtml(limitError)}</span>`;
+      input.value = "";
+      return;
+    }
 
     try {
       for (let i = 0; i < selected.length; i++) {
@@ -957,7 +1024,36 @@
     const zone = form.querySelector(".landing-drop-zone");
     const input = form.querySelector('input[type="file"]');
     const names = form.querySelector(".landing-file-names");
+    const status = form.querySelector(".upload-status");
     if (!zone || !(input instanceof HTMLInputElement)) return;
+
+    function setStatus(message, isError) {
+      if (!(status instanceof HTMLElement)) return;
+      if (!message) {
+        status.replaceChildren();
+        return;
+      }
+      const span = document.createElement("span");
+      span.className = isError ? "error" : "success";
+      span.textContent = message;
+      status.replaceChildren(span);
+    }
+
+    function applySelectedFiles(fileList) {
+      const files = Array.from(fileList || []);
+      const limitError = validateUploadBatch(files, form, { count: 0, bytes: 0 });
+      if (limitError) {
+        input.value = "";
+        if (names instanceof HTMLElement) {
+          names.hidden = true;
+          names.replaceChildren();
+        }
+        setStatus(limitError, true);
+        return false;
+      }
+      setStatus("", false);
+      return true;
+    }
 
     function syncNames() {
       if (!(names instanceof HTMLElement)) return;
@@ -978,7 +1074,20 @@
       names.replaceChildren(label, list);
     }
 
-    input.addEventListener("change", syncNames);
+    input.addEventListener("change", () => {
+      if (!applySelectedFiles(input.files)) return;
+      syncNames();
+    });
+
+    form.addEventListener("submit", (e) => {
+      const files = input.files ? Array.from(input.files) : [];
+      if (files.length === 0) return;
+      const limitError = validateUploadBatch(files, form, { count: 0, bytes: 0 });
+      if (limitError) {
+        e.preventDefault();
+        setStatus(limitError, true);
+      }
+    });
 
     ["dragenter", "dragover"].forEach((ev) => {
       zone.addEventListener(ev, (e) => {
@@ -997,6 +1106,7 @@
       if (!dt?.files?.length) return;
       const transfer = new DataTransfer();
       Array.from(dt.files).forEach((f) => transfer.items.add(f));
+      if (!applySelectedFiles(transfer.files)) return;
       input.files = transfer.files;
       syncNames();
     });

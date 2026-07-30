@@ -315,14 +315,101 @@ test.describe("Webklip E2E", () => {
       await expect(page.locator("#clip-content")).toHaveValue(text);
     });
 
+    test("adds switches and edits tabs", async ({ page }) => {
+      const slug = uniqueSlug("tabs");
+      await createClipViaApi(page.request, slug, "tab-one-body");
+      await page.goto(`/${slug}`);
+
+      await expect(page.locator("#clip-tab-bar")).toBeVisible();
+      await expect(page.locator("#clip-content")).toHaveValue("tab-one-body");
+
+      await page.locator("#clip-tab-bar [data-add-tab]").click();
+      await expect(page.locator("#clip-tab-bar .clip-tab[data-tab-id]")).toHaveCount(2);
+      await expect(page.locator("#clip-content")).toHaveValue("");
+
+      await page.locator("#clip-content").fill("tab-two-body");
+      await expect(page.locator("#clip-content")).toHaveValue("tab-two-body");
+
+      await page.locator("#clip-tab-bar .clip-tab[data-tab-id]").first().click();
+      await expect(page.locator("#clip-content")).toHaveValue("tab-one-body");
+
+      await page.locator("#clip-tab-bar .clip-tab[data-tab-id]").nth(1).click();
+      await expect(page.locator("#clip-content")).toHaveValue("tab-two-body");
+
+      // Allow WS debounce + persist
+      await page.waitForTimeout(800);
+      await page.reload();
+      await expect(page.locator("#clip-tab-bar .clip-tab[data-tab-id]")).toHaveCount(2);
+      const values = await page.evaluate(() => {
+        // @ts-expect-error workspace helper is injected on clip pages
+        const ws = window.WebklipWorkspace?.getState?.();
+        return ws?.tabs?.map((t: { body: string }) => t.body) ?? [];
+      });
+      expect(values).toEqual(expect.arrayContaining(["tab-one-body", "tab-two-body"]));
+    });
+
+    test("renames a tab via double-click", async ({ page }) => {
+      const slug = uniqueSlug("rename");
+      await createClipViaApi(page.request, slug, "rename-me");
+      await page.goto(`/${slug}`);
+
+      const tab = page.locator("#clip-tab-bar .clip-tab[data-tab-id]").first();
+      await expect(tab).toBeVisible();
+      await tab.dblclick();
+      const input = page.locator("#clip-tab-bar .clip-tab__rename");
+      await expect(input).toBeVisible();
+      await input.fill("Notes");
+      await input.press("Enter");
+      await expect(page.locator("#clip-tab-bar .clip-tab__title").first()).toHaveText("Notes");
+
+      await page.waitForTimeout(500);
+      await page.reload();
+      await expect(page.locator("#clip-tab-bar .clip-tab__title").first()).toHaveText("Notes");
+    });
+
     test("syntax language setting updates", async ({ page }) => {
       const slug = uniqueSlug("syntax");
       await createClipViaApi(page.request, slug, "const x = 1;");
       await page.goto(`/${slug}`);
 
-      await openMoreSettings(page);
-      await page.selectOption("#m-language", "javascript");
-      await expect(page.locator("#m-language")).toHaveValue("javascript");
+      await page.selectOption("#clip-tab-language", "javascript");
+      await expect(page.locator("#clip-tab-language")).toHaveValue("javascript");
+      await expect(page.locator("#clip-editor-wrap")).toHaveAttribute(
+        "data-language",
+        "javascript"
+      );
+    });
+
+    test("auto-detects language from existing content", async ({ page }) => {
+      const slug = uniqueSlug("autolang");
+      await createClipViaApi(
+        page.request,
+        slug,
+        `const greet = (name) => {\n  console.log("hi", name);\n};\n`
+      );
+      await page.goto(`/${slug}`);
+
+      await expect(page.locator("#clip-tab-language")).toHaveValue("javascript");
+      await expect(page.locator("#clip-editor-wrap")).toHaveAttribute(
+        "data-language",
+        "javascript"
+      );
+    });
+
+    test("syntax language is per tab", async ({ page }) => {
+      const slug = uniqueSlug("perlang");
+      await createClipViaApi(page.request, slug, "first tab body here");
+      await page.goto(`/${slug}`);
+
+      await page.selectOption("#clip-tab-language", "python");
+      await page.locator("#clip-tab-bar [data-add-tab]").click();
+      await expect(page.locator("#clip-tab-bar .clip-tab[data-tab-id]")).toHaveCount(2);
+      await page.selectOption("#clip-tab-language", "json");
+
+      await page.locator("#clip-tab-bar .clip-tab[data-tab-id]").first().click();
+      await expect(page.locator("#clip-tab-language")).toHaveValue("python");
+      await page.locator("#clip-tab-bar .clip-tab[data-tab-id]").nth(1).click();
+      await expect(page.locator("#clip-tab-language")).toHaveValue("json");
     });
 
     test("TTL setting updates", async ({ page }) => {
@@ -429,7 +516,7 @@ test.describe("Webklip E2E", () => {
       await page.goto(`/${slug}`);
 
       await openMoreSettings(page);
-      await page.locator('[data-protect-option="passphrase"]').check({ force: true });
+      await page.locator('#sheet-settings [data-protect-option="passphrase"]').click({ force: true });
       const setupModal = page.locator("[data-e2e-setup-modal]");
       await expect(setupModal).toBeVisible();
       await setupModal.locator("[data-e2e-setup-confirm]").click();
@@ -471,16 +558,16 @@ test.describe("Webklip E2E", () => {
       await page.goto(`/${slug}`);
       await openMoreSettings(page);
 
-      await page.locator('[data-protect-option="passphrase"]').check({ force: true });
+      await page.locator('#sheet-settings [data-protect-option="passphrase"]').click({ force: true });
       const setupModal = page.locator("[data-e2e-setup-modal]");
       await expect(setupModal).toBeVisible();
       const phrase = await setupModal.locator("[data-e2e-setup-passphrase]").inputValue();
       expect(phrase.split("-").length).toBeGreaterThanOrEqual(4);
       await setupModal.locator("[data-e2e-setup-confirm]").click();
-      await expect(page.getByText(/Passphrase end-to-end encryption enabled|End-to-end encryption is active/i)).toBeVisible({
+      await expect(page.locator(".toast")).toContainText(/Passphrase end-to-end encryption enabled/i, {
         timeout: 15_000,
       });
-      await expect(page.locator('[data-protect-option="passphrase"]')).toBeChecked();
+      await expect(page.locator('#sheet-settings [data-protect-option="passphrase"]')).toBeChecked();
       await expect(page.locator(".header-cluster .chip--secure")).toBeVisible();
     });
 
@@ -839,7 +926,7 @@ test.describe("Webklip E2E", () => {
       await createClipViaApi(setupPage.request, slug, "secret clipboard text");
       await setupPage.goto(`/${slug}`);
       await openMoreSettings(setupPage);
-      await setupPage.locator('[data-protect-option="passphrase"]').check({ force: true });
+      await setupPage.locator('#sheet-settings [data-protect-option="passphrase"]').click({ force: true });
       const modal = setupPage.locator("[data-e2e-setup-modal]");
       await expect(modal).toBeVisible();
       const passphrase = await setupPage.locator("[data-e2e-setup-passphrase]").inputValue();
@@ -924,11 +1011,17 @@ test.describe("Webklip E2E", () => {
       expect(get.ok()).toBeTruthy();
       const clip = await get.json();
       expect(clip.content).toBe("hello api");
+      expect(clip.tabs).toHaveLength(1);
+      expect(clip.tabs[0].body).toBe("hello api");
+      expect(clip.activeTabId).toBeTruthy();
 
       const put = await request.put(`/api/v1/clips/${slug}`, {
         data: { content: "updated api" },
       });
       expect(put.ok()).toBeTruthy();
+      const putBody = await put.json();
+      expect(putBody.content).toBe("updated api");
+      expect(putBody.tabs[0].body).toBe("updated api");
 
       const get2 = await request.get(`/api/v1/clips/${slug}`);
       expect((await get2.json()).content).toBe("updated api");

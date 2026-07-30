@@ -169,15 +169,17 @@
   {
     "slug": "burn-after-read",
     "title": "Burn After Read Links — Self-Destructing Clips | Webklip",
-    "description": "Create burn after read links that delete themselves after a single view. Perfect for one-time secrets and passwords.",
+    "description": "Create burn after read links that delete after one real view. WhatsApp and Slack link previews do not burn the clip — perfect for one-time secrets.",
     "h1": "Burn After Read Links",
     "intro": "Share a secret once. After it has been viewed, the clip deletes itself permanently.",
     "paragraphs": [
-      "Some information should only be seen once — a password, a recovery code, or a temporary credential. Burn after read deletes the clip after a single view: the recipient gets the content, and it is gone.",
+      "Some information should only be seen once — a password, a recovery code, or a temporary credential. Burn after read deletes the clip after a single real view: the recipient gets the content, and it is gone.",
+      "Paste the link into WhatsApp, Slack, Telegram, or similar chat apps without worry: their link-preview crawlers see a generic card and do not count as a read, so the clip stays intact until someone opens it in a browser.",
       "Combine with passphrase E2E so a guessed URL is still encrypted, and set a short TTL as a backup if nobody opens it."
     ],
     "benefits": [
-      "Automatic deletion after a single view",
+      "Automatic deletion after a single real view",
+      "WhatsApp, Slack, and other chat previews do not burn the clip",
       "Combine with passphrase E2E for sensitive secrets",
       "Configurable TTL as a fallback expiry",
       "No permanent copies left behind"
@@ -185,7 +187,8 @@
     "useCases": [
       "Send a one-time password to a colleague",
       "Share a temporary credential that self-destructs on retrieval",
-      "Deliver a recovery code that cannot be re-read"
+      "Deliver a recovery code that cannot be re-read",
+      "Paste a burn link into WhatsApp without the preview consuming it"
     ],
     "relatedSlugs": [
       "share-password",

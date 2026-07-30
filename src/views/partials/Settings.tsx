@@ -17,7 +17,6 @@ interface SettingsProps {
   slug: string;
   expiresAt: number | null;
   burnOnRead: boolean;
-  language: string | null;
   maxViews: number | null;
   hasPin: boolean;
   hasOwnerPassword: boolean;
@@ -44,32 +43,6 @@ function SettingsLabel({
     <label for={forId} class={className}>
       {children}
     </label>
-  );
-}
-
-function LanguageOptions({ language }: { language: string | null }) {
-  const langs = [
-    ["", "Plain text"],
-    ["javascript", "JavaScript"],
-    ["typescript", "TypeScript"],
-    ["python", "Python"],
-    ["bash", "Bash"],
-    ["json", "JSON"],
-    ["html", "HTML"],
-    ["css", "CSS"],
-    ["sql", "SQL"],
-    ["yaml", "YAML"],
-    ["markdown", "Markdown"],
-  ] as const;
-
-  return (
-    <>
-      {langs.map(([value, label]) => (
-        <option value={value} selected={language === value || (!language && value === "")}>
-          {label}
-        </option>
-      ))}
-    </>
   );
 }
 
@@ -244,7 +217,6 @@ export function SettingsPanel({
   slug,
   expiresAt,
   burnOnRead,
-  language,
   hasPin,
   hasOwnerPassword,
   webhookUrl,
@@ -400,6 +372,27 @@ export function SettingsPanel({
                   </label>
                 </div>
               </div>
+              <div class="field">
+                <span class="field__label">Ownership</span>
+                <p class="field-hint">
+                  {hasOwnerPassword
+                    ? "Owner password is set. Use it to recover edit access on a new device."
+                    : "An owner password is set when you list the clip on Klipwall."}{" "}
+                  <a href={`/${slug}/claim`}>Recover ownership</a>
+                </p>
+                {hasOwnerPassword && visibility !== "public" && (
+                  <button
+                    type="button"
+                    class="btn btn--ghost btn--sm"
+                    hx-post={`/${slug}/settings`}
+                    hx-vals='{"clearOwnerPassword":"on"}'
+                    hx-target="#settings-root"
+                    hx-swap="outerHTML"
+                  >
+                    Remove owner password
+                  </button>
+                )}
+              </div>
             </div>
 
             {!isPublic && <ProtectSection slug={slug} hasPin={hasPin} encrypted={encrypted} />}
@@ -415,48 +408,12 @@ export function SettingsPanel({
                 showHint
               />
             </div>
-
-            <div class="sheet__section">
-              <h3 class="sheet__section-title">Editor</h3>
-              <div class="field">
-                <SettingsLabel forId="m-language">
-                  <span>Syntax highlighting</span>
-                </SettingsLabel>
-                <SettingHint text="Syntax highlighting in the editor only. Does not change how content is stored." />
-                <select
-                  id="m-language"
-                  name="language"
-                  hx-post={`/${slug}/settings`}
-                  hx-target="#settings-root"
-                  hx-swap="outerHTML"
-                  hx-trigger="change"
-                >
-                  <LanguageOptions language={language} />
-                </select>
-              </div>
-            </div>
           </fieldset>
 
+          
+
           <div class="sheet__section">
-            <h3 class="sheet__section-title">Ownership</h3>
-            <p class="field-hint">
-              {hasOwnerPassword
-                ? "Owner password is set. Use it to recover edit access on a new device."
-                : "An owner password is set when you list the clip on Klipwall."}{" "}
-              <a href={`/${slug}/claim`}>Recover ownership</a>
-            </p>
-            {hasOwnerPassword && visibility !== "public" && (
-              <button
-                type="button"
-                class="btn btn--ghost btn--sm"
-                hx-post={`/${slug}/settings`}
-                hx-vals='{"clearOwnerPassword":"on"}'
-                hx-target="#settings-root"
-                hx-swap="outerHTML"
-              >
-                Remove owner password
-              </button>
-            )}
+            <VersionsPanel slug={slug} versions={versions} />
           </div>
 
           <div class="sheet__section">
@@ -488,9 +445,19 @@ export function SettingsPanel({
           </div>
 
           <div class="sheet__section">
-            <VersionsPanel slug={slug} versions={versions} />
+            <h3 class="sheet__section-title">Appearance</h3>
+            <SettingHint text="Light or dark for this browser only. Does not change how others see the clip." />
+            <div class="field">
+              <span class="field__label">Theme</span>
+              <div class="settings-e2e-row">
+                <label class="toggle">
+                  <input type="checkbox" data-theme-toggle />
+                  <span class="toggle__track" aria-hidden="true"></span>
+                  <span data-theme-toggle-label>Light</span>
+                </label>
+              </div>
+            </div>
           </div>
-
           <div class="sheet__section">
             <h3 class="sheet__section-title">Danger zone</h3>
             <div class="danger-zone">

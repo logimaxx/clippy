@@ -272,10 +272,15 @@ function buildLandingPasteForm(id: string): string {
 }
 
 function buildLandingFileForm(id: string): string {
-  return `<form action="/new" method="post" enctype="multipart/form-data" class="home-form landing-cta landing-hero-paste landing-hero-upload">
+  const maxFiles = 10;
+  const maxFileMb = Number(process.env.MAX_FILE_SIZE_MB ?? 10) || 10;
+  const maxTotalMb = Number(process.env.MAX_TOTAL_FILES_MB ?? 50) || 50;
+  const limitsHint = `Max ${maxFiles} files · ${maxFileMb} MB each · ${maxTotalMb} MB total`;
+  return `<form action="/new" method="post" enctype="multipart/form-data" class="home-form landing-cta landing-hero-paste landing-hero-upload" data-max-files="${maxFiles}" data-max-file-size-mb="${maxFileMb}" data-max-total-files-mb="${maxTotalMb}">
   <label class="drop-zone landing-drop-zone" for="${id}-file">
     <span class="landing-drop-zone-title">Drop, paste (Ctrl+V), or browse</span>
     <span class="landing-drop-zone-hint">Images, PDFs, text, zip, JSON, Markdown — paste a screenshot</span>
+    <span class="landing-drop-zone-limits">${escapeHtml(limitsHint)}</span>
     <input
       type="file"
       id="${id}-file"
@@ -286,6 +291,7 @@ function buildLandingFileForm(id: string): string {
     />
   </label>
   <p class="landing-file-names" id="${id}-names" hidden></p>
+  <span class="upload-status landing-upload-status" aria-live="polite"></span>
   <label class="sr-only" for="${id}">Optional note</label>
   <textarea
     id="${id}"

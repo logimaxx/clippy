@@ -1,4 +1,4 @@
-/* Webklip real-time textarea sync */
+/* Webklip real-time workspace sync */
 (async function () {
   if (window.WebklipE2EDecryptReady) {
     await window.WebklipE2EDecryptReady;
@@ -27,6 +27,7 @@
   let reconnectDelay = 2000;
   let stopped = false;
   let intentionalClose = false;
+  const pending = [];
 
   async function wireContent(text) {
     if (isEncrypted() && window.WebklipE2E?.hasKey()) {
@@ -43,6 +44,22 @@
       return await window.WebklipE2E.decrypt(trimmed);
     } catch {
       return wire;
+    }
+  }
+
+  function sendRaw(obj) {
+    const payload = JSON.stringify(obj);
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(payload);
+      return;
+    }
+    pending.push(payload);
+  }
+
+  function flushPending() {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    while (pending.length) {
+      ws.send(pending.shift());
     }
   }
 
@@ -76,6 +93,76 @@
     delete window[syncKey];
   }
 
+  function maxContentLength() {
+    const raw = Number(textarea.dataset.maxContentLength);
+    return Number.isFinite(raw) && raw > 0 ? raw : 1_000_000;
+  }
+
+  let lastTooLargeToast = 0;
+
+  function toastError(message) {
+    if (!message) return;
+    document.body.dispatchEvent(
+      new CustomEvent("showToast", { detail: { message } })
+    );
+  }
+
+  function contentTooLargeMessage() {
+    return `Content too large (max ${maxContentLength().toLocaleString()} characters)`;
+  }
+
+  function assertWithinLimit(content) {
+    if (typeof content !== "string" || content.length <= maxContentLength()) {
+      return true;
+    }
+    const now = Date.now();
+    if (now - lastTooLargeToast > 4000) {
+      lastTooLargeToast = now;
+      toastError(contentTooLargeMessage());
+    }
+    return false;
+  }
+
+  async function sendFullDocument() {
+    if (textarea.disabled) return;
+    const plain =
+      window.WebklipWorkspace?.getSerializedPlaintext?.() ?? textarea.value;
+    if (!assertWithinLimit(plain)) return;
+    const content = await wireContent(plain);
+    if (!assertWithinLimit(content)) return;
+    sendRaw({ type: "update", content });
+  }
+
+  function sendTabUpdate(tabId, body) {
+    if (textarea.disabled) return;
+    if (isEncrypted()) {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        sendFullDocument();
+      }, 150);
+      return;
+    }
+    const plain =
+      window.WebklipWorkspace?.getSerializedPlaintext?.() ?? String(body ?? "");
+    if (!assertWithinLimit(plain)) return;
+    sendRaw({ type: "tab_update", tabId, body });
+  }
+
+  function sendTabsMeta(detail) {
+    if (textarea.disabled) return;
+    if (isEncrypted()) {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        sendFullDocument();
+      }, 150);
+      return;
+    }
+    const plain = window.WebklipWorkspace?.getSerializedPlaintext?.();
+    if (plain != null && !assertWithinLimit(plain)) return;
+    const { type: _t, ...rest } = detail;
+    sendRaw({ type: "tabs_meta", ...rest });
+  }
+
   function connect() {
     if (stopped) return;
     if (ws && (ws.readyState === WebSocket.CONNECTING || ws.readyState === WebSocket.OPEN)) {
@@ -89,6 +176,7 @@
 
     ws.onopen = () => {
       reconnectDelay = 2000;
+      flushPending();
     };
 
     ws.onmessage = async (event) => {
@@ -96,9 +184,27 @@
         const data = JSON.parse(event.data);
         if (data.type === "update" && typeof data.content === "string") {
           isRemote = true;
-          textarea.value = await plainContent(data.content);
+          const plain = await plainContent(data.content);
+          if (window.WebklipWorkspace?.isWorkspaceDocument?.(plain)) {
+            window.WebklipWorkspace.loadPlaintext(plain);
+          } else if (window.WebklipWorkspace) {
+            window.WebklipWorkspace.applyRemoteTabUpdate?.(
+              window.WebklipWorkspace.getActiveTabId(),
+              plain
+            );
+          } else {
+            textarea.value = plain;
+            window.WebklipEditor?.refresh();
+          }
           isRemote = false;
-          window.WebklipEditor?.refresh();
+        } else if (data.type === "tab_update" && data.tabId) {
+          isRemote = true;
+          window.WebklipWorkspace?.applyRemoteTabUpdate?.(data.tabId, data.body ?? "");
+          isRemote = false;
+        } else if (data.type === "tabs_meta" && data.workspace) {
+          isRemote = true;
+          window.WebklipWorkspace?.applyRemoteWorkspace?.(data.workspace);
+          isRemote = false;
         } else if (data.type === "file_added" && data.fileId) {
           window.WebklipFiles?.appendAttachment?.({
             fileId: data.fileId,
@@ -118,6 +224,8 @@
           if (desktop) desktop.textContent = label;
           const mobile = document.getElementById("device-count");
           if (mobile) mobile.textContent = label;
+        } else if (data.type === "error" && data.message) {
+          toastError(String(data.message));
         }
       } catch (_) {}
     };
@@ -131,14 +239,28 @@
     ws.onerror = () => {};
   }
 
+  document.addEventListener("webklip-workspace", (e) => {
+    if (isRemote || textarea.disabled) return;
+    const detail = e.detail || {};
+    if (detail.type === "tab_update") {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        sendTabUpdate(detail.tabId, detail.body ?? "");
+      }, 150);
+    } else if (detail.type === "tabs_meta") {
+      // Structural changes must not be coalesced away by typing debounce.
+      sendTabsMeta(detail);
+    }
+  });
+
+  // Legacy path: direct textarea input still syncs when workspace events missing
   textarea.addEventListener("input", () => {
     if (isRemote || textarea.disabled) return;
+    if (window.WebklipWorkspace) return; // handled via webklip-workspace
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(async () => {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        const content = await wireContent(textarea.value);
-        ws.send(JSON.stringify({ type: "update", content }));
-      }
+      const content = await wireContent(textarea.value);
+      sendRaw({ type: "update", content });
     }, 150);
   });
 

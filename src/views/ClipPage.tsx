@@ -15,10 +15,49 @@ import {
   CloseIcon,
 } from "./partials/ClipIcons";
 import { asset } from "../lib/assets";
-import { siteHost } from "../lib/constants";
+import {
+  fileLimitsSummary,
+  MAX_CONTENT_LENGTH,
+  MAX_FILE_SIZE_MB,
+  MAX_FILES_PER_CLIP,
+  MAX_TOTAL_FILES_MB,
+  siteHost,
+} from "../lib/constants";
 import { clipSeoMeta } from "../lib/clip-seo";
 import type { Clip, ClipVersion } from "../db/schema";
 import { getClipFiles } from "../store/clips";
+import {
+  getActiveTab,
+  parseWorkspace,
+  serializeWorkspace,
+  workspacePlainText,
+} from "../store/workspace";
+
+const SYNTAX_LANGUAGES = [
+  ["", "Plain text"],
+  ["javascript", "JavaScript"],
+  ["typescript", "TypeScript"],
+  ["python", "Python"],
+  ["bash", "Bash"],
+  ["json", "JSON"],
+  ["html", "HTML"],
+  ["css", "CSS"],
+  ["sql", "SQL"],
+  ["yaml", "YAML"],
+  ["markdown", "Markdown"],
+] as const;
+
+function LanguageOptions({ language }: { language: string | null }) {
+  return (
+    <>
+      {SYNTAX_LANGUAGES.map(([value, label]) => (
+        <option value={value} selected={language === value || (!language && value === "")}>
+          {label}
+        </option>
+      ))}
+    </>
+  );
+}
 
 interface ClipPageProps {
   slug: string;
@@ -68,8 +107,16 @@ export function ClipPage({
   const isPublic = visibility === "public";
   const host = siteHost();
   const clipPathLabel = `${host}/${slug}`;
-  const seo = isPublic ? clipSeoMeta(slug, content) : null;
+  const workspace = encrypted ? null : parseWorkspace(content, language);
+  const activeTab = workspace ? getActiveTab(workspace) : null;
+  const editorBody = encrypted ? content : (activeTab?.body ?? content);
+  const editorLanguage = activeTab?.language ?? language;
+  const seoPlain = encrypted ? "" : workspacePlainText(content);
+  const seo = isPublic ? clipSeoMeta(slug, seoPlain) : null;
   const showCloneModal = Boolean(cloneError);
+  const workspaceJson = workspace
+    ? serializeWorkspace(workspace).replace(/</g, "\\u003c")
+    : null;
 
   return (
     <Layout
@@ -115,7 +162,6 @@ export function ClipPage({
               slug={slug}
               expiresAt={expiresAt}
               burnOnRead={burnOnRead}
-              language={language}
               maxViews={maxViews}
               hasPin={hasPin}
               hasOwnerPassword={hasOwnerPassword}
@@ -141,7 +187,7 @@ export function ClipPage({
                 <span class="header-settings-btn__label">Settings</span>
               </button>
             )}
-            <ThemeToggle />
+            {readOnly && <ThemeToggle />}
             <div class="share-menu" id="share-menu">
               <button
                 type="button"
@@ -235,25 +281,57 @@ export function ClipPage({
 
           <div class="main-grid">
             <section class="editor-panel" aria-label="Clip content">
+              <div
+                class="clip-tab-bar"
+                id="clip-tab-bar"
+                role="tablist"
+                aria-label="Document tabs"
+              ></div>
               <div class="panel-header">
-                <h2 class="panel-title">Content</h2>
+                <div class="clip-tab-lang">
+                  <label class="clip-tab-lang__label" for="clip-tab-language">
+                    Syntax
+                  </label>
+                  <select
+                    id="clip-tab-language"
+                    name="language"
+                    aria-label="Syntax highlighting for this tab"
+                    disabled={readOnly}
+                  >
+                    <LanguageOptions language={editorLanguage} />
+                  </select>
+                </div>
                 <div class="panel-header__actions">
                   <button
                     type="button"
                     id="md-preview-toggle"
                     class="btn btn--ghost btn--sm"
-                    hidden
+                    hidden={
+                      (editorLanguage !== "markdown" && editorLanguage !== "html") ||
+                      encrypted
+                    }
                     aria-pressed="false"
                   >
                     Preview
                   </button>
-                  <span class="panel-meta" id="char-count"></span>
+                  <span
+                    class="panel-meta"
+                    id="char-count"
+                    title={`Max ${MAX_CONTENT_LENGTH.toLocaleString()} characters (includes tab metadata)`}
+                  ></span>
                 </div>
               </div>
+              {workspaceJson && (
+                <script
+                  type="application/json"
+                  id="clip-workspace-data"
+                  dangerouslySetInnerHTML={{ __html: workspaceJson }}
+                />
+              )}
               <div
                 id="clip-editor-wrap"
                 class="editor-wrap clip-editor-wrap"
-                data-language={language ?? ""}
+                data-language={editorLanguage ?? ""}
                 data-encrypted={encrypted ? "true" : "false"}
               >
                 <div id="clip-editor-mount" class="clip-editor-mount" hidden></div>
@@ -261,7 +339,7 @@ export function ClipPage({
                   id="clip-md-preview"
                   class="clip-md-preview"
                   hidden
-                  aria-label="Markdown preview"
+                  aria-label="Content preview"
                 ></div>
                 <textarea
                   id="clip-content"
@@ -272,13 +350,14 @@ export function ClipPage({
                   aria-label="Clip content editor"
                   data-ws-room={readOnly ? undefined : slug}
                   data-ws-url={readOnly ? undefined : `/ws/${slug}`}
+                  data-max-content-length={String(MAX_CONTENT_LENGTH)}
                   data-encrypted={encrypted ? "true" : "false"}
                   data-e2e-salt={clip.e2eSalt ?? undefined}
                   data-e2e-wrapped-key={clip.e2eWrappedKey ?? undefined}
                   data-e2e-kdf={clip.e2eKdf ?? undefined}
                   disabled={readOnly || encrypted}
                   readonly={readOnly}
-                >{content}</textarea>
+                >{editorBody}</textarea>
               </div>
             </section>
 
@@ -291,9 +370,18 @@ export function ClipPage({
               </div>
               <div class="files-panel__body">
                 {!readOnly && !encrypted && (
-                  <form class="upload-form" data-upload-url={`/${slug}/upload`}>
+                  <form
+                    class="upload-form"
+                    data-upload-url={`/${slug}/upload`}
+                    data-max-files={String(MAX_FILES_PER_CLIP)}
+                    data-max-file-size-mb={String(MAX_FILE_SIZE_MB)}
+                    data-max-total-files-mb={String(MAX_TOTAL_FILES_MB)}
+                  >
                     <label class="drop-zone" id="drop-zone">
-                      Drop, paste (Ctrl+V), or tap to browse
+                      <span class="drop-zone-title">
+                        Drop, paste (Ctrl+V), or tap to browse
+                      </span>
+                      <span class="drop-zone-hint">{fileLimitsSummary()}</span>
                       <input
                         type="file"
                         name="file"
@@ -629,6 +717,7 @@ export function ClipPage({
       <script src={asset("clip-mobile.js")} defer></script>
       {!readOnly && <script src={asset("clip-settings.js")} defer></script>}
       <script src={asset("clip-editor.js")} defer></script>
+      <script src={asset("clip-tabs.js")} defer></script>
       <script src={asset("e2e.js")} defer></script>
       {!readOnly && <script src={asset("clip-sync.js")} defer></script>}
     </Layout>

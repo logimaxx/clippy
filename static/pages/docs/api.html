@@ -81,6 +81,9 @@ curl -s https://webklip.com/api/v1/clips/my-clip</code></pre>
   <li><code>webhook</code> — URL notified on read, burn, or expiry (see <a href="/docs/webhooks">Webhooks</a>).</li>
   <li><code>visibility</code> — <code>private</code> (default) or <code>public</code> (listed on Klipwall; requires <code>ownerPassword</code>).</li>
   <li><code>ownerPassword</code> — recovers edit access on a new device (min 8 characters; required for public clips).</li>
+  <li>
+    <code>content</code> — max 1,000,000 characters (includes multi-tab workspace JSON when used).
+  </li>
 </ul>
 <p>Plain-text body is also accepted (<code>Content-Type: text/plain</code>) as the clip content.</p>
 <p>Response (201):</p>
@@ -119,6 +122,8 @@ curl -s https://webklip.com/api/v1/clips/my-clip</code></pre>
   Returns the raw file bytes (<code>Content-Disposition: inline</code>) so the clip UI can preview images, PDFs, text, and media in a modal, or download them.
   Requires legacy PIN header/query when the clip uses a server PIN.
   Attach files from the clip UI by dropping, browsing, or pasting an image from the clipboard (Ctrl+V / Cmd+V).
+  Limits: 10 files per clip, 10&nbsp;MB per file, 50&nbsp;MB total (env
+  <code>MAX_FILE_SIZE_MB</code> / <code>MAX_TOTAL_FILES_MB</code>).
   File uploads are disabled on passphrase E2E clips. File IDs are shown in the clip UI after upload.
 </p>
 

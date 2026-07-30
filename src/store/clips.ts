@@ -6,6 +6,7 @@ import { fireWebhook } from "../lib/webhook";
 import { getFilesDir } from "../lib/cleanup";
 import { deleteVersionsForClip } from "./versions";
 import * as memory from "./memory";
+import { contentForStorage, mergeContentWrite } from "./workspace";
 import { unlink, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import { join } from "node:path";
@@ -82,7 +83,10 @@ export async function createClip(
 
   const clip: NewClip = {
     slug,
-    content: normalized.content ?? "",
+    content: contentForStorage(
+      normalized.content ?? "",
+      normalized.language ?? null
+    ),
     contentType: normalized.contentType ?? "text",
     expiresAt,
     burnOnRead,
@@ -162,6 +166,22 @@ export function schedulePersist(slug: string, content: string) {
 }
 
 export async function updateContent(slug: string, content: string) {
+  const existing = await getClip(slug);
+  const next =
+    existing && !existing.encrypted
+      ? mergeContentWrite(existing.content, content, existing.language)
+      : content;
+  schedulePersist(slug, next);
+  await db.update(clips).set({ content: next }).where(eq(clips.slug, slug));
+  const cached = memory.getCached(slug);
+  if (cached) {
+    cached.content = next;
+    cached.dirty = false;
+  }
+}
+
+/** Replace stored content blob as-is (workspace JSON or E2E ciphertext). */
+export async function replaceContent(slug: string, content: string) {
   schedulePersist(slug, content);
   await db.update(clips).set({ content }).where(eq(clips.slug, slug));
   const cached = memory.getCached(slug);
@@ -380,6 +400,19 @@ export async function updateSettings(slug: string, settings: ClipSettingsUpdate)
       cached.content = contentUpdate;
       cached.dirty = false;
     }
+  } else if (
+    constrained.language !== undefined &&
+    !current.encrypted &&
+    !(constrained.encrypted === true)
+  ) {
+    const { parseWorkspace, serializeWorkspace, setTabLanguage, getActiveTab } =
+      await import("./workspace");
+    const ws = parseWorkspace(current.content, current.language);
+    const active = getActiveTab(ws);
+    const next = serializeWorkspace(
+      setTabLanguage(ws, active.id, constrained.language ?? null)
+    );
+    await db.update(clips).set({ content: next }).where(eq(clips.slug, slug));
   }
   memory.deleteCached(slug);
   return getClip(slug);

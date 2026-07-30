@@ -14,6 +14,7 @@ import {
   settingsToastMessage,
   MAX_TTL,
   clipContentSchema,
+  contentTooLargeMessage,
   MAX_FILES_PER_CLIP,
 } from "../lib/constants";
 import { getClientIp, rateLimit } from "../lib/rate-limit";
@@ -46,6 +47,7 @@ import {
   updateSettings,
   getClip,
   updateContent,
+  replaceContent,
   deleteClip,
   recordView,
   listPublicClips,
@@ -76,7 +78,6 @@ function settingsPanelProps(slug: string, clip: Clip, versions: Awaited<ReturnTy
     slug,
     expiresAt: clip.expiresAt,
     burnOnRead: clip.burnOnRead,
-    language: clip.language,
     maxViews: clip.maxViews,
     hasPin: !!clip.pinHash,
     hasOwnerPassword: !!clip.ownerPasswordHash,
@@ -132,7 +133,10 @@ async function renderClipPage(c: Context, slug: string) {
 
   if (crawler) {
     if (isListablePublic(clip) && clip.content.trim()) {
-      return c.html(<ClipLinkPreview slug={slug} content={clip.content} />);
+      const { workspacePlainText } = await import("../store/workspace");
+      return c.html(
+        <ClipLinkPreview slug={slug} content={workspacePlainText(clip.content)} />
+      );
     }
     return c.html(<ClipLinkPreview slug={slug} />);
   }
@@ -261,7 +265,7 @@ pages.post("/new", async (c) => {
 
   const rawContent = typeof body.content === "string" ? body.content : "";
   const parsed = clipContentSchema.safeParse({ content: rawContent });
-  if (!parsed.success) return c.text("Content too large", 400);
+  if (!parsed.success) return c.text(contentTooLargeMessage(), 400);
   const files = collectUploadFiles(body as Record<string, unknown>);
   try {
     await createClip(slug, {
@@ -356,7 +360,13 @@ pages.post("/:slug/versions/:versionId/restore", async (c) => {
   const version = await getVersion(versionId);
   if (!version || version.clipSlug !== slug) return c.text("Not found", 404);
 
-  await updateContent(slug, version.content);
+  await replaceContent(slug, version.content);
+
+  const { getActiveTab, parseWorkspace, serializeWorkspace } = await import(
+    "../store/workspace"
+  );
+  const restored = parseWorkspace(version.content, clip.language);
+  const active = getActiveTab(restored);
 
   return c.html(
     <textarea
@@ -366,7 +376,10 @@ pages.post("/:slug/versions/:versionId/restore", async (c) => {
       data-ws-room={slug}
       data-ws-url={`/ws/${slug}`}
       data-encrypted={clip.encrypted ? "true" : "false"}
-    >{version.content}</textarea>
+      data-workspace-restore={encodeURIComponent(serializeWorkspace(restored))}
+    >
+      {active.body}
+    </textarea>
   );
 });
 
@@ -654,7 +667,7 @@ pages.post("/:slug/settings", async (c) => {
     if (parsed.data.protect === "none" && parsed.data.content !== undefined) {
       const contentParsed = clipContentSchema.safeParse({ content: parsed.data.content });
       if (!contentParsed.success) {
-        c.header("HX-Trigger", toastHeader("Content too large"));
+        c.header("HX-Trigger", toastHeader(contentTooLargeMessage()));
         return c.html(<SettingsPanel {...settingsPanelProps(slug, clip, versions)} />);
       }
       Object.assign(updates, clearE2eFields());
@@ -697,7 +710,7 @@ pages.post("/:slug/settings", async (c) => {
     if (parsed.data.content !== undefined) {
       const contentParsed = clipContentSchema.safeParse({ content: parsed.data.content });
       if (!contentParsed.success) {
-        c.header("HX-Trigger", toastHeader("Content too large"));
+        c.header("HX-Trigger", toastHeader(contentTooLargeMessage()));
         return c.html(<SettingsPanel {...settingsPanelProps(slug, clip, versions)} />);
       }
       updates.content = contentParsed.data.content;
@@ -724,7 +737,7 @@ pages.post("/:slug/settings", async (c) => {
     if (parsed.data.content !== undefined) {
       const contentParsed = clipContentSchema.safeParse({ content: parsed.data.content });
       if (!contentParsed.success) {
-        c.header("HX-Trigger", toastHeader("Content too large"));
+        c.header("HX-Trigger", toastHeader(contentTooLargeMessage()));
         return c.html(<SettingsPanel {...settingsPanelProps(slug, clip, versions)} />);
       }
       updates.content = contentParsed.data.content;

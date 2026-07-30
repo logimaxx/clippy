@@ -7,6 +7,11 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 
+/* `.btn { display: inline-flex }` and similar would otherwise override the attribute. */
+[hidden] {
+  display: none !important;
+}
+
 html, body {
   margin: 0;
   min-height: 100%;
@@ -934,14 +939,179 @@ a.chip--owner-claim:hover {
   overflow: hidden;
 }
 
+.clip-tab-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 0.15rem;
+  box-sizing: border-box;
+  height: var(--panel-header-h);
+  min-height: var(--panel-header-h);
+  padding: 0.25rem 0.35rem 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  background: color-mix(in srgb, var(--bg-sunken) 70%, var(--bg-elevated));
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.clip-tab-lang {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.clip-tab-lang__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.clip-tab-lang select {
+  appearance: none;
+  border: 1px solid var(--border-subtle);
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 0.3rem 1.6rem 0.3rem 0.55rem;
+  border-radius: var(--radius-sm);
+  max-width: 11rem;
+  cursor: pointer;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-tertiary) 50%),
+    linear-gradient(135deg, var(--text-tertiary) 50%, transparent 50%);
+  background-position: calc(100% - 0.75rem) 55%, calc(100% - 0.5rem) 55%;
+  background-size: 0.3rem 0.3rem, 0.3rem 0.3rem;
+  background-repeat: no-repeat;
+}
+
+.clip-tab-lang select:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border-subtle));
+}
+
+.clip-tab-lang select:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 1px;
+}
+
+.clip-tab-lang select:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@media (max-width: 767px) {
+  .clip-tab-lang__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .clip-tab-lang select {
+    max-width: 9rem;
+    font-size: 0.75rem;
+  }
+}
+
+.clip-tab {
+  appearance: none;
+  border: 1px solid transparent;
+  border-bottom: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.35rem 0.55rem;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 10rem;
+  white-space: nowrap;
+  flex: 0 0 auto;
+  user-select: none;
+}
+
+.clip-tab:hover {
+  color: var(--text-primary);
+  background: color-mix(in srgb, var(--bg-elevated) 80%, transparent);
+}
+
+.clip-tab.is-active {
+  color: var(--text-primary);
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+  box-shadow: 0 1px 0 var(--bg-elevated);
+}
+
+.clip-tab__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.clip-tab__close {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--text-tertiary);
+  font-size: 0.95rem;
+  line-height: 1;
+  padding: 0 0.1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.clip-tab__close:hover {
+  color: var(--text-primary);
+  background: var(--bg-sunken);
+}
+
+.clip-tab--add {
+  max-width: none;
+  padding-inline: 0.65rem;
+  color: var(--text-tertiary);
+  font-weight: 600;
+}
+
+.clip-tab--add:hover {
+  color: var(--accent);
+}
+
+.clip-tab__rename {
+  appearance: none;
+  border: 1px solid var(--accent);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.1rem 0.25rem;
+  border-radius: var(--radius-sm);
+  width: 7rem;
+  max-width: 100%;
+  min-width: 3rem;
+  outline: none;
+}
+
 .panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
   box-sizing: border-box;
-  height: calc(1.875rem + 1rem + 1px);
-  padding: 0.5rem 0.75rem;
+  height: var(--panel-header-h);
+  padding: 0.25rem 0.75rem;
   border-bottom: 1px solid var(--border-subtle);
   background: color-mix(in srgb, var(--bg-sunken) 50%, var(--bg-elevated));
 }
@@ -959,6 +1129,11 @@ a.chip--owner-claim:hover {
   font-family: var(--font-mono);
   font-size: 0.7rem;
   color: var(--text-tertiary);
+}
+
+.panel-meta.is-over-limit {
+  color: var(--danger);
+  font-weight: 600;
 }
 
 .panel-header__actions {
@@ -1011,6 +1186,20 @@ a.chip--owner-claim:hover {
   font-size: 0.875rem;
   line-height: 1.6;
   color: var(--text-primary);
+}
+
+.clip-md-preview.clip-md-preview--html {
+  padding: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.clip-html-preview {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
 }
 
 .clip-md-preview h1,
@@ -1381,7 +1570,23 @@ button.file-card__name--preview:focus-visible {
   font-size: 0.8125rem;
   cursor: pointer;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
   transition: border-color var(--transition), background var(--transition);
+}
+
+.drop-zone-title {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.drop-zone-hint {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  line-height: 1.35;
 }
 
 .drop-zone:hover,

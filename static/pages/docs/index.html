@@ -29,6 +29,8 @@ curl -s https://webklip.com/api/v1/clips/my-clip</code></pre>
 <h2>Limits</h2>
 <ul>
   <li>Clip slugs: 3–64 characters, letters, numbers, <code>_</code>, and <code>-</code></li>
-  <li>Content size: up to 1&nbsp;MB per update</li>
+  <li>
+    Content size: up to 1,000,000 characters per clip (stored blob, including multi-tab workspace JSON)
+  </li>
   <li>Rate limits: per-IP caps on API requests and clip creation (see <code>X-RateLimit-Remaining</code> response header)</li>
 </ul>

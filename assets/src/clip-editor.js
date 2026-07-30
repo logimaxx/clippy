@@ -13,6 +13,7 @@ import { sql } from "@codemirror/lang-sql";
 import { yaml } from "@codemirror/lang-yaml";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
 import { marked } from "marked";
+import { detectLanguage } from "./detect-language.js";
 
 const languageConf = new Compartment();
 const editableConf = new Compartment();
@@ -117,7 +118,12 @@ function webklipTheme() {
   let mountEl = null;
   let previewEl = null;
   let bound = false;
+  let htmlPreviewTimer = 0;
+  let lastHtmlSrcdoc = null;
   const mobileQuery = window.matchMedia("(max-width: 767px)");
+  const HTML_PREVIEW_DEBOUNCE_MS = 200;
+  // Scripts may run, but without allow-same-origin they cannot touch the parent page.
+  const HTML_IFRAME_SANDBOX = "allow-scripts allow-forms allow-modals allow-popups";
 
   function getWrap() {
     return document.getElementById("clip-editor-wrap");
@@ -129,6 +135,36 @@ function webklipTheme() {
 
   function language() {
     return wrap?.dataset.language || "";
+  }
+
+  function languageSelects() {
+    const sel = document.getElementById("clip-tab-language");
+    return sel ? [sel] : [];
+  }
+
+  function activeLanguageSelect() {
+    return document.getElementById("clip-tab-language");
+  }
+
+  /** Apply detection only while language is unset (plain text). Never overrides a choice. */
+  function maybeAutoDetectLanguage(text) {
+    if (!wrap || !shouldUseEditor()) return;
+    if (language()) return;
+    const detected = detectLanguage(text ?? "");
+    if (!detected) return;
+
+    for (const sel of languageSelects()) {
+      if (sel instanceof HTMLSelectElement) sel.value = detected;
+    }
+    wrap.dataset.language = detected;
+
+    const primary = activeLanguageSelect();
+    if (primary instanceof HTMLSelectElement) {
+      // Lets clip-tabs pick up the change (workspace + sync).
+      primary.dispatchEvent(new Event("change", { bubbles: true }));
+    } else {
+      refresh();
+    }
   }
 
   function isEncrypted() {
@@ -182,24 +218,128 @@ function webklipTheme() {
     return view?.state.doc.toString() ?? getTextarea()?.value ?? "";
   }
 
+  function isPreviewableLanguage(lang = language()) {
+    return lang === "markdown" || lang === "html";
+  }
+
+  /** Preview is available whenever content can be rendered (not tied to edit mode). */
+  function canPreviewContent() {
+    if (!isPreviewableLanguage()) return false;
+    const ta = getTextarea();
+    if (!ta) return false;
+    if (isEncrypted() && ta.dataset.decrypted !== "true") return false;
+    return true;
+  }
+
+  function clearHtmlPreviewTimer() {
+    if (htmlPreviewTimer) {
+      window.clearTimeout(htmlPreviewTimer);
+      htmlPreviewTimer = 0;
+    }
+  }
+
+  function clearPreviewContainer(el) {
+    if (!el) return;
+    el.replaceChildren();
+    el.classList.remove("clip-md-preview--html");
+  }
+
+  function ensureHtmlFrame(container) {
+    let frame = container.querySelector("iframe.clip-html-preview");
+    if (frame) return frame;
+    container.replaceChildren();
+    container.classList.add("clip-md-preview--html");
+    frame = document.createElement("iframe");
+    frame.className = "clip-html-preview";
+    frame.title = "HTML preview";
+    frame.setAttribute("sandbox", HTML_IFRAME_SANDBOX);
+    frame.setAttribute("referrerpolicy", "no-referrer");
+    container.appendChild(frame);
+    return frame;
+  }
+
+  function writeHtmlPreview(container, text) {
+    if (!container) return;
+    const frame = ensureHtmlFrame(container);
+    const srcdoc = text ?? "";
+    if (lastHtmlSrcdoc === srcdoc && frame.srcdoc === srcdoc) return;
+    lastHtmlSrcdoc = srcdoc;
+    frame.srcdoc = srcdoc;
+  }
+
+  function scheduleHtmlPreview(desktopEl, modalEl, useModal, text) {
+    clearHtmlPreviewTimer();
+    const apply = () => {
+      htmlPreviewTimer = 0;
+      if (useModal) {
+        writeHtmlPreview(modalEl, text);
+      } else {
+        writeHtmlPreview(desktopEl, text);
+      }
+    };
+    // Immediate first paint when opening / switching target; debounce live edits.
+    if (lastHtmlSrcdoc === null) {
+      apply();
+      return;
+    }
+    htmlPreviewTimer = window.setTimeout(apply, HTML_PREVIEW_DEBOUNCE_MS);
+  }
+
   function updatePreview(text) {
-    const show = previewOpen && language() === "markdown";
-    const html = show ? marked.parse(text || "", { async: false }) : "";
+    const lang = language();
+    const show = previewOpen && isPreviewableLanguage(lang);
     const useModal = isMobile();
 
-    if (previewEl) {
-      if (!show || useModal) {
+    if (!show) {
+      clearHtmlPreviewTimer();
+      lastHtmlSrcdoc = null;
+      if (previewEl) {
         previewEl.hidden = true;
-        previewEl.replaceChildren();
+        clearPreviewContainer(previewEl);
+      }
+      clearPreviewContainer(getModalPreviewBody());
+      return;
+    }
+
+    const modalBody = getModalPreviewBody();
+
+    if (lang === "html") {
+      if (useModal) {
+        if (previewEl) {
+          previewEl.hidden = true;
+          clearPreviewContainer(previewEl);
+        }
+      } else {
+        if (previewEl) previewEl.hidden = false;
+        clearPreviewContainer(modalBody);
+      }
+      scheduleHtmlPreview(previewEl, modalBody, useModal, text);
+      return;
+    }
+
+    // Markdown: render into the host document (styled by .clip-md-preview).
+    clearHtmlPreviewTimer();
+    lastHtmlSrcdoc = null;
+    const html = marked.parse(text || "", { async: false });
+
+    if (previewEl) {
+      if (useModal) {
+        previewEl.hidden = true;
+        clearPreviewContainer(previewEl);
       } else {
         previewEl.hidden = false;
+        previewEl.classList.remove("clip-md-preview--html");
         previewEl.innerHTML = html;
       }
     }
 
-    const modalBody = getModalPreviewBody();
     if (modalBody) {
-      modalBody.innerHTML = show && useModal ? html : "";
+      if (useModal) {
+        modalBody.classList.remove("clip-md-preview--html");
+        modalBody.innerHTML = html;
+      } else {
+        clearPreviewContainer(modalBody);
+      }
     }
   }
 
@@ -214,6 +354,9 @@ function webklipTheme() {
       updatePreview(previewText());
       return;
     }
+
+    // Force a fresh HTML frame paint when (re)opening preview.
+    lastHtmlSrcdoc = null;
 
     if (isMobile()) {
       wrap?.classList.remove("clip-editor--split");
@@ -233,7 +376,7 @@ function webklipTheme() {
   function updatePreviewToggle() {
     const btn = document.getElementById("md-preview-toggle");
     if (!btn) return;
-    const show = language() === "markdown" && shouldUseEditor();
+    const show = canPreviewContent();
     btn.hidden = !show;
     if (!show && previewOpen) {
       setPreviewOpen(false);
@@ -293,6 +436,10 @@ function webklipTheme() {
           const text = update.state.doc.toString();
           syncToTextarea(text);
           updatePreview(text);
+          const pasted = update.transactions.some((tr) =>
+            tr.isUserEvent("input.paste")
+          );
+          if (pasted) maybeAutoDetectLanguage(text);
         }
       }),
     ];
@@ -307,6 +454,7 @@ function webklipTheme() {
 
     updatePreview(ta.value);
     updatePreviewToggle();
+    maybeAutoDetectLanguage(ta.value);
   }
 
   function refresh() {
@@ -361,6 +509,15 @@ function webklipTheme() {
     }
   }
 
+  function onTextareaPaste() {
+    // Fallback when CodeMirror is not mounted (or paste lands on the textarea).
+    queueMicrotask(() => {
+      const ta = getTextarea();
+      if (!ta) return;
+      maybeAutoDetectLanguage(ta.value);
+    });
+  }
+
   function onSettingsChange(e) {
     if (e.target instanceof HTMLSelectElement && e.target.name === "language") {
       wrap.dataset.language = e.target.value;
@@ -377,16 +534,6 @@ function webklipTheme() {
       textarea = getTextarea();
       if (!wrap || !textarea) return;
 
-      const langSelect =
-        document.querySelector(
-          "#settings-form-desktop:not([inert]) select[name='language']"
-        ) ||
-        document.querySelector(
-          "#settings-form-mobile:not([inert]) select[name='language']"
-        );
-      if (langSelect instanceof HTMLSelectElement) {
-        wrap.dataset.language = langSelect.value;
-      }
       const enc =
         document.querySelector(
           "#settings-form-desktop:not([inert]) input[name='encrypted'][type='checkbox']"
@@ -440,6 +587,9 @@ function webklipTheme() {
 
     document.body.addEventListener("input", (e) => {
       if (e.target?.id === "clip-content") onTextareaInput();
+    });
+    document.body.addEventListener("paste", (e) => {
+      if (e.target?.id === "clip-content") onTextareaPaste();
     });
   }
 

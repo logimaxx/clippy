@@ -98,7 +98,8 @@ The editor (CodeMirror) supports language modes including JavaScript, TypeScript
 - Multipart upload from the clip UI — drop, browse, or paste images from the clipboard (Ctrl+V / Cmd+V)
 - In-browser preview modal for images, PDFs, text, audio, and video (download still available)
 - Individual download via the UI or `GET /api/v1/files/:slug/:id`
-- Size limits configurable (`MAX_FILE_SIZE_MB` per file, `MAX_TOTAL_FILES_MB` per clip)
+- Size limits: 10 files per clip, 10 MB per file, 50 MB total (`MAX_FILE_SIZE_MB` / `MAX_TOTAL_FILES_MB`)
+- Text content: max 1,000,000 characters per clip (stored blob, including multi-tab workspace JSON)
 - Files are deleted with the clip on expiry or burn
 
 ### QR code

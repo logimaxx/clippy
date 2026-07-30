@@ -1,3 +1,5 @@
+import { workspacePlainText } from "../store/workspace";
+
 /** SEO helpers for public clip pages and crawler previews. */
 
 export function humanizeSlug(slug: string): string {
@@ -9,7 +11,7 @@ export function humanizeSlug(slug: string): string {
 }
 
 export function clipMetaDescription(content: string, maxLen = 160): string {
-  const text = content
+  const text = workspacePlainText(content)
     .replace(/^#{1,6}\s+/gm, "")
     .replace(/[`*_>~]+/g, "")
     .replace(/\s+/g, " ")

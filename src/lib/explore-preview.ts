@@ -1,7 +1,8 @@
 import type { Clip } from "../db/schema";
+import { workspacePlainText } from "../store/workspace";
 
 export function clipPreviewText(content: string, maxLen = 140): string {
-  const line = content.replace(/\s+/g, " ").trim();
+  const line = workspacePlainText(content).replace(/\s+/g, " ").trim();
   if (!line) return "Empty clip";
   return line.length > maxLen ? `${line.slice(0, maxLen - 3)}…` : line;
 }

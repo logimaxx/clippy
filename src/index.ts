@@ -16,18 +16,16 @@ import { auth } from "./routes/auth";
 import { account } from "./routes/account";
 import { oauth } from "./routes/oauth";
 import { admin } from "./routes/admin";
-import { scheduleVersionSave } from "./store/versions";
 import { validateProductionSecrets, securityHeaders } from "./lib/security-headers";
-import { clipContentSchema } from "./lib/constants";
 import { isUnlockedFromRequest } from "./lib/pin";
 import { isClipOwnerFromRequest } from "./lib/owner";
 import { getSessionUserIdFromRequest } from "./lib/session";
 import { canWriteClip } from "./lib/teams";
 import { recordApiUsage } from "./lib/api-usage";
 import * as rooms from "./ws/rooms";
+import { handleWorkspaceWsMessage } from "./ws/workspace-handlers";
 import {
   ensureClip,
-  schedulePersist,
   getClip,
   needsLegacyPinGate,
 } from "./store/clips";
@@ -149,21 +147,15 @@ const server = Bun.serve<WsData>({
       rooms.broadcastStatus(ws.data.slug);
     },
     async message(ws, message) {
-      const { slug, canWrite } = ws.data;
       try {
-        const data = JSON.parse(String(message));
-        if (data.type === "update" && typeof data.content === "string") {
-          if (!canWrite) {
-            ws.send(JSON.stringify({ type: "error", message: "Read-only" }));
-            return;
-          }
-          clipContentSchema.parse({ content: data.content });
-          await ensureClip(slug);
-          schedulePersist(slug, data.content);
-          scheduleVersionSave(slug, () => data.content, null);
-          rooms.broadcast(slug, { type: "update", content: data.content }, ws);
-        } else if (data.type === "ping") {
+        const data = JSON.parse(String(message)) as Record<string, unknown>;
+        if (data.type === "ping") {
           ws.send(JSON.stringify({ type: "pong" }));
+          return;
+        }
+        const handled = await handleWorkspaceWsMessage(ws, data);
+        if (!handled) {
+          ws.send(JSON.stringify({ type: "error", message: "Unknown message" }));
         }
       } catch {
         ws.send(JSON.stringify({ type: "error", message: "Invalid message" }));

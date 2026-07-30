@@ -4,7 +4,11 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { Context } from "hono";
 import { getFilesDir } from "../lib/cleanup";
-import { MAX_FILES_PER_CLIP } from "../lib/constants";
+import {
+  MAX_FILE_SIZE,
+  MAX_FILES_PER_CLIP,
+  MAX_TOTAL_FILES_SIZE,
+} from "../lib/constants";
 import {
   ensureClip,
   getClip,
@@ -16,10 +20,6 @@ import {
 import { isUnlocked, verifyPin } from "../lib/pin";
 import * as memory from "../store/memory";
 import * as rooms from "../ws/rooms";
-
-const MAX_FILE_SIZE = Number(process.env.MAX_FILE_SIZE_MB ?? 10) * 1024 * 1024;
-const MAX_TOTAL_FILES_SIZE =
-  Number(process.env.MAX_TOTAL_FILES_MB ?? 50) * 1024 * 1024;
 
 /** Serialize uploads per clip so quota checks can't race. */
 const uploadLocks = new Map<string, Promise<unknown>>();
@@ -153,7 +153,7 @@ export async function attachFileToClip(
   if (size > MAX_FILE_SIZE) {
     return {
       ok: false,
-      error: `File too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB)`,
+      error: `File too large (max ${MAX_FILE_SIZE / 1024 / 1024} MB)`,
     };
   }
 
@@ -176,7 +176,7 @@ export async function attachFileToClip(
       const maxMb = MAX_TOTAL_FILES_SIZE / 1024 / 1024;
       return {
         ok: false,
-        error: `Total attachments too large (max ${maxMb}MB)`,
+        error: `Total attachments too large (max ${maxMb} MB)`,
       };
     }
 

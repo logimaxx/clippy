@@ -39,8 +39,13 @@
     <h2>Abuse prevention</h2>
     <ul>
       <li>Per-IP rate limits on requests and clip creation</li>
-      <li>File upload size limits</li>
-      <li>Content size limits on updates</li>
+      <li>
+        File upload limits: 10 MB per file, 50 MB total, and 10 files per clip
+        (configurable via <code>MAX_FILE_SIZE_MB</code> / <code>MAX_TOTAL_FILES_MB</code>)
+      </li>
+      <li>
+        Text content limit: 1,000,000 characters per clip (includes multi-tab workspace JSON)
+      </li>
       <li>URL validation on outbound callbacks to prevent server-side request forgery</li>
     </ul>
 

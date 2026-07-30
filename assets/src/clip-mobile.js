@@ -149,8 +149,14 @@
     const editor = document.getElementById("clip-content");
     const counter = document.getElementById("char-count");
     if (!editor || !counter) return;
+    // Workspace UI owns the counter when multi-tab is active.
+    if (window.WebklipWorkspace?.getSerializedPlaintext) return;
+    const maxRaw = Number(editor.dataset.maxContentLength);
+    const max = Number.isFinite(maxRaw) && maxRaw > 0 ? maxRaw : 1_000_000;
     const len = editor.value.length;
-    counter.textContent = `${len} char${len === 1 ? "" : "s"} · saved`;
+    counter.textContent = `${len.toLocaleString()} / ${max.toLocaleString()}`;
+    counter.title = `Max ${max.toLocaleString()} characters`;
+    counter.classList.toggle("is-over-limit", len > max);
   }
 
   function getQrModal() {
@@ -540,7 +546,6 @@
     initDropZone();
     syncFormFieldsets();
     bindSelectPair("ttl", "m-ttl");
-    bindSelectPair("language", "m-language");
     updateCharCount();
   }
 

@@ -293,12 +293,16 @@
   async function applyDecryptedToEditor(plaintext) {
     const ta = document.getElementById("clip-content");
     if (!ta) return;
-    ta.value = plaintext;
     ta.dataset.decrypted = "true";
     ta.disabled = false;
     const wrap = document.getElementById("clip-editor-wrap");
     if (wrap) wrap.dataset.decrypted = "true";
-    window.WebklipEditor?.refresh?.();
+    if (window.WebklipWorkspace?.loadPlaintext) {
+      window.WebklipWorkspace.loadPlaintext(plaintext);
+    } else {
+      ta.value = plaintext;
+      window.WebklipEditor?.refresh?.();
+    }
     ta.dispatchEvent(new Event("input", { bubbles: true }));
   }
 
