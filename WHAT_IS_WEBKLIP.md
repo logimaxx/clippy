@@ -1,6 +1,6 @@
 # What Webklip Does
 
-Webklip is a temporary workspace for sharing text and files over a private link. It is an ephemeral web clipboard: you paste content (or attach files), share a URL, and every open device stays in sync until the clip expires and is deleted.
+Webklip is an ephemeral online clipboard for sharing text and files over a private link. It acts like a temporary workspace: you paste content (or attach files), share a URL, and every open device stays in sync until the clip expires and is deleted.
 
 The public service runs at [webklip.com](https://webklip.com). The same software is self-contained and can be self-hosted.
 
@@ -187,7 +187,7 @@ Webhook targets are validated to reduce SSRF risk (private/loopback addresses re
 | **IT & support** | One-time passwords or recovery codes with passphrase E2E and burn-after-read |
 | **Teams** | Named vanity URLs and shared workspaces for recurring clip names |
 
-It is **not** a permanent cloud drive, a full chat product, or a system-wide clipboard that captures every Ctrl+C. It is a temporary shared page you open when you need it.
+It is **not** a permanent cloud drive, a full chat product, or a system-wide clipboard that captures every Ctrl+C. It is a temporary shared online clipboard you open when you need it — more than a static pastebin, gone when you are done.
 
 ---
 
@@ -233,4 +233,4 @@ It is designed to be **self-contained**: one process (plus optional Redis/proxy 
 
 ## One-line definition
 
-**Webklip is an ephemeral, real-time web clipboard: a temporary private (or optionally public) link for text and files that syncs across devices and deletes itself when you are done.**
+**Webklip is an ephemeral online clipboard with live sync: a temporary private (or optionally public) link for text, files, and tabs that syncs across devices and deletes itself when you are done.**

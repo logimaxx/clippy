@@ -2,16 +2,17 @@
   {
     "slug": "online-clipboard",
     "title": "Online Clipboard — Share Text Instantly | Webklip",
-    "description": "Free online clipboard for instant text sharing. No sign-up, real-time sync, automatic expiry. Create a web clipboard in one click.",
+    "description": "Free online clipboard for instant text sharing. Live sync, file attachments, multiple tabs, automatic expiry. More than a pastebin — no sign-up.",
     "h1": "Online Clipboard",
     "intro": "Copy text on one device and paste it on another — without email, chat apps, or cloud storage accounts.",
     "paragraphs": [
       "An online clipboard is a web-based tool that stores text temporarily so you can access it from any browser. Webklip turns any URL into a shared clipboard: paste your content, send the link, and open it on your phone, laptop, or tablet.",
-      "Unlike a system clipboard that only works on one machine, a web clipboard syncs in real time. Type on your desktop and see the same text appear on your phone seconds later — then let the clip expire so nothing lingers in a message history."
+      "Unlike a classic pastebin that leaves a static page online, Webklip syncs in real time and acts like a temporary workspace — text, files, and tabs on one private link. Type on your desktop and see the same content appear on your phone seconds later — then let the clip expire so nothing lingers in a message history."
     ],
     "benefits": [
       "No sign-up — create a clip and share the link immediately",
       "Real-time sync across all open devices",
+      "Text, files, and multiple tabs on one temporary link",
       "Automatic deletion after expiry",
       "Works on phone, tablet, and desktop browsers"
     ],
@@ -34,13 +35,13 @@
     "intro": "Type on one device. Watch it appear on every other open tab — live, over a private link.",
     "paragraphs": [
       "Most \"share between devices\" tools are one-shot: paste, send a link, open it later. Live sync keeps every open clip connected. Edit on your laptop and the same text updates on your phone in real time — no refresh, no WhatsApp self-message, no waiting for someone to re-open the page.",
-      "Open the same Webklip link on two (or more) devices and you get a temporary shared workspace. Paste a code snippet, tweak a note, drop a file or paste a screenshot — every connected browser stays in sync until the clip expires. Ideal when you are bouncing between screens or collaborating without creating a permanent chat thread."
+      "Open the same Webklip link on two (or more) devices and you get a live online clipboard — a temporary shared workspace for text, files, and tabs. Paste a code snippet, tweak a note, drop a file or paste a screenshot — every connected browser stays in sync until the clip expires. Ideal when you are bouncing between screens or collaborating without creating a permanent chat thread or pastebin."
     ],
     "benefits": [
       "Real-time updates as you type or paste — no page reload",
       "Works across phone, tablet, and desktop browsers",
       "Same private link for every device — no account required",
-      "Text and file attachments sync together, then auto-expire",
+      "Text, files, and tabs sync together, then auto-expire",
       "Paste a screenshot with Ctrl+V and see it on every open device"
     ],
     "useCases": [
@@ -57,12 +58,12 @@
   {
     "slug": "share-text-between-devices",
     "title": "Share Text Between Devices — Copy Instantly | Webklip",
-    "description": "Copy text between phone and desktop instantly. Free web clipboard with real-time sync. No app install required.",
+    "description": "Copy text between phone and desktop instantly. Free online clipboard with real-time sync — more than a one-shot paste. No app install required.",
     "h1": "Share Text Between Devices",
     "intro": "Stop emailing yourself. Copy between devices with a single link that syncs in real time.",
     "paragraphs": [
-      "Moving text between your phone and computer should take seconds. Create a temporary page that acts as a shared clipboard, paste on one device, open the link on another, and your content is there — no app install, no chat thread.",
-      "Keep both devices open and watch text appear as you type. Ideal for a verification code, a long URL, a paragraph you are editing across screens, or a screenshot pasted with Ctrl+V."
+      "Moving text between your phone and computer should take seconds. Create a temporary online clipboard, paste on one device, open the link on another, and your content is there — no app install, no chat thread, no permanent pastebin left behind.",
+      "Keep both devices open and watch text appear as you type. Ideal for a verification code, a long URL, a paragraph you are editing across screens, or a screenshot pasted with Ctrl+V. When you are done, the clip expires."
     ],
     "benefits": [
       "Instant transfer with no app install",
@@ -146,8 +147,8 @@
     "h1": "Share Code Snippets",
     "intro": "Move code between workstations with a link that syncs in real time and expires when you are done.",
     "paragraphs": [
-      "Pasting into Slack or email leaves permanent copies and strips formatting. Webklip gives you a temporary page with syntax highlighting and real-time sync — set the language, paste your snippet, and share the URL.",
-      "Open it on another monitor or send it to a colleague. Changes sync while you pair-edit; when the review is done, the clip expires instead of living forever in chat."
+      "Pasting into Slack or email leaves permanent copies and strips formatting. A classic pastebin leaves a static page. Webklip gives you a temporary online clipboard with syntax highlighting and real-time sync — set the language, paste your snippet, and share the URL.",
+      "Open it on another monitor or send it to a colleague. Changes sync while you pair-edit; when the review is done, the clip expires instead of living forever in chat or on a public paste."
     ],
     "benefits": [
       "Syntax highlighting for dozens of languages",
@@ -226,12 +227,12 @@
   {
     "slug": "pastebin-vs-webklip",
     "title": "Pastebin vs Webklip — Temporary Paste Sharing | Webklip",
-    "description": "Pastebin vs Webklip: compare permanent pastes with an ephemeral clipboard that syncs live, attaches files, and expires by default.",
+    "description": "Pastebin vs Webklip: compare permanent pastes with an ephemeral online clipboard that syncs live, attaches files, and expires by default.",
     "h1": "Pastebin vs Webklip",
-    "intro": "Pastebin is built for pastes that stick around. Webklip is built for sharing that disappears — with live sync across every open device.",
+    "intro": "Pastebin is built for pastes that stick around. Webklip is an online clipboard built for sharing that disappears — with live sync across every open device.",
     "paragraphs": [
       "Pastebin has been the default place to dump code and text for years: create a paste, get a URL, leave it online. That works when you want a long-lived public snippet. It is a weaker fit when you are moving a secret, a one-off config, or a draft between your phone and laptop — the paste often outlives the need, and nothing updates live while you edit.",
-      "Webklip takes the opposite default. Paste into a temporary clip, share the link, and every open browser stays in sync until the TTL ends (15 minutes by default). Add passphrase end-to-end encryption or burn-after-read when the content should not linger. You still get syntax highlighting and an API — without treating every paste as something that should live forever."
+      "Webklip takes the opposite default. Paste into a temporary clip, share the link, and every open browser stays in sync until the TTL ends (15 minutes by default). Add files, multiple tabs, passphrase end-to-end encryption, or burn-after-read when you need more than a static paste — without treating every paste as something that should live forever."
     ],
     "compare": {
       "leftLabel": "Pastebin",
@@ -275,17 +276,17 @@
         {
           "feature": "Best for",
           "left": "Long-lived public pastes and archives",
-          "right": "Temporary sharing and cross-device sync"
+          "right": "Live online clipboard — temporary sharing that syncs, then disappears"
         }
       ],
-      "footnote": "Pastebin remains a solid choice when you want a paste to stay public and discoverable. Choose Webklip when the content should sync live and then go away."
+      "footnote": "Pastebin remains a solid choice when you want a paste to stay public and discoverable. Choose Webklip when you need a live online clipboard — sync across devices, then let it go."
     },
     "benefitsHeading": "Why choose Webklip over Pastebin?",
     "benefits": [
       "Ephemeral by default — abandoned clips are deleted, not archived forever",
       "Real-time sync so phone and desktop stay on the same draft",
       "Passphrase E2E and burn-after-read for one-time secrets",
-      "Attach files to the same temporary link as your text — including screenshots via Ctrl+V, with in-browser preview"
+      "Attach files and keep multiple tabs on the same temporary link — including screenshots via Ctrl+V"
     ],
     "useCases": [
       "Move a code snippet between laptops without leaving a permanent paste",
@@ -308,7 +309,7 @@
     "intro": "PrivateBin encrypts pastes in the browser. Webklip does that too — and keeps every open device in sync until the clip expires.",
     "paragraphs": [
       "PrivateBin is a well-known zero-knowledge paste tool: content is encrypted client-side, and you can burn a paste after it is read. That model is excellent for dumping a secret into a static page. It is less ideal when you are actively moving text between phone and laptop, or when you want attachments and live edits on the same link.",
-      "Webklip is a temporary workspace instead of a one-shot paste. Paste or type into a clip, share the URL (or scan a QR code), and every open tab stays in sync. Turn on passphrase end-to-end encryption when you need zero-knowledge storage, or burn-after-read for single-use secrets — then let the default short TTL clean up what nobody needs anymore."
+      "Webklip is an online clipboard that behaves like a temporary workspace instead of a one-shot paste. Paste or type into a clip, share the URL (or scan a QR code), and every open tab stays in sync. Turn on passphrase end-to-end encryption when you need zero-knowledge storage, or burn-after-read for single-use secrets — then let the default short TTL clean up what nobody needs anymore."
     ],
     "compare": {
       "leftLabel": "PrivateBin",
@@ -342,7 +343,7 @@
         {
           "feature": "Best for",
           "left": "Encrypted one-shot pastes",
-          "right": "Live ephemeral workspace + optional E2E"
+          "right": "Live online clipboard + optional E2E"
         }
       ],
       "footnote": "PrivateBin remains a strong choice for classic encrypted pastes. Choose Webklip when you also need live sync, QR handoff, or files on the same temporary link."
@@ -371,7 +372,7 @@
     "title": "One-Time Secret Alternative — Burn-After-Read Links | Webklip",
     "description": "One-Time Secret alternative with burn-after-read, passphrase E2E, live sync, and automatic expiry. Share a secret once — or keep editing until it disappears.",
     "h1": "One-Time Secret Alternative",
-    "intro": "One-Time Secret is built for a single reveal. Webklip can burn after one view too — and also works as a live temporary workspace when you need more than a one-shot link.",
+    "intro": "One-Time Secret is built for a single reveal. Webklip can burn after one view too — and also works as a live online clipboard when you need more than a one-shot link.",
     "paragraphs": [
       "One-Time Secret (OTS) popularized the idea of a link that self-destructs after it is read. That is perfect for handing someone a password once. The tradeoff is that the page is usually a single retrieval: no ongoing sync, limited room for notes and files, and little help when you are bouncing the same draft between your own devices.",
       "Webklip supports burn-after-read for true one-time secrets, and passphrase end-to-end encryption so the server never sees plaintext. When you do not need a single reveal, use a short TTL instead and keep every open browser in sync — including screenshots pasted with Ctrl+V — until the clip expires."
@@ -524,7 +525,7 @@
     "title": "Clipboard API — REST Web Clipboard | Webklip",
     "description": "REST clipboard API for creating, reading, and deleting ephemeral clips. Automate temporary text sharing with TTL, burn-after-read, and webhooks — no account required for anonymous clips.",
     "h1": "Clipboard API",
-    "intro": "A simple REST API for an ephemeral web clipboard — create a clip, read it later, or burn it after one retrieval.",
+    "intro": "A simple REST API for an ephemeral online clipboard — create a clip, read it later, or burn it after one retrieval.",
     "paragraphs": [
       "When scripts, CI jobs, or internal tools need to pass a short-lived string, a chat app is the wrong transport. Webklip exposes a JSON HTTP API under <a href=\"/docs/api\">/api/v1</a>: create a clip by slug, set a TTL or burn-after-read, read content once, and optionally receive webhooks when a clip is read, burned, or expired.",
       "Anonymous clips need no account. Pair the API with the web UI when humans also need to open the same link — including live sync in the browser — or keep the flow fully automated. Passphrase E2E clips store ciphertext only; decrypt on the client with the passphrase the API never receives."

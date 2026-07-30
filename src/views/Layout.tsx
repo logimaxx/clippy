@@ -19,7 +19,8 @@ interface LayoutProps {
 
 export function Layout({
   title,
-  description = "Webklip — instant web clipboard with real-time sync",
+  description =
+    "Webklip — online clipboard with live sync and temporary sharing",
   ogTitle,
   ogDescription,
   themeToggle = "floating",

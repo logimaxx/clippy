@@ -42,8 +42,8 @@ export function ClipLinkPreview({ slug, content }: ClipLinkPreviewProps) {
   return (
     <Layout
       title={`Webklip — ${slug}`}
-      description="One-time secure clipboard link on Webklip."
-      ogTitle="Webklip — Secure clipboard"
+      description="One-time secure clip link on Webklip."
+      ogTitle="Webklip — Secure clip"
       ogDescription="Open this link to view a one-time clip."
       robots="noindex, nofollow"
     >

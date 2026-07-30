@@ -459,13 +459,13 @@ writePage(
   "/",
   "index.html",
   renderPage(layout, header, footer, homeBody, ctx, {
-    title: "Webklip — Temporary Workspace for Instant Text & File Sharing",
+    title: "Webklip — Online Clipboard for Instant Text & File Sharing",
     description:
-      "Stop sending yourself links through WhatsApp. Share text and files instantly between devices with a temporary private link. No account, real-time sync, expires in 15 minutes by default.",
+      "Free online clipboard with live sync. Share text and files between devices on a temporary private link that acts like a disposable workspace. No account, expires in 15 minutes by default.",
     canonical: "/",
     ogTitle: "Webklip — Stop sending yourself links through WhatsApp",
     ogDescription:
-      "Share text and files instantly between devices with a temporary private link. No accounts. Expires in 15 minutes by default.",
+      "A live online clipboard for text, files, and tabs. No accounts. Expires in 15 minutes by default.",
     jsonLd: {
       "@context": "https://schema.org",
       "@type": "WebApplication",
@@ -474,7 +474,7 @@ writePage(
       operatingSystem: "Any",
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
       description:
-        "A free temporary workspace for instant text and file sharing between devices. No sign-up required. Clips expire in 15 minutes by default.",
+        "A free online clipboard with live sync — a temporary workspace for text, files, and tabs between devices. No sign-up required. Clips expire in 15 minutes by default.",
     },
     jsonLdFile: "index.json",
   })
@@ -503,7 +503,8 @@ const legalPages = [
     file: "terms.html",
     src: "terms.html",
     title: "Terms and Conditions — Webklip",
-    description: "Terms and conditions governing use of the Webklip web clipboard service.",
+    description:
+      "Terms and conditions governing use of the Webklip online clipboard service.",
   },
   {
     path: "/security",

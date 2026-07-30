@@ -1,16 +1,16 @@
-# Webklip — Temporary Workspace for Instant Text & File Sharing
+# Webklip — Online Clipboard for Instant Text & File Sharing
 
-**Meta description:** Stop sending yourself links through WhatsApp. Share text and files instantly between devices with a temporary private link. No account, real-time sync, expires in 15 minutes by default.
+**Meta description:** Free online clipboard with live sync. Share text and files between devices on a temporary private link that acts like a disposable workspace. No account, expires in 15 minutes by default.
 
 ---
 
 ## Hero
 
-Temporary workspace
+Online clipboard
 
 # Stop sending yourself links through WhatsApp.
 
-Share text and files instantly between any devices using a temporary private link.
+A live online clipboard that acts like a temporary workspace: text, files, and tabs on one private link.
 No accounts. No conversations. Expires in 15 minutes by default.
 
 **[Create a Clip]**
@@ -34,6 +34,7 @@ Or open any URL like `webklip.com/my-clip` to start sharing.
 - **Burn after read** — Deletes after one real open — WhatsApp and Slack link previews don’t count
 - **File attachments** — Images, PDFs, and docs with in-browser preview; paste screenshots with Ctrl+V
 - **Syntax highlighting & Markdown preview** — For code and notes
+- **Multiple tabs** — Keep notes, code, and drafts on one clip — more than a single paste
 
 ---
 
@@ -61,7 +62,7 @@ Pastebin keeps pastes around. Webklip syncs live and expires by default — with
 
 *(Trimmed to a short note instead of a full dedicated section with its own heading — the hero already made this point.)*
 
-Chat apps and email keep permanent copies, need an account, and bury files in conversation history. A Webklip link does one job — share, then disappear. You can still send that link over WhatsApp: for burn-after-read clips, the chat’s link preview does not open or burn the content.
+Classic pastebins leave static pastes online. Chat apps and email keep permanent copies and bury files in conversation history. A Webklip clip is a live online clipboard — share, sync across devices, then disappear. You can still send that link over WhatsApp: for burn-after-read clips, the chat’s link preview does not open or burn the content.
 
 ---
 
@@ -69,7 +70,7 @@ Chat apps and email keep permanent copies, need an account, and bury files in co
 
 *(Reduced from 8 personas to 3 — pick the strongest, most distinct use cases.)*
 
-**Developers** — Move snippets between machines with syntax highlighting, no Slack threads that never disappear.
+**Developers** — Move snippets between machines with live sync and syntax highlighting — without a permanent pastebin or Slack thread.
 
 **IT & support** — Send one-time passwords or recovery codes with passphrase E2E, plus burn-after-read.
 
@@ -122,3 +123,4 @@ Ephemeral by design. No ads. Privacy-friendly site analytics when enabled. Expir
 4. Reduced "How people use Webklip" from 8 personas to 3.
 5. Moved the clip-creation box into the hero so the product is visible without a click.
 6. Removed "How it works" — redundant with the hero paste box.
+7. Category-first framing: "Online clipboard" for search; temporary workspace as differentiation in the subhead and features.

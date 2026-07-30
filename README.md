@@ -1,6 +1,6 @@
 # Webklip
 
-Lightweight self-contained web clipboard with a REST API, real-time sync, HTMX UI, and PWA support.
+Lightweight self-contained online clipboard with a REST API, real-time sync, HTMX UI, and PWA support.
 
 ## Quick start
 

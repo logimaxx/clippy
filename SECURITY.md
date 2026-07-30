@@ -4,7 +4,7 @@ This document is for operators deploying Webklip in production and for security 
 
 ## Threat model
 
-Webklip is an **ephemeral web clipboard**. Access control for anonymous clips relies on the **link-as-secret** model: anyone who knows the URL can read and edit unless you add **passphrase end-to-end encryption**. Public Klipwall clips cannot use E2E or burn-after-read.
+Webklip is an **ephemeral online clipboard**. Access control for anonymous clips relies on the **link-as-secret** model: anyone who knows the URL can read and edit unless you add **passphrase end-to-end encryption**. Public Klipwall clips cannot use E2E or burn-after-read.
 
 | Asset | Risk if compromised |
 |-------|---------------------|
