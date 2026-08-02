@@ -83,7 +83,7 @@ Chat is fine for messages — not for dumping snippets, files, and secrets into 
 *(Kept as the single security-focused section — no longer repeating the feature list, just the privacy-specific claims.)*
 
 - No ads
-- Privacy-friendly site analytics only when enabled (never tracks the clipboard app itself)
+- Anonymous usage logs only when analytics is enabled (no content or editor tracking)
 - Anonymous — no account needed
 - Expires in 15 minutes by default (you can extend)
 - Automatic deletion after expiry — we do not keep abandoned clips
@@ -105,7 +105,7 @@ A few clips people chose to list on Explore.
 
 ## Footer
 
-Ephemeral by design. No ads. Privacy-friendly site analytics when enabled. Expires in 15 min by default. Data deleted on expiry.
+Ephemeral by design. No ads. Anonymous usage logs when enabled. Expires in 15 min by default. Data deleted on expiry.
 
 [About] [Privacy] [Terms] [Security] [Contact]
 

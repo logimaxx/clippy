@@ -215,7 +215,7 @@ It is **not** a permanent cloud drive, a full chat product, or a system-wide cli
 - **Automatic deletion** after expiry or burn
 - **Optional passphrase E2E** for sensitive content
 - **Link-as-secret** for unprotected clips — stated plainly
-- **No ads**; site analytics (Umami) only when configured, and not for tracking clipboard content itself
+- **No ads**; anonymous usage logs (Umami) only when configured — site visits and app access counts, not clip content or editor behavior
 - Operated by [LogiMaxx Systems](https://logimaxx.ro/) for the public instance
 
 See [SECURITY.md](SECURITY.md) for the threat model, deployment checklist, and responsible disclosure. Legal pages: About, Privacy, Terms, Security, Contact.

@@ -158,30 +158,31 @@ function buildContext(): BuildContext {
     legalUpdated: "July 26, 2026",
     umamiScript: umami?.script ?? "",
     footerTracking: umami
-      ? " Privacy-friendly site analytics."
+      ? " Anonymous usage logs when enabled."
       : " No tracking.",
     trustAnalytics: umami
-      ? "Privacy-friendly site analytics only — no app usage tracking"
+      ? "Anonymous usage logs only — no content or editor tracking"
       : "No analytics trackers",
     resourceLinks,
     umami: {
       analyticsSection: umami
         ? `<p>
-      We use <a href="https://umami.is" rel="noopener noreferrer">Umami</a> to measure
-      visits to our public website (marketing pages, docs, and similar). Umami is
-      privacy-friendly: it does not use cookies for analytics, does not build personal
-      profiles, and does not do cross-site advertising tracking.
+      We use <a href="https://umami.is" rel="noopener noreferrer">Umami</a> to collect
+      anonymous usage logs: visits to our public website (marketing pages, docs, and similar)
+      and counts of clipboard app access. Umami is privacy-friendly: it does not use cookies
+      for analytics, does not build personal profiles, and does not do cross-site advertising
+      tracking.
     </p>
     <p>
-      We do <strong>not</strong> use Umami (or any other analytics tool) to track usage
-      of the clipboard app itself — for example, we do not record which clips you open,
-      what you paste, or how you use editor features.
+      Usage logs do <strong>not</strong> include clip content, which clips you open (secret
+      link names), what you paste, or how you use editor features. App access is counted in
+      aggregate on the server without recording those details.
     </p>`
         : `<p>
       We do not run analytics or advertising trackers on Webklip.
     </p>`,
       cookieConsent: umami
-        ? " We do not use non-essential analytics cookies; Umami measures anonymous site visits without analytics cookies."
+        ? " We do not use non-essential analytics cookies; Umami measures anonymous usage without analytics cookies."
         : " We do not use non-essential cookies, so no cookie consent banner is shown.",
     },
   };

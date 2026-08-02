@@ -41,6 +41,7 @@ import {
   OWNER_PASSWORD_MIN_LEN,
 } from "../lib/owner";
 import { getTeamBySlug, canReadClip, canWriteClip } from "../lib/teams";
+import { trackAppAccess } from "../lib/umami";
 import {
   ensureClip,
   createClip,
@@ -68,6 +69,14 @@ import { OwnerClaim } from "../views/OwnerClaim";
 import { KlipwallPage } from "../views/Klipwall";
 import { SettingsPanel } from "../views/partials/Settings";
 import * as rooms from "../ws/rooms";
+
+function trackClipAppAccess(c: Context): void {
+  trackAppAccess({
+    userAgent: c.req.header("user-agent"),
+    language: c.req.header("accept-language"),
+    referrer: c.req.header("referer"),
+  });
+}
 import type { Clip } from "../db/schema";
 
 const pages = new Hono();
@@ -128,6 +137,7 @@ async function renderClipPage(c: Context, slug: string) {
 
   if (needsLegacyPinGate(clip) && !isUnlocked(c, slug)) {
     if (crawler) return c.html(<ClipLinkPreview slug={slug} />);
+    trackClipAppAccess(c);
     return c.html(<PinGate slug={slug} />);
   }
 
@@ -177,6 +187,7 @@ async function renderClipPage(c: Context, slug: string) {
           ? "That name is already taken. Pick another."
           : null;
 
+  trackClipAppAccess(c);
   return c.html(
     <ClipPage
       slug={clip.slug}

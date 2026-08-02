@@ -27,7 +27,7 @@ export function SiteFooter() {
   const email = contactEmail();
   const year = new Date().getFullYear();
   const tracking = isUmamiEnabled()
-    ? " Privacy-friendly site analytics."
+    ? " Anonymous usage logs when enabled."
     : " No tracking.";
   const resources = landingResourceLinks();
 
