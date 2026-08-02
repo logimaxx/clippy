@@ -12,7 +12,7 @@ WORKDIR /app
 COPY package.json ./
 RUN bun install --production
 COPY --from=build /app/dist ./dist
-COPY --from=build /app/static ./static
+COPY --from=build /app/website/reserved-paths.json ./website/reserved-paths.json
 COPY --from=build /app/src ./src
 COPY --from=build /app/assets ./assets
 COPY --from=build /app/scripts ./scripts

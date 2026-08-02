@@ -42,6 +42,34 @@
     setFormActive(mobile, !useDesktop);
   }
 
+  function syncSettingsPageOffset() {
+    const header = document.querySelector(".header--clip");
+    if (!header) return;
+    const bottom = Math.ceil(header.getBoundingClientRect().bottom);
+    document.documentElement.style.setProperty("--clip-header-offset", `${bottom}px`);
+  }
+
+  function setBottomNavActive(view) {
+    app.querySelectorAll(".bottom-nav__item[data-view]").forEach((b) => {
+      b.classList.toggle("is-active", b.getAttribute("data-view") === view);
+    });
+  }
+
+  function syncSettingsSheetMode() {
+    const sheet = document.getElementById("sheet-settings");
+    if (!sheet) return;
+    const mobilePage = mobileQuery.matches && openSheetName === "settings";
+    sheet.classList.toggle("sheet--page", mobilePage);
+    if (mobilePage) {
+      sheet.setAttribute("role", "region");
+      sheet.removeAttribute("aria-modal");
+      syncSettingsPageOffset();
+    } else {
+      sheet.setAttribute("role", "dialog");
+      sheet.setAttribute("aria-modal", "true");
+    }
+  }
+
   function bindSelectPair(aId, bId) {
     const a = document.getElementById(aId);
     const b = document.getElementById(bId);
@@ -67,16 +95,39 @@
     Object.entries(sheets).forEach(([key, el]) => {
       if (!el || key === name) return;
       el.classList.remove("is-open");
+      el.classList.remove("sheet--page");
       el.hidden = true;
     });
 
     openSheetName = name;
+    const mobileSettingsPage = mobileQuery.matches && name === "settings";
+
+    if (mobileSettingsPage) {
+      app.dataset.view = "settings";
+      setBottomNavActive("settings");
+      backdrop.classList.remove("is-open");
+      backdrop.hidden = true;
+      sheet.hidden = false;
+      sheet.classList.add("is-open");
+      syncSettingsSheetMode();
+      syncFormFieldsets();
+      // Full-page panel scrolls internally; do not lock body.
+      syncBodyScrollLock();
+      return;
+    }
+
+    if (app.dataset.view === "settings") {
+      app.dataset.view = "editor";
+      setBottomNavActive("editor");
+    }
+
     backdrop.hidden = false;
     sheet.hidden = false;
     // Apply is-open synchronously so HTMX re-opens after swap are visible
     // immediately (rAF can lose the race with layout/CSS display:none rules).
     backdrop.classList.add("is-open");
     sheet.classList.add("is-open");
+    syncSettingsSheetMode();
     syncFormFieldsets();
     syncBodyScrollLock();
   }
@@ -106,8 +157,12 @@
   }
 
   function syncBodyScrollLock() {
+    const settingsLocksScroll =
+      openSheetName === "settings" && !(mobileQuery.matches && app.dataset.view === "settings");
+    const otherSheetOpen = Boolean(openSheetName) && openSheetName !== "settings";
     document.body.style.overflow =
-      openSheetName ||
+      settingsLocksScroll ||
+      otherSheetOpen ||
       isQrModalOpen() ||
       isDocsModalOpen() ||
       isCloneModalOpen() ||
@@ -122,12 +177,34 @@
     const sheets = getSheets();
     if (!backdrop) return;
     const wasOpen = Boolean(openSheetName);
+    const settingsSheet = sheets.settings;
+    const wasMobileSettingsPage =
+      wasOpen &&
+      openSheetName === "settings" &&
+      Boolean(settingsSheet?.classList.contains("sheet--page"));
     const token = ++sheetCloseToken;
     backdrop.classList.remove("is-open");
-    Object.values(sheets).forEach((sheet) => sheet?.classList.remove("is-open"));
+    Object.values(sheets).forEach((sheet) => {
+      sheet?.classList.remove("is-open");
+      sheet?.classList.remove("sheet--page");
+    });
     openSheetName = null;
+    if (wasMobileSettingsPage && app.dataset.view === "settings") {
+      app.dataset.view = "editor";
+      setBottomNavActive("editor");
+    }
+    syncSettingsSheetMode();
     syncFormFieldsets();
     if (!wasOpen) {
+      backdrop.hidden = true;
+      Object.values(sheets).forEach((sheet) => {
+        if (sheet) sheet.hidden = true;
+      });
+      syncBodyScrollLock();
+      return;
+    }
+    // Mobile settings page has no slide animation; hide immediately.
+    if (wasMobileSettingsPage) {
       backdrop.hidden = true;
       Object.values(sheets).forEach((sheet) => {
         if (sheet) sheet.hidden = true;
@@ -503,6 +580,17 @@
     });
   }
 
+  function setMobileView(view) {
+    if (!view) return;
+    if (view === "settings") {
+      openSheet("settings");
+      return;
+    }
+    app.dataset.view = view;
+    setBottomNavActive(view);
+    if (openSheetName) closeSheets();
+  }
+
   function bindSheetControls() {
     document.querySelectorAll("[data-open-sheet]").forEach((btn) => {
       if (btn.dataset.sheetBound === "1") return;
@@ -526,12 +614,7 @@
       if (btn.dataset.navBound === "1") return;
       btn.dataset.navBound = "1";
       btn.addEventListener("click", () => {
-        const view = btn.getAttribute("data-view");
-        if (!view) return;
-        app.dataset.view = view;
-        app.querySelectorAll(".bottom-nav__item").forEach((b) => b.classList.remove("is-active"));
-        btn.classList.add("is-active");
-        closeSheets();
+        setMobileView(btn.getAttribute("data-view"));
       });
     });
   }
@@ -592,7 +675,21 @@
     });
   }
 
-  mobileQuery.addEventListener("change", syncFormFieldsets);
+  mobileQuery.addEventListener("change", () => {
+    syncFormFieldsets();
+    if (openSheetName === "settings") {
+      openSheet("settings");
+    } else {
+      syncSettingsSheetMode();
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    if (mobileQuery.matches && app.dataset.view === "settings") {
+      syncSettingsPageOffset();
+    }
+  });
+
   init();
 
   document.body.addEventListener("htmx:afterSettle", (e) => {

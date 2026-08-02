@@ -60,11 +60,11 @@
     }
   }
 
-  function protectionLabels(toggle) {
+  function protectionLabels(el) {
     const labels = [];
-    if (toggle.dataset.hasPin === "true") labels.push("legacy PIN");
-    if (toggle.dataset.encrypted === "true") labels.push("passphrase E2E");
-    if (toggle.dataset.burnOnRead === "true") labels.push("burn-after-read");
+    if (el.dataset.hasPin === "true") labels.push("legacy PIN");
+    if (el.dataset.encrypted === "true") labels.push("passphrase E2E");
+    if (el.dataset.burnOnRead === "true") labels.push("burn-after-read");
     return labels;
   }
 
@@ -150,35 +150,144 @@
     }
   }
 
-  function currentProtectMode() {
-    const pass = document.querySelector('[data-protect-option="passphrase"]');
-    if (pass instanceof HTMLInputElement && pass.dataset.encrypted === "true") {
-      return "passphrase";
+  let pendingAccess = null;
+
+  function currentAccessMode() {
+    const published = document.querySelector('[data-access-option="published"]');
+    if (
+      published instanceof HTMLInputElement &&
+      published.dataset.visibility === "public"
+    ) {
+      return "published";
     }
-    if (pass instanceof HTMLInputElement && pass.dataset.hasPin === "true") {
-      return "pin";
+    const protectedOpt = document.querySelector('[data-access-option="protected"]');
+    if (
+      protectedOpt instanceof HTMLInputElement &&
+      (protectedOpt.dataset.encrypted === "true" ||
+        protectedOpt.dataset.hasPin === "true")
+    ) {
+      return "protected";
     }
-    return "none";
+    return "private";
   }
 
-  function syncProtectRadios(mode) {
-    document.querySelectorAll("[data-protect-option]").forEach((el) => {
+  function syncAccessRadios(mode) {
+    document.querySelectorAll("[data-access-option]").forEach((el) => {
       if (!(el instanceof HTMLInputElement)) return;
-      if (mode === "passphrase" || mode === "pin") {
-        el.checked = el.value === "passphrase";
-      } else {
-        el.checked = el.value === mode;
-      }
+      el.checked = el.value === mode;
     });
   }
 
   function clipSlug() {
     return (
-      document.querySelector("[data-public-toggle]")?.dataset?.slug ||
+      document.querySelector("[data-access-option]")?.dataset?.slug ||
       document.querySelector("[data-e2e-setup-modal]")?.dataset?.slug ||
       document.getElementById("clip-content")?.dataset?.wsRoom ||
       ""
     );
+  }
+
+  function goPrivate(input) {
+    const slug = input.dataset.slug || clipSlug();
+    if (!slug) return;
+
+    if (input.dataset.visibility === "public") {
+      if (typeof htmx !== "undefined") {
+        htmx.ajax("POST", `/${slug}/settings`, {
+          target: "#settings-root",
+          swap: "outerHTML",
+          values: { visibility: "private" },
+        });
+      }
+      return;
+    }
+
+    if (input.dataset.encrypted === "true") {
+      removePassphraseProtect();
+      return;
+    }
+
+    if (input.dataset.hasPin === "true") {
+      if (typeof htmx !== "undefined") {
+        htmx.ajax("POST", `/${slug}/settings`, {
+          target: "#settings-root",
+          swap: "outerHTML",
+          values: { protect: "none" },
+        });
+      }
+    }
+  }
+
+  function goProtected(input) {
+    if (input.dataset.encrypted === "true") {
+      syncAccessRadios("protected");
+      return;
+    }
+
+    syncAccessRadios(currentAccessMode());
+
+    if (input.dataset.visibility === "public") {
+      const slug = input.dataset.slug || clipSlug();
+      if (!slug || typeof htmx === "undefined") return;
+      pendingAccess = "protected";
+      htmx.ajax("POST", `/${slug}/settings`, {
+        target: "#settings-root",
+        swap: "outerHTML",
+        values: { visibility: "private" },
+      });
+      return;
+    }
+
+    openE2eSetupModal("enable");
+  }
+
+  function goPublished(input) {
+    syncAccessRadios(currentAccessMode());
+    const slug = input.dataset.slug || clipSlug();
+    if (!slug) return;
+    beginPublishFlow(
+      slug,
+      input.dataset.hasOwnerPassword === "true",
+      protectionLabels(input)
+    );
+  }
+
+  function handleAccessChange(input) {
+    const option = input.dataset.accessOption;
+    if (option === "private") {
+      goPrivate(input);
+      return true;
+    }
+    if (option === "protected") {
+      goProtected(input);
+      return true;
+    }
+    if (option === "published") {
+      goPublished(input);
+      return true;
+    }
+    return false;
+  }
+
+  function closeSectionHelp(except) {
+    document.querySelectorAll("[data-section-help]").forEach((btn) => {
+      if (except && btn === except) return;
+      if (!(btn instanceof HTMLElement)) return;
+      btn.setAttribute("aria-expanded", "false");
+      const tip = btn.parentElement?.querySelector(".section-help__tip");
+      if (tip instanceof HTMLElement) tip.hidden = true;
+    });
+  }
+
+  function toggleSectionHelp(btn) {
+    const tip = btn.parentElement?.querySelector(".section-help__tip");
+    if (!(tip instanceof HTMLElement)) return;
+    const open = btn.getAttribute("aria-expanded") === "true";
+    closeSectionHelp();
+    if (!open) {
+      btn.setAttribute("aria-expanded", "true");
+      tip.hidden = false;
+    }
   }
 
   function setSetupError(message) {
@@ -221,7 +330,7 @@
     el.dataset.mode = "";
     document.body.style.overflow = "";
     setSetupError("");
-    syncProtectRadios(currentProtectMode());
+    syncAccessRadios(currentAccessMode());
   }
 
   function openE2eSetupModal(mode) {
@@ -314,7 +423,7 @@
       window.WebklipE2E.showPassphraseGate({
         error: "Unlock with your passphrase before removing protection",
       });
-      syncProtectRadios(currentProtectMode());
+      syncAccessRadios(currentAccessMode());
       return;
     }
 
@@ -360,7 +469,7 @@
 
     if (option === "none") {
       if (input.dataset.encrypted === "true") {
-        syncProtectRadios(currentProtectMode());
+        syncAccessRadios(currentAccessMode());
         removePassphraseProtect();
         return true;
       }
@@ -376,10 +485,10 @@
 
     if (option === "passphrase") {
       if (input.dataset.encrypted === "true") {
-        syncProtectRadios("passphrase");
+        syncAccessRadios("protected");
         return true;
       }
-      syncProtectRadios(currentProtectMode());
+      syncAccessRadios(currentAccessMode());
       openE2eSetupModal("enable");
       return true;
     }
@@ -482,6 +591,12 @@
     "change",
     (e) => {
       const toggle = e.target;
+      if (toggle instanceof HTMLInputElement && toggle.matches("[data-access-option]")) {
+        e.stopImmediatePropagation();
+        handleAccessChange(toggle);
+        return;
+      }
+
       if (toggle instanceof HTMLInputElement && toggle.matches("[data-public-toggle]")) {
         if (!toggle.checked) return;
 
@@ -546,6 +661,18 @@
   document.body.addEventListener("click", (e) => {
     const target = e.target;
     if (!(target instanceof Element)) return;
+
+    const helpBtn = target.closest("[data-section-help]");
+    if (helpBtn instanceof HTMLElement) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleSectionHelp(helpBtn);
+      return;
+    }
+
+    if (!target.closest(".section-help")) {
+      closeSectionHelp();
+    }
 
     if (target.closest("[data-e2e-setup-cancel]")) {
       closeE2eSetupModal();
@@ -712,11 +839,15 @@
   });
 
   document.body.addEventListener("htmx:afterSwap", (e) => {
-    if (e.detail.target?.id === "settings-root") {
-      closeE2eSetupModal();
-      closePublicClearModal();
-      closePublicModal();
-      closeExpiresModal();
+    if (e.detail.target?.id !== "settings-root") return;
+    closePublicClearModal();
+    closePublicModal();
+    closeExpiresModal();
+    if (pendingAccess === "protected") {
+      pendingAccess = null;
+      openE2eSetupModal("enable");
+      return;
     }
+    closeE2eSetupModal();
   });
 })();

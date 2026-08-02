@@ -10,7 +10,7 @@
     "dev": "bun run scripts/dev.ts",
     "start": "bun run src/index.ts",
     "build:assets": "bun run scripts/build-assets.ts",
-    "build:static": "bun run scripts/build-static.ts",
+    "build:static": "bun run website/build.ts",
     "build": "bun run build:assets && bun run build:static",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "bun run src/db/migrate.ts",

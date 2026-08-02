@@ -13,6 +13,11 @@ import {
   FilesNavIcon,
   SettingsNavIcon,
   CloseIcon,
+  DevicesIcon,
+  EyeIcon,
+  EyeOffIcon,
+  ShieldIcon,
+  KeyIcon,
 } from "./partials/ClipIcons";
 import { asset } from "../lib/assets";
 import {
@@ -137,20 +142,54 @@ export function ClipPage({
 
           {readOnly ? (
             <div class="header-cluster" aria-label="Clip status">
-              <span class="chip chip--live chip--devices">
+              <span
+                class="chip chip--icon chip--live chip--devices"
+                aria-label={deviceLabel}
+                title={deviceLabel}
+              >
                 <span class="pulse" aria-hidden="true"></span>
-                <span id="device-count-desktop">{deviceLabel}</span>
+                <DevicesIcon />
+                <span id="device-count">{devices}</span>
               </span>
-              <span class={`chip ${isPublic ? "chip--public" : "chip--private"}`}>
-                {isPublic ? "Public" : "Private"}
+              <span
+                class={`chip chip--icon ${
+                  isPublic
+                    ? "chip--public"
+                    : encrypted
+                      ? "chip--secure"
+                      : hasPin
+                        ? "chip--pin"
+                        : "chip--private"
+                }`}
+                aria-label={
+                  isPublic
+                    ? "Published"
+                    : encrypted
+                      ? "Protected"
+                      : hasPin
+                        ? "PIN protected"
+                        : "Private"
+                }
+                title={
+                  isPublic
+                    ? "Published"
+                    : encrypted
+                      ? "Protected"
+                      : hasPin
+                        ? "PIN protected"
+                        : "Private"
+                }
+              >
+                {isPublic ? (
+                  <EyeIcon />
+                ) : encrypted ? (
+                  <ShieldIcon />
+                ) : hasPin ? (
+                  <KeyIcon />
+                ) : (
+                  <EyeOffIcon />
+                )}
               </span>
-              {encrypted ? (
-                <span class="chip chip--secure">E2E</span>
-              ) : hasPin ? (
-                <span class="chip chip--pin">PIN</span>
-              ) : (
-                <span class="chip chip--open">Unprotected</span>
-              )}
               {!isOwner && hasOwnerPassword && (
                 <a href={`/${slug}/claim`} class="chip chip--owner-claim">
                   Recover ownership
@@ -191,14 +230,15 @@ export function ClipPage({
             <div class="share-menu" id="share-menu">
               <button
                 type="button"
-                class="btn btn--primary"
+                class="btn btn--primary btn--icon"
                 id="share-trigger"
                 aria-haspopup="menu"
                 aria-expanded="false"
                 aria-controls="share-popover"
+                aria-label="Share"
+                title="Share"
               >
                 <ShareIcon />
-                Share
               </button>
               <div class="share-menu__popover" id="share-popover" role="menu" hidden>
                 <button
@@ -429,6 +469,12 @@ export function ClipPage({
             <FilesNavIcon />
             Files
           </button>
+          {!readOnly && (
+            <button type="button" class="bottom-nav__item" data-view="settings">
+              <SettingsNavIcon />
+              Settings
+            </button>
+          )}
         </nav>
 
         <div class="modal-backdrop" id="qr-modal-backdrop" hidden data-qr-modal>

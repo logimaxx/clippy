@@ -1,7 +1,14 @@
 /** @jsxImportSource hono/jsx */
 import { ThemeToggle } from "../ThemeToggle";
+import type { AuthUser } from "../../lib/session";
 
-export function SiteHeader() {
+interface SiteHeaderProps {
+  /** Marketing chrome links vs product-only nav for the OSS app shell. */
+  variant?: "marketing" | "app";
+  user?: AuthUser | null;
+}
+
+export function SiteHeader({ variant = "marketing", user = null }: SiteHeaderProps) {
   return (
     <header class="site-header">
       <div class="site-header-inner">
@@ -11,10 +18,21 @@ export function SiteHeader() {
         <div class="site-header-end">
           <nav id="site-nav" class="site-nav" aria-label="Main">
             <a href="/klipwall">Klipwall</a>
-            <a href="/#features">Features</a>
-            <a href="/about">About</a>
-            <a href="/docs">API</a>
-            <a href="/security">Security</a>
+            {variant === "marketing" ? (
+              <>
+                <a href="/#features">Features</a>
+                <a href="/about">About</a>
+                <a href="/docs">API</a>
+                <a href="/security">Security</a>
+              </>
+            ) : user ? (
+              <a href="/account">Account</a>
+            ) : (
+              <>
+                <a href="/login">Log in</a>
+                <a href="/register">Register</a>
+              </>
+            )}
           </nav>
           <ThemeToggle />
           <button

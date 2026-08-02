@@ -245,9 +245,9 @@ It is designed to be **self-contained**: one process (plus optional Redis/proxy 
 | [SECURITY.md](SECURITY.md) | Threat model and production hardening |
 | [docs/OAUTH.md](docs/OAUTH.md) | Google / GitHub OAuth setup |
 | [docs/MIGRATION.md](docs/MIGRATION.md) | Moving a Docker deployment |
-| [homepage.md](homepage.md) | Marketing homepage structure and copy |
+| [homepage.md](website/homepage.md) | Marketing homepage structure and copy |
 | `/docs` on a running instance | Live API and webhook documentation |
-| Landing pages | SEO guides: `/online-clipboard`, `/live-sync`, `/pastebin-vs-webklip`, `/temporary-file-sharing`, `/secure-clipboard`, `/burn-after-read`, `/e2e-encrypted-clipboard`, and others in `static/landing-pages.json` |
+| Landing pages | SEO guides: `/online-clipboard`, `/live-sync`, `/pastebin-vs-webklip`, `/temporary-file-sharing`, `/secure-clipboard`, `/burn-after-read`, `/e2e-encrypted-clipboard`, and others in `website/static/landing-pages.json` |
 
 ---
 

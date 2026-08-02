@@ -23,7 +23,7 @@ Principala provocare nu mai este dezvoltarea funcționalităților de bază, ci 
 
 ## Ce există deja (Phase 2–3)
 
-Verificat în cod (`src/`, `assets/`, `static/pages/docs/`).
+Verificat în cod (`src/`, `assets/`, `website/static/pages/docs/`).
 
 ### Core (anonim, fără cont)
 
@@ -85,7 +85,7 @@ Verificat în cod (`src/`, `assets/`, `static/pages/docs/`).
 
 ### Ce poate fi îmbunătățit
 
-Homepage-ul (`static/pages/home.html`) transmite imaginea unui „online clipboard”, în timp ce produsul este deja mai capabil.
+Homepage-ul (`website/static/pages/home.html`) transmite imaginea unui „online clipboard”, în timp ce produsul este deja mai capabil.
 
 **Lipsesc din landing** (deși există în produs):
 
@@ -95,7 +95,7 @@ Homepage-ul (`static/pages/home.html`) transmite imaginea unui „online clipboa
 * Version history
 * REST API / CLI
 
-Acest gap sub-vinde produsul. Detalii de copy în `HOMEPAGE_COPY.md`.
+Acest gap sub-vinde produsul. Detalii de copy în `website/HOMEPAGE_COPY.md`.
 
 ### Clarificări terminologice
 
@@ -359,4 +359,4 @@ Direcția strategică recomandată este transformarea lui într-un **Temporary W
 
 Această poziționare este mai greu de copiat, extinde semnificativ cazurile de utilizare și diferențiază produsul de serviciile clasice de tip clipboard sau pastebin.
 
-**Primul pas concret:** aliniază homepage-ul cu realitatea produsului (vezi `HOMEPAGE_COPY.md`), apoi investește în diferențiere (extension, clipboard sync, workspace extins).
+**Primul pas concret:** aliniază homepage-ul cu realitatea produsului (vezi `website/HOMEPAGE_COPY.md`), apoi investește în diferențiere (extension, clipboard sync, workspace extins).

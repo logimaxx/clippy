@@ -98,11 +98,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .header-cluster {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 0.35rem;
   flex: 1;
   min-width: 0;
+  overflow: hidden;
 }
 
 .header-quick {
@@ -145,10 +146,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
   display: inline;
 }
 
-.chip--devices-mobile {
-  display: none;
-}
-
 .header-actions {
   display: flex;
   align-items: center;
@@ -186,6 +183,20 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .header .theme-toggle:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+#share-trigger.btn--icon {
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  min-height: 2rem;
+  padding: 0;
+  border-radius: var(--radius-sm);
+}
+
+#share-trigger.btn--icon svg {
+  width: 0.95rem;
+  height: 0.95rem;
 }
 
 /* Share menu — one entry point for copy, QR, system share */
@@ -616,6 +627,52 @@ button.chip {
   letter-spacing: 0.01em;
   line-height: inherit;
   appearance: none;
+}
+
+.chip--icon {
+  justify-content: center;
+  width: 2rem;
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border-radius: var(--radius-sm);
+  gap: 0.2rem;
+}
+
+.chip--icon.chip--devices {
+  width: auto;
+  min-width: 2rem;
+  padding: 0 0.45rem;
+}
+
+.chip--icon svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+}
+
+.chip--icon #device-count {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.countdown--chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  height: 2rem;
+  padding: 0 0.45rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-sunken);
+  appearance: none;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--spark);
+  cursor: pointer;
 }
 
 .chip--action {
@@ -1696,6 +1753,66 @@ button.file-card__name--preview:focus-visible {
 
 .sheet__section { margin-bottom: 1.25rem; }
 
+.sheet__section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0 0 0.65rem;
+}
+
+.sheet__section-title-row .sheet__section-title {
+  margin: 0;
+}
+
+.section-help {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.section-help__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-tertiary);
+  cursor: pointer;
+}
+
+.section-help__btn:hover,
+.section-help__btn[aria-expanded="true"] {
+  color: var(--accent);
+  background: var(--accent-muted);
+}
+
+.section-help__tip {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.35rem);
+  z-index: 20;
+  width: min(18rem, calc(100vw - 2.5rem));
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-default);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-md);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.45;
+}
+
+.access-owner-meta {
+  margin-top: 0.75rem;
+}
+
 .sheet__section-title {
   margin: 0 0 0.65rem;
   font-size: 0.7rem;
@@ -1819,8 +1936,6 @@ button.file-card__name--preview:focus-visible {
 
   .header-quick { display: flex; }
 
-  .chip--devices-mobile { display: none !important; }
-
   .toolbar--mobile-only { display: none; }
 
   .main-grid {
@@ -1889,29 +2004,11 @@ button.file-card__name--preview:focus-visible {
 
   .header-quick { display: none; }
 
-  .header .chip--devices { display: none; }
-
-  .chip--devices-mobile { display: inline-flex; }
-
   .header-settings-btn {
-    padding: 0;
-    width: 2rem;
-    min-width: 2rem;
-    justify-content: center;
+    display: none !important;
   }
-
-  .header-settings-btn__label { display: none; }
 
   .field--pin { display: none; }
-
-  .header--clip {
-    flex-wrap: wrap;
-  }
-
-  .header--clip .header-settings {
-    order: 3;
-    flex: 1 1 100%;
-  }
 
   .app[data-view="editor"] .files-panel,
   .app:not([data-view="files"]) .files-panel {
@@ -1933,6 +2030,51 @@ button.file-card__name--preview:focus-visible {
   .app[data-view="files"] .main-grid {
     flex: 1;
     min-height: 0;
+  }
+
+  .app[data-view="settings"] .editor-panel,
+  .app[data-view="settings"] .files-panel {
+    display: none;
+  }
+
+  .app[data-view="settings"] .workspace {
+    /* Settings fills this space via the fixed sheet--page panel */
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* Mobile: settings as a full-page section between header and bottom nav */
+  .sheet.sheet--page {
+    left: 0;
+    right: 0;
+    top: var(--clip-header-offset, var(--header-h));
+    bottom: calc(var(--bottom-nav-h) + var(--safe-bottom));
+    max-height: none;
+    height: auto;
+    border-radius: 0;
+    border-top: none;
+    box-shadow: none;
+    transform: none;
+    transition: none;
+    z-index: 35;
+  }
+
+  .sheet.sheet--page.is-open {
+    transform: none;
+  }
+
+  .sheet.sheet--page .sheet__handle,
+  .sheet.sheet--page .sheet__close {
+    display: none;
+  }
+
+  .sheet.sheet--page .sheet__header {
+    padding: 0.85rem 1rem 0.5rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .sheet.sheet--page .sheet__body {
+    padding: 0.75rem 1rem calc(1rem + var(--safe-bottom));
   }
 }
 

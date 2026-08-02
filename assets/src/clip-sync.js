@@ -220,10 +220,15 @@
         } else if (data.type === "status") {
           const n = data.devices ?? 0;
           const label = `${n} device${n === 1 ? "" : "s"}`;
-          const desktop = document.getElementById("device-count-desktop");
-          if (desktop) desktop.textContent = label;
-          const mobile = document.getElementById("device-count");
-          if (mobile) mobile.textContent = label;
+          const count = document.getElementById("device-count");
+          if (count) {
+            count.textContent = String(n);
+            const chip = count.closest(".chip");
+            if (chip instanceof HTMLElement) {
+              chip.setAttribute("aria-label", label);
+              chip.title = label;
+            }
+          }
         } else if (data.type === "error" && data.message) {
           toastError(String(data.message));
         }

@@ -6,9 +6,12 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 
-const ROOT = join(import.meta.dir, "..");
-const STATIC = join(ROOT, "static");
-const OUT = join(ROOT, "dist", "pages");
+/** Website package root (`website/`). */
+const WEBSITE = import.meta.dir;
+/** Monorepo / app repo root (parent of `website/`). */
+const REPO_ROOT = join(WEBSITE, "..");
+const STATIC = join(WEBSITE, "static");
+const OUT = join(REPO_ROOT, "dist", "pages");
 const STRUCTURED_DATA_DIR = join(OUT, "structured-data");
 
 interface LandingCompareRow {
@@ -70,7 +73,7 @@ function absoluteUrl(origin: string, path: string): string {
 }
 
 function loadManifest(): string {
-  const path = join(ROOT, "dist", "asset-manifest.json");
+  const path = join(REPO_ROOT, "dist", "asset-manifest.json");
   if (!existsSync(path)) {
     return "/assets/dev";
   }
@@ -609,6 +612,35 @@ writeFileSync(join(OUT, "robots.txt"), buildRobots(ctx.siteUrl));
 
 writeFileSync(join(OUT, "routes.json"), JSON.stringify(routes, null, 2));
 
+/** First path segment reserved so clips cannot collide with marketing URLs. */
+const reservedPathSegments = [
+  ...new Set(
+    Object.keys(routes)
+      .filter((p) => p !== "/")
+      .map((p) => p.replace(/^\//, "").split("/")[0])
+      .filter(Boolean)
+  ),
+].sort();
+
+const resourceLinks = landingPages.map((p) => ({ slug: p.slug, h1: p.h1 }));
+
+writeFileSync(
+  join(OUT, "resource-links.json"),
+  JSON.stringify(resourceLinks, null, 2)
+);
+writeFileSync(
+  join(OUT, "reserved-paths.json"),
+  JSON.stringify(reservedPathSegments, null, 2)
+);
+// Website-owned copy for the app to load (and for phase-2 sync into the app deploy).
+writeFileSync(
+  join(WEBSITE, "reserved-paths.json"),
+  JSON.stringify(reservedPathSegments, null, 2) + "\n"
+);
+
 console.log(`Static pages built → ${OUT} (${Object.keys(routes).length} pages)`);
+console.log(
+  `Reserved marketing paths → ${reservedPathSegments.length} segments (${join(WEBSITE, "reserved-paths.json")})`
+);
 
 export { buildSitemap, buildRobots, sitemapPaths };

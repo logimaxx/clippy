@@ -67,6 +67,7 @@ import { ClipGone } from "../views/ClipGone";
 import { PinGate } from "../views/PinGate";
 import { OwnerClaim } from "../views/OwnerClaim";
 import { KlipwallPage } from "../views/Klipwall";
+import { AppHome } from "../views/AppHome";
 import { SettingsPanel } from "../views/partials/Settings";
 import * as rooms from "../ws/rooms";
 
@@ -239,6 +240,18 @@ pages.get("/klipwall", async (c) => {
 });
 
 pages.get("/explore", (c) => c.redirect("/klipwall", 301));
+
+/** OSS / self-host entry. Skipped when marketing `dist/pages` serves `/`. */
+pages.get("/", async (c) => {
+  const authUser = await resolveAuth(c);
+  return c.html(
+    <AppHome
+      user={authUser}
+      createError={c.req.query("create_error")}
+      createSlug={c.req.query("create_slug")}
+    />
+  );
+});
 
 function collectUploadFiles(body: Record<string, unknown>): File[] {
   const raw = body.file;

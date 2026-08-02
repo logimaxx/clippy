@@ -63,7 +63,7 @@ async function buildAssets(): Promise<boolean> {
 
 async function buildStatic(): Promise<boolean> {
   console.log("[dev] rebuilding static pages…");
-  return run(["bun", "run", "scripts/build-static.ts"], {
+  return run(["bun", "run", "website/build.ts"], {
     WEBKLIP_DEV: "1",
   });
 }
@@ -137,6 +137,8 @@ async function pump() {
 function onWatchEvent(kind: "assets" | "static", filename: string | null) {
   if (!filename) return;
   if (filename.startsWith(".") || filename.includes("node_modules")) return;
+  // Build output written into website/ — do not rebuild on our own write.
+  if (kind === "static" && /(^|\/)reserved-paths\.json$/.test(filename)) return;
 
   if (kind === "static") {
     scheduleStatic();
@@ -149,7 +151,7 @@ function onWatchEvent(kind: "assets" | "static", filename: string | null) {
 
 function startWatchers() {
   const assetsDir = join(ROOT, "assets", "src");
-  const staticDir = join(ROOT, "static");
+  const websiteDir = join(ROOT, "website");
   const manifest = join(ROOT, "assets", "manifest.template.json");
 
   watchers.push(
@@ -163,7 +165,7 @@ function startWatchers() {
     })
   );
   watchers.push(
-    watch(staticDir, { recursive: true }, (_event, filename) => {
+    watch(websiteDir, { recursive: true }, (_event, filename) => {
       onWatchEvent("static", filename);
     })
   );
@@ -177,7 +179,7 @@ if (!(await buildAssets()) || !(await buildStatic())) {
 }
 
 startWatchers();
-console.log(`[dev] watching assets/src + static (live reload :${LIVE_RELOAD_PORT})`);
+console.log(`[dev] watching assets/src + website (live reload :${LIVE_RELOAD_PORT})`);
 
 const child = Bun.spawn(["bun", "run", "--watch", "src/index.ts"], {
   cwd: ROOT,

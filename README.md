@@ -108,6 +108,8 @@ See [SECURITY.md](SECURITY.md) for the full deployment checklist, threat model, 
 
 To move an existing Docker deployment (volumes + `.env`) to another host, see [docs/MIGRATION.md](docs/MIGRATION.md).
 
+Marketing pages live under [`website/`](website/); see [docs/WEBSITE_SPLIT.md](docs/WEBSITE_SPLIT.md) for the app/website layout and planned edge split.
+
 Quick checklist:
 
 - Generate a strong `SESSION_SECRET` (`openssl rand -base64 32`)

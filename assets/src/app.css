@@ -955,6 +955,32 @@ a {
   position: relative;
 }
 
+.home.app-home {
+  max-width: 40rem;
+  text-align: left;
+}
+
+.home.app-home h1 {
+  text-align: center;
+}
+
+.home.app-home .tagline,
+.home.app-home .hint {
+  text-align: center;
+}
+
+.home.app-home .landing-hero-paste {
+  animation: none;
+}
+
+.app-home-auth {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.75rem;
+}
+
 .home::before {
   content: "";
   position: fixed;

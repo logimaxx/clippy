@@ -227,7 +227,11 @@ test.describe("Webklip E2E", () => {
     test("creates clip with custom slug", async ({ page }) => {
       const slug = uniqueSlug("custom");
       await createClipViaUi(page, slug);
-      await expect(page.locator("#device-count-desktop")).toContainText(/device/i);
+      await expect(page.locator("#device-count")).toHaveText(/\d+/);
+      await expect(page.locator(".chip--devices")).toHaveAttribute(
+        "aria-label",
+        /device/i
+      );
     });
 
     test("creates clip from home with pasted content", async ({ page }) => {
@@ -468,21 +472,26 @@ test.describe("Webklip E2E", () => {
       await page.goto(`/${slug}`);
 
       await openMoreSettings(page);
-      await page.locator("#settings-form-mobile [data-public-toggle]").click({ force: true });
+      await page.locator('#settings-form-mobile [data-access-option="published"]').click({ force: true });
       const modal = page.locator("#public-publish-modal");
       await expect(modal).toBeVisible();
       await modal.locator("#public-owner-password").fill("ownerpass1");
       await modal.getByRole("button", { name: "Publish" }).click();
       await expect(page.locator(".toast")).toContainText(/public|Klipwall|Published/i);
       await expect(
-        page.locator("#settings-form-mobile [data-public-toggle]")
+        page.locator('#settings-form-mobile [data-access-option="published"]')
       ).toBeChecked();
       await page.reload();
       await expect(page.locator(".header-cluster .chip--public")).toBeVisible();
       await expect(page.locator("#ttl")).not.toHaveValue("burn");
       await expect(page.locator("#ttl option[value='burn']")).toHaveCount(0);
       await openMoreSettings(page);
-      await expect(page.locator("[data-protect-section]")).toHaveCount(0);
+      await expect(
+        page.locator('#settings-form-mobile [data-access-option="protected"]')
+      ).not.toBeChecked();
+      await expect(
+        page.locator('#settings-form-mobile [data-access-option="published"]')
+      ).toBeChecked();
 
       await page.goto("/klipwall");
       await expect(page.getByRole("heading", { name: "Klipwall" })).toBeVisible();
@@ -498,12 +507,17 @@ test.describe("Webklip E2E", () => {
       await page.goto(`/${slug}`);
 
       await openMoreSettings(page);
-      await page.locator("#settings-form-mobile [data-public-toggle]").click({ force: true });
+      await page.locator('#settings-form-mobile [data-access-option="published"]').click({ force: true });
       const modal = page.locator("#public-publish-modal");
       await expect(modal).toBeVisible();
       await modal.getByRole("button", { name: "Cancel" }).click();
       await expect(modal).toBeHidden();
-      await expect(page.locator("#settings-form-mobile [data-public-toggle]")).not.toBeChecked();
+      await expect(
+        page.locator('#settings-form-mobile [data-access-option="published"]')
+      ).not.toBeChecked();
+      await expect(
+        page.locator('#settings-form-mobile [data-access-option="private"]')
+      ).toBeChecked();
       await expect(page.locator(".header-cluster .chip--public")).toHaveCount(0);
     });
 
@@ -516,7 +530,7 @@ test.describe("Webklip E2E", () => {
       await page.goto(`/${slug}`);
 
       await openMoreSettings(page);
-      await page.locator('#sheet-settings [data-protect-option="passphrase"]').click({ force: true });
+      await page.locator('#sheet-settings [data-access-option="protected"]').click({ force: true });
       const setupModal = page.locator("[data-e2e-setup-modal]");
       await expect(setupModal).toBeVisible();
       await setupModal.locator("[data-e2e-setup-confirm]").click();
@@ -524,16 +538,18 @@ test.describe("Webklip E2E", () => {
         timeout: 15_000,
       });
 
-      await page.locator("#settings-form-mobile [data-public-toggle]").click({ force: true });
+      await page.locator('#settings-form-mobile [data-access-option="published"]').click({ force: true });
       const clearModal = page.locator("#public-clear-protections-modal");
       await expect(clearModal).toBeVisible();
       await expect(clearModal).toContainText(/E2E|passphrase/i);
       await clearModal.getByRole("button", { name: "Cancel" }).click();
       await expect(clearModal).toBeHidden();
-      await expect(page.locator("#settings-form-mobile [data-public-toggle]")).not.toBeChecked();
+      await expect(
+        page.locator('#settings-form-mobile [data-access-option="published"]')
+      ).not.toBeChecked();
       await expect(page.getByText(/End-to-end encryption is active/i)).toBeVisible();
 
-      await page.locator("#settings-form-mobile [data-public-toggle]").click({ force: true });
+      await page.locator('#settings-form-mobile [data-access-option="published"]').click({ force: true });
       await expect(clearModal).toBeVisible();
       await clearModal.getByRole("button", { name: "Continue" }).click();
       const publishModal = page.locator("#public-publish-modal");
@@ -542,9 +558,11 @@ test.describe("Webklip E2E", () => {
       await publishModal.getByRole("button", { name: "Publish" }).click();
       await expect(page.getByText(/Published on Klipwall/i)).toBeVisible();
       await expect(
-        page.locator("#settings-form-mobile [data-public-toggle]")
+        page.locator('#settings-form-mobile [data-access-option="published"]')
       ).toBeChecked();
-      await expect(page.locator("[data-protect-section]")).toHaveCount(0);
+      await expect(
+        page.locator('#settings-form-mobile [data-access-option="protected"]')
+      ).not.toBeChecked();
       await page.reload();
       await expect(page.locator(".header-cluster .chip--public")).toBeVisible();
     });
@@ -558,7 +576,7 @@ test.describe("Webklip E2E", () => {
       await page.goto(`/${slug}`);
       await openMoreSettings(page);
 
-      await page.locator('#sheet-settings [data-protect-option="passphrase"]').click({ force: true });
+      await page.locator('#sheet-settings [data-access-option="protected"]').click({ force: true });
       const setupModal = page.locator("[data-e2e-setup-modal]");
       await expect(setupModal).toBeVisible();
       const phrase = await setupModal.locator("[data-e2e-setup-passphrase]").inputValue();
@@ -567,7 +585,9 @@ test.describe("Webklip E2E", () => {
       await expect(page.locator(".toast")).toContainText(/Passphrase end-to-end encryption enabled/i, {
         timeout: 15_000,
       });
-      await expect(page.locator('#sheet-settings [data-protect-option="passphrase"]')).toBeChecked();
+      await expect(
+        page.locator('#sheet-settings [data-access-option="protected"]')
+      ).toBeChecked();
       await expect(page.locator(".header-cluster .chip--secure")).toBeVisible();
     });
 
@@ -768,9 +788,13 @@ test.describe("Webklip E2E", () => {
       await pageA.goto(`/${slug}`);
       await pageB.goto(`/${slug}`);
 
-      await expect(pageA.locator("#device-count-desktop")).toContainText("2 devices", {
+      await expect(pageA.locator("#device-count")).toHaveText("2", {
         timeout: 10_000,
       });
+      await expect(pageA.locator(".chip--devices")).toHaveAttribute(
+        "aria-label",
+        "2 devices"
+      );
 
       const message = `ws-sync-${Date.now()}`;
       await pageA.locator("#clip-content").fill(message);
@@ -795,9 +819,13 @@ test.describe("Webklip E2E", () => {
       await pageA.goto(`/${slug}`);
       await pageB.goto(`/${slug}`);
 
-      await expect(pageA.locator("#device-count-desktop")).toContainText("2 devices", {
+      await expect(pageA.locator("#device-count")).toHaveText("2", {
         timeout: 10_000,
       });
+      await expect(pageA.locator(".chip--devices")).toHaveAttribute(
+        "aria-label",
+        "2 devices"
+      );
 
       const filePath = join(tmpdir(), `webklip-e2e-sync-${Date.now()}.txt`);
       writeFileSync(filePath, `e2e file sync ${Date.now()}`);
@@ -926,7 +954,7 @@ test.describe("Webklip E2E", () => {
       await createClipViaApi(setupPage.request, slug, "secret clipboard text");
       await setupPage.goto(`/${slug}`);
       await openMoreSettings(setupPage);
-      await setupPage.locator('#sheet-settings [data-protect-option="passphrase"]').click({ force: true });
+      await setupPage.locator('#sheet-settings [data-access-option="protected"]').click({ force: true });
       const modal = setupPage.locator("[data-e2e-setup-modal]");
       await expect(modal).toBeVisible();
       const passphrase = await setupPage.locator("[data-e2e-setup-passphrase]").inputValue();

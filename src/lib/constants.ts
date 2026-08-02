@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { isAdminPathSegment } from "./admin";
+import { loadMarketingReservedPaths } from "./reserved-paths";
 
 export const TTL_OPTIONS = [
   { value: 900, label: "15 min" },
@@ -268,7 +269,8 @@ export const clipContentSchema = z.object({
 export const SLUG_REGEX = /^[a-zA-Z0-9_-]{3,64}$/;
 export const VANITY_SLUG_REGEX = /^[a-zA-Z0-9_-]{2,32}\/[a-zA-Z0-9_-]{2,64}$/;
 
-export const RESERVED_SLUGS = new Set([
+/** Product routes owned by the app (always reserved). */
+const APP_RESERVED_SLUGS = [
   "account",
   "api",
   "assets",
@@ -280,36 +282,20 @@ export const RESERVED_SLUGS = new Set([
   "teams",
   "new",
   "ws",
-  "privacy",
-  "terms",
-  "security",
-  "about",
-  "docs",
   "demo",
   "explore",
   "klipwall",
   "favicon.ico",
   "robots.txt",
   "sitemap.xml",
-  // SEO landing pages
-  "online-clipboard",
-  "live-sync",
-  "share-text-between-devices",
-  "temporary-file-sharing",
-  "secure-clipboard",
-  "share-code-snippets",
-  "clipboard-api",
-  "burn-after-read",
-  "encrypted-clipboard",
-  "pastebin-vs-webklip",
-  "privatebin-alternative",
-  "onetimesecret-alternative",
-  "share-password",
-  "qr-clipboard",
-  "temporary-notes",
-  "markdown-paste",
-  "share-screenshot",
-]);
+] as const;
+
+function buildReservedSlugs(): Set<string> {
+  return new Set([...APP_RESERVED_SLUGS, ...loadMarketingReservedPaths()]);
+}
+
+/** Product + marketing reserved first-path segments (clips/teams cannot claim these). */
+export const RESERVED_SLUGS = buildReservedSlugs();
 
 export const RESERVED_CLIP_SUFFIXES = new Set([
   "countdown",

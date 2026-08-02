@@ -1,6 +1,6 @@
 /** @jsxImportSource hono/jsx */
 import type { ClipVersion } from "../../db/schema";
-import { SettingHint } from "./SettingHint";
+import { SectionTitle } from "./SettingHint";
 
 interface VersionsPanelProps {
   slug: string;
@@ -10,8 +10,10 @@ interface VersionsPanelProps {
 export function VersionsPanel({ slug, versions }: VersionsPanelProps) {
   return (
     <div id="versions-panel" class="versions-panel">
-      <h3 class="sheet__section-title">Version history</h3>
-      <SettingHint text="Auto-saved every 5 seconds while you edit. Restore an older snapshot anytime." />
+      <SectionTitle
+        title="Versions"
+        help="Auto-saved every 5 seconds while you edit. Restore an older snapshot anytime."
+      />
       {versions.length === 0 ? (
         <p class="field-hint">No saved versions yet.</p>
       ) : (

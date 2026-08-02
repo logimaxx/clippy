@@ -1,5 +1,5 @@
 /** @jsxImportSource hono/jsx */
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { contactEmail } from "../../lib/contact";
 import { isUmamiEnabled } from "../../lib/umami";
@@ -11,15 +11,26 @@ interface LandingPageMeta {
 
 let cachedResourceLinks: LandingPageMeta[] | null = null;
 
+/** Prefer built manifest so the running app does not need website source. */
 function landingResourceLinks(): LandingPageMeta[] {
   if (cachedResourceLinks) return cachedResourceLinks;
-  try {
-    const raw = readFileSync(join(process.cwd(), "static", "landing-pages.json"), "utf-8");
-    const pages = JSON.parse(raw) as LandingPageMeta[];
-    cachedResourceLinks = pages.map((p) => ({ slug: p.slug, h1: p.h1 }));
-  } catch {
-    cachedResourceLinks = [];
+  const candidates = [
+    join(process.cwd(), "dist", "pages", "resource-links.json"),
+    join(process.cwd(), "website", "static", "landing-pages.json"),
+  ];
+  for (const path of candidates) {
+    if (!existsSync(path)) continue;
+    try {
+      const pages = JSON.parse(readFileSync(path, "utf-8")) as LandingPageMeta[];
+      cachedResourceLinks = pages
+        .filter((p) => p.slug && p.h1)
+        .map((p) => ({ slug: p.slug, h1: p.h1 }));
+      return cachedResourceLinks;
+    } catch {
+      /* try next */
+    }
   }
+  cachedResourceLinks = [];
   return cachedResourceLinks;
 }
 

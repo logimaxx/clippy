@@ -44,7 +44,7 @@ Or open any URL like `webklip.com/my-clip` to start sharing.
 
 Type on one device. Watch it appear on every other open tab — live, over a private link.
 
-*(SEO landing page in `static/landing-pages.json` — same template as Online Clipboard / Share Text Between Devices.)*
+*(SEO landing page in `website/static/landing-pages.json` — same template as Online Clipboard / Share Text Between Devices.)*
 
 ---
 
@@ -54,7 +54,7 @@ Type on one device. Watch it appear on every other open tab — live, over a pri
 
 Pastebin keeps pastes around. Webklip syncs live and expires by default — with optional E2E and burn-after-read.
 
-*(Comparison landing in `static/landing-pages.json` — includes a side-by-side table.)*
+*(Comparison landing in `website/static/landing-pages.json` — includes a side-by-side table.)*
 
 ---
 
