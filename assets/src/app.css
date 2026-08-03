@@ -2885,7 +2885,9 @@ a {
 }
 
 .use-case-card code,
-.feature-highlight code {
+.feature-highlight code,
+.seo-landing-prose code,
+.trust-list code {
   padding: 0.1rem 0.3rem;
   border-radius: 4px;
   background: var(--bg-sunken);
@@ -3001,6 +3003,16 @@ a {
   margin: 0 auto;
   padding: 3rem 1.5rem 2rem;
   text-align: center;
+}
+
+.landing-signup-actions {
+  margin-top: 1.75rem;
+}
+
+.landing-signup-hint {
+  margin: 0.85rem 0 0;
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
 }
 
 .seo-landing-hero h1 {

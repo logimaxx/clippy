@@ -137,7 +137,8 @@
     "relatedSlugs": [
       "encrypted-clipboard",
       "burn-after-read",
-      "share-password"
+      "share-password",
+      "share-credentials-with-team"
     ]
   },
   {
@@ -194,6 +195,7 @@
     "relatedSlugs": [
       "share-password",
       "encrypted-clipboard",
+      "share-credentials-with-team",
       "onetimesecret-alternative"
     ]
   },
@@ -458,8 +460,44 @@
     "relatedSlugs": [
       "burn-after-read",
       "encrypted-clipboard",
+      "share-credentials-with-team",
       "onetimesecret-alternative",
       "secure-clipboard"
+    ]
+  },
+  {
+    "slug": "share-credentials-with-team",
+    "title": "Share Credentials With Your Team Securely | Webklip",
+    "description": "Send credentials to teammates on a temporary link: passphrase end-to-end encryption, burn-after-read, and a shared team space with read-only roles.",
+    "h1": "Share Credentials With Your Team",
+    "intro": "Stop pasting passwords into Slack threads. Hand a credential to a teammate on a link that encrypts in the browser, then deletes itself.",
+    "heroVariant": "signup",
+    "paragraphs": [
+      "Credentials shared over chat, email, or a ticket comment keep working long after the handoff: the message stays searchable, gets forwarded, and survives in exports and backups. A Webklip clip inverts that. Turn on passphrase end-to-end encryption and the content is encrypted in your browser before upload — we store ciphertext and never receive the passphrase. Add burn-after-read and the clip deletes itself the first time someone really opens it; chat link previews do not consume it.",
+      "When the same handoff happens every week, a team gives it a fixed address. Create a team, invite people by email, and team clips live at <code>webklip.com/team/clip-name</code> — a URL your colleagues can type from memory instead of a fresh random link buried in a thread. Invites are bound to one email address, work once, and expire after 7 days.",
+      "Roles decide who can change a clip: owners, admins, and members can edit, while <strong>viewers are read-only</strong> — the right level for someone who needs to consume a credential but should not rewrite it. Anyone holding the link can still read the clip, so passphrase E2E is what actually narrows the audience. That is the honest trade, and it is why we recommend pairing a team space with encryption for anything sensitive.",
+      "Webklip is not a password manager and is not trying to be one. Keep long-lived secrets in a vault; use Webklip for the moment a secret has to move between people, then let it expire. See our <a href=\"/security\">security practices</a> for the full model."
+    ],
+    "benefitsHeading": "Why hand off credentials through Webklip?",
+    "benefits": [
+      "Passphrase end-to-end encryption — encrypted in the browser, we store ciphertext only",
+      "Burn after read — the clip deletes on the first real open, and Slack or WhatsApp previews do not trigger it",
+      "A team address at <code>webklip.com/team/clip-name</code> instead of a random link nobody can find later",
+      "Read-only viewer role for people who should receive a secret but not edit it",
+      "Email-bound invites that work once and expire in 7 days",
+      "Short default expiry, so a handoff nobody completed cleans itself up"
+    ],
+    "useCases": [
+      "Send a new hire their first login on day one and let it burn after they open it",
+      "Hand a database URL or API key to a contractor without leaving a copy in email",
+      "Pass a recovery code to whoever is on call during an incident",
+      "Post a rotated service credential to your team space so the URL stays the same"
+    ],
+    "relatedSlugs": [
+      "share-password",
+      "secure-clipboard",
+      "burn-after-read",
+      "encrypted-clipboard"
     ]
   },
   {

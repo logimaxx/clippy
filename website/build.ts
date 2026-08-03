@@ -37,8 +37,11 @@ interface LandingPage {
   benefits: string[];
   useCases: string[];
   relatedSlugs: string[];
-  /** Hero CTA: paste textarea (default) or file upload drop zone */
-  heroVariant?: "paste" | "file";
+  /**
+   * Hero CTA: paste textarea (default), file upload drop zone, or account
+   * buttons for pages whose subject is an account-only feature.
+   */
+  heroVariant?: "paste" | "file" | "signup";
   /** Optional side-by-side comparison table (e.g. competitor vs Webklip) */
   compare?: LandingCompare;
   /** Override for the benefits section heading */
@@ -326,6 +329,14 @@ function buildLandingFileForm(id: string): string {
 </form>`;
 }
 
+function buildLandingSignupCta(): string {
+  return `<div class="accounts-actions landing-signup-actions">
+  <a href="/register" class="btn btn-primary btn-lg">Create a free account</a>
+  <a href="/login" class="btn">Log in</a>
+</div>
+<p class="hint landing-signup-hint">Free, no payment details.</p>`;
+}
+
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, "&amp;")
@@ -380,14 +391,22 @@ function buildLandingBody(page: LandingPage, allPages: LandingPage[]): string {
     .concat('<a href="/">Webklip homepage</a>')
     .join("\n      ");
   const formId = `landing-paste-${page.slug}`;
-  const heroForm =
-    page.heroVariant === "file"
+  const signup = page.heroVariant === "signup";
+  const heroForm = signup
+    ? buildLandingSignupCta()
+    : page.heroVariant === "file"
       ? buildLandingFileForm(formId)
       : buildLandingPasteForm(formId);
-  const ctaText =
-    page.heroVariant === "file"
+  const ctaText = signup
+    ? "Create a free account, invite your team by email, and share your first clip in a minute."
+    : page.heroVariant === "file"
       ? "Upload or paste a screenshot above, or create an empty clip to attach files later."
       : "Paste above, or create an empty clip to start sharing.";
+  const closingCta = signup
+    ? buildLandingSignupCta()
+    : `<form action="/new" method="post" class="home-form landing-cta">
+    <button type="submit" class="btn btn-primary btn-lg">Create a Clip</button>
+  </form>`;
   const benefitsHeading =
     page.benefitsHeading ?? `Why use Webklip for ${page.h1.toLowerCase()}?`;
   const compareSection = page.compare ? `\n\n${buildCompareSection(page.compare)}` : "";
@@ -426,9 +445,7 @@ function buildLandingBody(page: LandingPage, allPages: LandingPage[]): string {
 <section class="landing-section seo-landing-cta">
   <h2>Ready to try it?</h2>
   <p class="seo-landing-cta-text">${ctaText}</p>
-  <form action="/new" method="post" class="home-form landing-cta">
-    <button type="submit" class="btn btn-primary btn-lg">Create a Clip</button>
-  </form>
+  ${closingCta}
 </section>`;
 }
 
