@@ -838,11 +838,85 @@
     }
   });
 
+  function migrateE2eSession(oldSlug, newSlug) {
+    if (!oldSlug || !newSlug || oldSlug === newSlug) return;
+    try {
+      const dek = sessionStorage.getItem(`webklip_dek_${oldSlug}`);
+      const pass = sessionStorage.getItem(`webklip_pass_${oldSlug}`);
+      if (dek) sessionStorage.setItem(`webklip_dek_${newSlug}`, dek);
+      if (pass != null) sessionStorage.setItem(`webklip_pass_${newSlug}`, pass);
+    } catch {
+      /* ignore quota / private mode */
+    }
+  }
+
+  function resolvedRenameSlug(input) {
+    const prefix = (input.dataset.slugPrefix || "").replace(/\/$/, "");
+    const value = input.value.trim();
+    if (!value) return "";
+    return prefix ? `${prefix}/${value}` : value;
+  }
+
+  function bindSlugRename() {
+    const input = document.querySelector("[data-slug-rename]");
+    const saveBtn = document.querySelector("[data-slug-rename-save]");
+    const status = document.querySelector("[data-slug-rename-status]");
+    if (!(input instanceof HTMLInputElement) || !(saveBtn instanceof HTMLButtonElement)) {
+      return;
+    }
+
+    const current = input.dataset.slugCurrent || "";
+
+    function setStatus(message, isError) {
+      if (!(status instanceof HTMLElement)) return;
+      if (!message) {
+        status.hidden = true;
+        status.textContent = "";
+        status.classList.remove("is-error");
+        return;
+      }
+      status.hidden = false;
+      status.textContent = message;
+      status.classList.toggle("is-error", Boolean(isError));
+    }
+
+    function sync() {
+      const next = resolvedRenameSlug(input);
+      const changed = Boolean(next) && next !== current;
+      saveBtn.disabled = !changed;
+      if (!next) {
+        setStatus("", false);
+        return;
+      }
+      if (next === current) {
+        setStatus("", false);
+        return;
+      }
+      setStatus(`Will move to /${next}`, false);
+    }
+
+    input.addEventListener("input", sync);
+    sync();
+
+    saveBtn.addEventListener("click", () => {
+      const next = resolvedRenameSlug(input);
+      if (!next || next === current || typeof htmx === "undefined") return;
+      migrateE2eSession(current, next);
+      saveBtn.disabled = true;
+      htmx.ajax("POST", `/${current}/settings`, {
+        values: { slug: next },
+      });
+    });
+  }
+
+  bindSlugRename();
+
   document.body.addEventListener("htmx:afterSwap", (e) => {
     if (e.detail.target?.id !== "settings-root") return;
     closePublicClearModal();
     closePublicModal();
     closeExpiresModal();
+    bindSlugRename();
     if (pendingAccess === "protected") {
       pendingAccess = null;
       openE2eSetupModal("enable");

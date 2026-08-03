@@ -636,7 +636,7 @@ for (const page of docsPages) {
   );
 }
 
-const sitemapPaths = [...Object.keys(routes), "/klipwall"].sort((a, b) => {
+const sitemapPaths = [...Object.keys(routes), "/klipwall", "/contact"].sort((a, b) => {
   if (a === "/") return -1;
   if (b === "/") return 1;
   return a.localeCompare(b);

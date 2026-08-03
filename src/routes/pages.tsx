@@ -50,6 +50,7 @@ import {
   updateContent,
   replaceContent,
   deleteClip,
+  renameClip,
   recordView,
   listPublicClips,
   countPublicClips,
@@ -666,8 +667,7 @@ pages.post("/:slug/unlock", async (c) => {
   return c.redirect(`/${slug}`, 302);
 });
 
-pages.post("/:slug/settings", async (c) => {
-  const slug = c.req.param("slug");
+async function handleClipSettings(c: Context, slug: string) {
   if (!isValidSlug(slug)) return c.text("Invalid slug", 400);
 
   const authUser = await resolveAuth(c);
@@ -691,6 +691,38 @@ pages.post("/:slug/settings", async (c) => {
   const wasPublic = clip.visibility === "public";
   const owner = isClipOwner(c, slug, authUser?.id ?? null, clip.ownerId);
   const versions = await listVersions(slug);
+
+  if (parsed.data.slug !== undefined) {
+    const requested = parsed.data.slug.trim();
+    // Same-value slug (e.g. accidental include with other fields) is ignored.
+    if (requested) {
+      const result = await renameClip(slug, requested);
+      if (result.ok) {
+        setOwnerCookie(c, result.clip.slug);
+        if (needsLegacyPinGate(result.clip) && isUnlocked(c, slug)) {
+          setUnlockCookie(c, result.clip.slug);
+        }
+        rooms.broadcast(slug, { type: "redirect", url: `/${result.clip.slug}` });
+
+        const dest = `/${result.clip.slug}`;
+        if (c.req.header("HX-Request")) {
+          c.header("HX-Redirect", dest);
+          return c.body(null, 204);
+        }
+        return c.redirect(dest, 302);
+      }
+      if (result.error !== "same") {
+        const message =
+          result.error === "taken"
+            ? "That slug is already taken"
+            : result.error === "reserved"
+              ? "That slug is reserved"
+              : "Invalid slug";
+        c.header("HX-Trigger", toastHeader(message));
+        return c.html(<SettingsPanel {...settingsPanelProps(slug, clip, versions)} />);
+      }
+    }
+  }
 
   const wantsOwnerPassword =
     !!parsed.data.clearOwnerPassword ||
@@ -867,7 +899,15 @@ pages.post("/:slug/settings", async (c) => {
   );
   c.header("HX-Trigger", toastHeader(message));
   return c.html(<SettingsPanel {...settingsPanelProps(slug, updated, versions)} />);
+}
+
+pages.post("/:team/:name/settings", async (c) => {
+  const slug = parseVanitySlug(c.req.param("team"), c.req.param("name"));
+  if (!slug) return c.text("Invalid slug", 400);
+  return handleClipSettings(c, slug);
 });
+
+pages.post("/:slug/settings", (c) => handleClipSettings(c, c.req.param("slug")));
 
 pages.post("/:slug/upload", async (c) => {
   const slug = c.req.param("slug");

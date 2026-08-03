@@ -15,6 +15,7 @@ import { filesApi } from "./routes/files";
 import { qr } from "./routes/qr";
 import { auth } from "./routes/auth";
 import { account } from "./routes/account";
+import { contact } from "./routes/contact";
 import { oauth } from "./routes/oauth";
 import { admin } from "./routes/admin";
 import { validateProductionSecrets, securityHeaders } from "./lib/security-headers";
@@ -113,6 +114,7 @@ app.use("*", async (c, next) => {
 
 app.route("/", auth);
 app.route("/", account);
+app.route("/", contact);
 app.route("/", oauth);
 if (isAdminEnabled()) {
   app.route(getAdminPath(), admin);

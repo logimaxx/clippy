@@ -54,7 +54,7 @@ export function SiteFooter() {
           <a href="/privacy">Privacy</a>
           <a href="/terms">Terms</a>
           <a href="/security">Security</a>
-          <a href={`mailto:${email}`}>Contact</a>
+          <a href="/contact">Contact</a>
         </nav>
         <nav class="site-footer-links site-footer-resources">
           <span class="site-footer-label">Resources</span>

@@ -55,7 +55,25 @@ export async function deleteVersionsForClip(clipSlug: string) {
   await db.delete(clipVersions).where(eq(clipVersions.clipSlug, clipSlug));
 }
 
+/** Point version history at a new slug (used when renaming a clip). */
+export async function reassignVersions(oldSlug: string, newSlug: string) {
+  if (oldSlug === newSlug) return;
+  await db
+    .update(clipVersions)
+    .set({ clipSlug: newSlug })
+    .where(eq(clipVersions.clipSlug, oldSlug));
+}
+
 const versionTimers = new Map<string, Timer>();
+
+/** Drop a pending debounced version save so it cannot write under a stale slug. */
+export function clearVersionTimer(clipSlug: string) {
+  const existing = versionTimers.get(clipSlug);
+  if (existing) {
+    clearTimeout(existing);
+    versionTimers.delete(clipSlug);
+  }
+}
 
 export function scheduleVersionSave(
   clipSlug: string,

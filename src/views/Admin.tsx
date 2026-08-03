@@ -46,6 +46,40 @@ function BreakdownTable({
   );
 }
 
+/** For metrics that are not parts of a whole, so a share column would mislead. */
+function MetricsTable({
+  title,
+  note,
+  rows,
+}: {
+  title: string;
+  note?: string;
+  rows: { label: string; value: number | string }[];
+}) {
+  return (
+    <section class="admin-section">
+      <h2>{title}</h2>
+      {note && <p class="muted">{note}</p>}
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Value</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr>
+              <td>{row.label}</td>
+              <td>{row.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
 function StatsChart({
   points,
   label,
@@ -139,6 +173,8 @@ export function AdminPage({ stats, history, adminPath }: AdminPageProps) {
   const b = stats.breakdown;
   const api = stats.apiUsage;
   const apiRows = apiUsageRows(api);
+  const accounts = stats.accounts;
+  const teams = stats.teams;
 
   const clipChartPoints = history.map((point) => ({
     t: point.recordedAt,
@@ -148,6 +184,11 @@ export function AdminPage({ stats, history, adminPath }: AdminPageProps) {
   const apiChartPoints = history.map((point) => ({
     t: point.recordedAt,
     v: point.apiUsage.total,
+  }));
+
+  const accountChartPoints = history.map((point) => ({
+    t: point.recordedAt,
+    v: point.accounts.total,
   }));
 
   const contentTypeRows = Object.entries(b.contentType)
@@ -177,6 +218,40 @@ export function AdminPage({ stats, history, adminPath }: AdminPageProps) {
 
         <section class="admin-hero">
           <div class="admin-stat-card admin-stat-card-primary">
+            <span class="admin-stat-label">Accounts</span>
+            <span class="admin-stat-value">{accounts.total}</span>
+          </div>
+          <div class="admin-stat-card">
+            <span class="admin-stat-label">Accounts (24h)</span>
+            <span class="admin-stat-value">{accounts.createdLast24h}</span>
+          </div>
+          <div class="admin-stat-card">
+            <span class="admin-stat-label">Accounts (7d)</span>
+            <span class="admin-stat-value">{accounts.createdLast7d}</span>
+          </div>
+        </section>
+
+        <section class="admin-hero">
+          <div class="admin-stat-card admin-stat-card-primary">
+            <span class="admin-stat-label">Teams</span>
+            <span class="admin-stat-value">{teams.total}</span>
+          </div>
+          <div class="admin-stat-card">
+            <span class="admin-stat-label">Teams (7d)</span>
+            <span class="admin-stat-value">{teams.createdLast7d}</span>
+          </div>
+          <div class="admin-stat-card">
+            <span class="admin-stat-label">Memberships</span>
+            <span class="admin-stat-value">{teams.memberships}</span>
+          </div>
+          <div class="admin-stat-card">
+            <span class="admin-stat-label">Team clips</span>
+            <span class="admin-stat-value">{teams.clips.total}</span>
+          </div>
+        </section>
+
+        <section class="admin-hero">
+          <div class="admin-stat-card admin-stat-card-primary">
             <span class="admin-stat-label">API requests (24h)</span>
             <span class="admin-stat-value">{stats.apiRequestsLast24h}</span>
           </div>
@@ -196,10 +271,77 @@ export function AdminPage({ stats, history, adminPath }: AdminPageProps) {
         </section>
 
         <section class="admin-section">
+          <h2>Accounts over time</h2>
+          <StatsChart points={accountChartPoints} label="Accounts over time" />
+        </section>
+
+        <section class="admin-section">
           <h2>API requests per snapshot</h2>
           <p class="muted">Requests counted in each hourly snapshot window (excludes /api/health).</p>
           <StatsChart points={apiChartPoints} label="API requests per snapshot" />
         </section>
+
+        <MetricsTable
+          title="Accounts"
+          rows={[
+            { label: "Total", value: accounts.total },
+            { label: "Email verified", value: accounts.verified },
+            { label: "Awaiting verification", value: accounts.unverified },
+            { label: "With password", value: accounts.withPassword },
+            { label: "With OAuth link", value: accounts.withOauth },
+            { label: "With API key", value: accounts.withApiKey },
+            { label: "Member of a team", value: accounts.inTeam },
+            { label: "Created (24h)", value: accounts.createdLast24h },
+            { label: "Created (7d)", value: accounts.createdLast7d },
+          ]}
+        />
+
+        <MetricsTable
+          title="Teams"
+          rows={[
+            { label: "Total", value: teams.total },
+            { label: "Created (24h)", value: teams.createdLast24h },
+            { label: "Created (7d)", value: teams.createdLast7d },
+            { label: "Memberships", value: teams.memberships },
+            { label: "Members per team (avg)", value: teams.averageMembers },
+            { label: "Largest team (members)", value: teams.largestMembers },
+            { label: "Pending invites", value: teams.pendingInvites },
+          ]}
+        />
+
+        <BreakdownTable
+          title="Team size"
+          rows={[
+            { label: "Owner only", value: teams.memberSizes.solo },
+            { label: "2–5 members", value: teams.memberSizes.small },
+            { label: "6–20 members", value: teams.memberSizes.medium },
+            { label: "21+ members", value: teams.memberSizes.large },
+          ]}
+        />
+
+        <MetricsTable
+          title="Team clips"
+          note="Clips living under a team namespace, and how they spread across teams."
+          rows={[
+            { label: "Clips in teams", value: teams.clips.total },
+            { label: "Personal clips (owned, no team)", value: b.audience.personal },
+            { label: "Anonymous clips", value: b.audience.anonymous },
+            { label: "Clips per team (avg)", value: teams.clips.averagePerTeam },
+            { label: "Busiest team (clips)", value: teams.clips.largestTeam },
+            { label: "Teams with clips", value: teams.clips.teamsWithClips },
+            { label: "Teams without clips", value: teams.clips.teamsWithoutClips },
+          ]}
+        />
+
+        <BreakdownTable
+          title="Clips per team"
+          rows={[
+            { label: "No clips", value: teams.clips.distribution.none },
+            { label: "1–9 clips", value: teams.clips.distribution.few },
+            { label: "10–49 clips", value: teams.clips.distribution.some },
+            { label: "50+ clips", value: teams.clips.distribution.many },
+          ]}
+        />
 
         <BreakdownTable title="API resource (current period)" rows={apiRows.resource} />
         <BreakdownTable title="API auth (current period)" rows={apiRows.auth} />
@@ -251,10 +393,9 @@ export function AdminPage({ stats, history, adminPath }: AdminPageProps) {
         <BreakdownTable
           title="Ownership"
           rows={[
-            { label: "Anonymous", value: b.ownership.anonymous },
-            { label: "Authenticated", value: b.ownership.authenticated },
-            { label: "Team clip", value: b.team.set },
-            { label: "Personal", value: b.team.none },
+            { label: "Anonymous", value: b.audience.anonymous },
+            { label: "Personal (signed in)", value: b.audience.personal },
+            { label: "Team", value: b.audience.team },
           ]}
         />
 

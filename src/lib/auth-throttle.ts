@@ -10,6 +10,8 @@ const RESET_WINDOW_MS = 60 * 60 * 1000;
 const EMAIL_CHANGE_PER_USER = 3;
 const EMAIL_CHANGE_PER_TARGET = 3;
 const EMAIL_CHANGE_WINDOW_MS = 60 * 60 * 1000;
+const CONTACT_PER_IP = 5;
+const CONTACT_WINDOW_MS = 60 * 60 * 1000;
 
 const attempts = new Map<string, { count: number; resetAt: number }>();
 
@@ -103,6 +105,12 @@ export function canRequestEmailChange(userId: string, email: string): boolean {
     EMAIL_CHANGE_WINDOW_MS
   ).allowed;
   return perUser && perTarget;
+}
+
+/** Caps contact-form mail so the public endpoint cannot spam CONTACT_EMAIL. */
+export function canRequestContact(headers: Headers): boolean {
+  const ip = getClientIp(headers);
+  return rateLimit(`contact-ip:${ip}`, CONTACT_PER_IP, CONTACT_WINDOW_MS).allowed;
 }
 
 setInterval(() => {

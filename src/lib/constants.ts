@@ -173,6 +173,8 @@ export const clipSettingsSchema = z.object({
     .optional()
     .transform((v) => v === true || v === "on" || v === "true" || v === "1"),
   webhook: z.string().max(2048).optional(),
+  /** New clip slug — triggers rename + redirect when different from the current path. */
+  slug: z.string().max(100).optional(),
   /** Protect mode: none clears E2E; passphrase enables client-side E2E (requires e2e fields). */
   protect: z.enum(["none", "passphrase", "e2e"]).optional(),
   e2eSalt: z.string().max(128).optional(),
@@ -244,6 +246,9 @@ export function settingsToastMessage(
   if (parsed.ownerPassword && parsed.ownerPassword.length > 0) {
     return "Owner password saved";
   }
+  if (parsed.slug !== undefined) {
+    return "Link updated";
+  }
   if (parsed.webhook !== undefined) {
     return clip.webhookUrl ? "Webhook saved" : "Webhook cleared";
   }
@@ -286,6 +291,7 @@ const APP_RESERVED_SLUGS = [
   "demo",
   "explore",
   "klipwall",
+  "contact",
   "favicon.ico",
   "robots.txt",
   "sitemap.xml",

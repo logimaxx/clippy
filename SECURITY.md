@@ -23,7 +23,7 @@ Clips are **not encrypted at rest** by default. Passphrase E2E keeps plaintext o
 | `NODE_ENV` | Set to `production` in production deployments. |
 | `SECURE_COOKIES` | Set to `true` when TLS terminates at a reverse proxy, or ensure the proxy sends `X-Forwarded-Proto: https`. |
 | `DATA_DIR` | Persistent volume for SQLite and uploads. |
-| `CONTACT_EMAIL` | Shown on legal/security pages and for disclosure reports. |
+| `CONTACT_EMAIL` | Shown on legal/security pages, disclosure reports, and as the `/contact` form destination. |
 
 ## Production deployment checklist
 

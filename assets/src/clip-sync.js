@@ -229,6 +229,9 @@
               chip.title = label;
             }
           }
+        } else if (data.type === "redirect" && typeof data.url === "string") {
+          stop();
+          location.assign(data.url);
         } else if (data.type === "error" && data.message) {
           toastError(String(data.message));
         }

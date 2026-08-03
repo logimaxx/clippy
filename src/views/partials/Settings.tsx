@@ -431,6 +431,64 @@ export function SettingsPanel({
 
           <div class="sheet__section">
             <SectionTitle
+              title="Link"
+              help="The public URL for this clip. Changing it moves the clip; old links stop working."
+            />
+            <div class="field">
+              <label class="field__label" for="m-slug">
+                Slug
+              </label>
+              {slug.includes("/") ? (
+                <div class="slug-rename-row">
+                  <span class="slug-rename-prefix" aria-hidden="true">
+                    {slug.split("/")[0]}/
+                  </span>
+                  <input
+                    type="text"
+                    id="m-slug"
+                    name="slug"
+                    value={slug.split("/")[1] ?? ""}
+                    class="slug-input"
+                    autocomplete="off"
+                    spellcheck={false}
+                    pattern="[a-zA-Z0-9_-]{2,64}"
+                    maxlength={64}
+                    data-slug-rename
+                    data-slug-current={slug}
+                    data-slug-prefix={`${slug.split("/")[0]}/`}
+                    aria-describedby="slug-rename-status"
+                  />
+                </div>
+              ) : (
+                <input
+                  type="text"
+                  id="m-slug"
+                  name="slug"
+                  value={slug}
+                  class="slug-input"
+                  autocomplete="off"
+                  spellcheck={false}
+                  pattern="[a-zA-Z0-9_-]{3,64}"
+                  maxlength={64}
+                  data-slug-rename
+                  data-slug-current={slug}
+                  aria-describedby="slug-rename-status"
+                />
+              )}
+              <p class="field-hint" id="slug-rename-status" data-slug-rename-status hidden></p>
+              <button
+                type="button"
+                class="btn btn--ghost btn--sm"
+                data-slug-rename-save
+                disabled
+              >
+                Update link
+              </button>
+            </div>
+          </div>
+
+          <div class="sheet__section">
+            <SectionTitle
               title="Advanced"
               help="Optional webhook notified when the clip changes. Use the REST API to automate create and update."
             />

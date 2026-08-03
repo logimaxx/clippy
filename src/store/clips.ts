@@ -14,15 +14,23 @@ import {
 } from "drizzle-orm";
 import { db } from "../db/client";
 import { clips, teams, type Clip, type NewClip, type ClipVisibility } from "../db/schema";
-import { applyBurnExpiryCap, BURN_MAX_TTL, DEFAULT_TTL } from "../lib/constants";
+import {
+  applyBurnExpiryCap,
+  BURN_MAX_TTL,
+  DEFAULT_TTL,
+  isReservedSlug,
+  isValidSlug,
+  parseVanitySlug,
+  SLUG_REGEX,
+} from "../lib/constants";
 import { fireWebhook } from "../lib/webhook";
 import { getFilesDir } from "../lib/cleanup";
-import { deleteVersionsForClip } from "./versions";
+import { clearVersionTimer, deleteVersionsForClip, reassignVersions } from "./versions";
 import * as memory from "./memory";
 import { contentForStorage, mergeContentWrite } from "./workspace";
-import { unlink, rm } from "node:fs/promises";
+import { mkdir, rename, unlink, rm } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 
 const writeTimers = new Map<string, Timer>();
 
@@ -429,6 +437,102 @@ export async function updateSettings(slug: string, settings: ClipSettingsUpdate)
   }
   memory.deleteCached(slug);
   return getClip(slug);
+}
+
+export type RenameClipError = "not_found" | "invalid" | "reserved" | "taken" | "same";
+
+export type RenameClipResult =
+  | { ok: true; clip: Clip }
+  | { ok: false; error: RenameClipError };
+
+/**
+ * Resolve a requested slug rename against the current slug.
+ * Vanity clips stay under the same team; the name segment may be typed alone.
+ */
+export function resolveRenameSlug(currentSlug: string, requested: string): string | null {
+  const trimmed = requested.trim();
+  if (!trimmed || trimmed === currentSlug) return trimmed === currentSlug ? currentSlug : null;
+
+  if (currentSlug.includes("/")) {
+    const [team] = currentSlug.split("/");
+    if (!team) return null;
+    if (trimmed.includes("/")) {
+      const [reqTeam, reqName] = trimmed.split("/");
+      if (!reqTeam || !reqName || reqTeam !== team) return null;
+      return parseVanitySlug(team, reqName);
+    }
+    return parseVanitySlug(team, trimmed);
+  }
+
+  if (trimmed.includes("/") || !SLUG_REGEX.test(trimmed)) return null;
+  if (isReservedSlug(trimmed)) return null;
+  return trimmed;
+}
+
+async function flushPendingWrite(slug: string) {
+  const timer = writeTimers.get(slug);
+  if (timer) {
+    clearTimeout(timer);
+    writeTimers.delete(slug);
+  }
+  const cached = memory.getCached(slug);
+  if (cached?.dirty) {
+    await db.update(clips).set({ content: cached.content }).where(eq(clips.slug, slug));
+    cached.dirty = false;
+  }
+}
+
+/** Rename a clip's primary slug, moving versions and on-disk attachments. */
+export async function renameClip(
+  oldSlug: string,
+  requestedSlug: string
+): Promise<RenameClipResult> {
+  const newSlug = resolveRenameSlug(oldSlug, requestedSlug);
+  if (newSlug === null) {
+    if (isReservedSlug(requestedSlug.trim()) || isReservedSlug(requestedSlug.trim().split("/")[0] ?? "")) {
+      return { ok: false, error: "reserved" };
+    }
+    return { ok: false, error: "invalid" };
+  }
+  if (newSlug === oldSlug) return { ok: false, error: "same" };
+  if (!isValidSlug(newSlug)) return { ok: false, error: "invalid" };
+  if (isReservedSlug(newSlug)) return { ok: false, error: "reserved" };
+
+  const current = await getClip(oldSlug);
+  if (!current) return { ok: false, error: "not_found" };
+
+  const taken = await getClip(newSlug);
+  if (taken) return { ok: false, error: "taken" };
+
+  await flushPendingWrite(oldSlug);
+  clearVersionTimer(oldSlug);
+
+  const oldDir = join(getFilesDir(), oldSlug);
+  const newDir = join(getFilesDir(), newSlug);
+  if (existsSync(oldDir) && existsSync(newDir)) {
+    return { ok: false, error: "taken" };
+  }
+
+  let nextFilePath = current.filePath;
+  if (nextFilePath && nextFilePath.startsWith(oldDir)) {
+    nextFilePath = newDir + nextFilePath.slice(oldDir.length);
+  }
+
+  await reassignVersions(oldSlug, newSlug);
+  await db
+    .update(clips)
+    .set({ slug: newSlug, filePath: nextFilePath })
+    .where(eq(clips.slug, oldSlug));
+
+  if (existsSync(oldDir)) {
+    await mkdir(dirname(newDir), { recursive: true });
+    await rename(oldDir, newDir);
+  }
+
+  memory.deleteCached(oldSlug);
+  const clip = await getClipFresh(newSlug);
+  if (!clip) return { ok: false, error: "not_found" };
+  return { ok: true, clip };
 }
 
 export async function listPublicClips(

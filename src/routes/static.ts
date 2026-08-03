@@ -68,7 +68,7 @@ function loadStaticSitemapPaths(): string[] {
   if (existsSync(pathsFile)) {
     return JSON.parse(readFileSync(pathsFile, "utf-8")) as string[];
   }
-  return ["/", "/klipwall"];
+  return ["/", "/klipwall", "/contact"];
 }
 
 function buildSitemapXml(base: string, paths: string[]): string {

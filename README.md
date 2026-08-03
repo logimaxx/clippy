@@ -91,10 +91,10 @@ Legacy server PIN clips (pre-passphrase) still unlock via the PIN form / `X-Clip
 | `NODE_ENV` | — | Set to `production` in production |
 | `SESSION_SECRET` | — | **Required in production.** HMAC signing for cookies |
 | `SECURE_COOKIES` | `false` | Set `true` behind HTTPS reverse proxy |
-| `CONTACT_EMAIL` | `contact@logimaxx.ro` | Legal/security contact on public pages |
+| `CONTACT_EMAIL` | `contact@logimaxx.ro` | Legal/security contact and destination for the `/contact` form |
 | `SITE_URL` | `https://webklip.com` | Public site URL (no trailing slash) — writes `sitemap.xml` at build time; OAuth redirect base |
 | `ENABLE_AUTH_API` | `false` | Enable `POST /api/v1/auth/register` and API key API |
-| `RESEND_API_KEY` / `MAIL_FROM` | — | Resend API key and sender address — both required to enable password reset |
+| `RESEND_API_KEY` / `MAIL_FROM` | — | Resend API key and sender address — both required for password reset and the contact form |
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | — | Enable “Continue with Google” (redirect: `{SITE_URL}/auth/google/callback`) — see [docs/OAUTH.md](docs/OAUTH.md) |
 | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | — | Enable “Continue with GitHub” (redirect: `{SITE_URL}/auth/github/callback`) — see [docs/OAUTH.md](docs/OAUTH.md) |
 | `UMAMI_WEBSITE_ID` | — | Umami website ID — enables analytics when set |

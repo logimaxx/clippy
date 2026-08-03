@@ -27,6 +27,16 @@ describe("marketing header auth region", () => {
     expect(HEADER_PARTIAL).toContain('href="/register"');
   });
 
+  test("auth controls live inside the collapsible nav (not beside the menu toggle)", () => {
+    const navOpen = HEADER_PARTIAL.indexOf('<nav id="site-nav"');
+    const navClose = HEADER_PARTIAL.indexOf("</nav>");
+    const auth = HEADER_PARTIAL.indexOf("<!--AUTH_NAV-->");
+    expect(navOpen).toBeGreaterThanOrEqual(0);
+    expect(navClose).toBeGreaterThan(navOpen);
+    expect(auth).toBeGreaterThan(navOpen);
+    expect(auth).toBeLessThan(navClose);
+  });
+
   test("a session swaps the region for the account pill", () => {
     const html = injectAuthNav(HEADER_PARTIAL, {
       name: "Ada Lovelace",

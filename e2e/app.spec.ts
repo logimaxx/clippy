@@ -125,7 +125,7 @@ test.describe("Webklip E2E", () => {
     });
 
     test("legal pages load", async ({ page }) => {
-      for (const path of ["/about", "/privacy", "/terms", "/security"]) {
+      for (const path of ["/about", "/privacy", "/terms", "/security", "/contact"]) {
         await page.goto(path);
         await expect(page.getByRole("main")).toBeVisible();
         await expect(page).toHaveTitle(/Webklip/i);
@@ -482,6 +482,27 @@ test.describe("Webklip E2E", () => {
       await page.selectOption("#ttl", "900");
       await expect(page.locator("#ttl")).toHaveValue("900");
       await expect(page.locator(".toast")).toContainText("15 min");
+    });
+
+    test("renames clip slug from settings and redirects", async ({ page }) => {
+      const slug = uniqueSlug("slugold");
+      const next = uniqueSlug("slugnew");
+      await createClipViaApi(page.request, slug, "slug-rename-body");
+      await page.goto(`/${slug}`);
+
+      await openMoreSettings(page);
+      const input = page.locator("#m-slug");
+      await expect(input).toHaveValue(slug);
+      await input.fill(next);
+      await page.locator("[data-slug-rename-save]").click();
+
+      await expect(page).toHaveURL(new RegExp(`/${next}$`));
+      await expect(page.locator("#clip-content")).toHaveValue("slug-rename-body");
+
+      const gone = await page.request.get(`/api/v1/clips/${slug}`);
+      expect(gone.status()).toBe(404);
+      const moved = await page.request.get(`/api/v1/clips/${next}`);
+      expect(moved.ok()).toBeTruthy();
     });
 
     test("15 minutes is the default expires option", async ({ page }) => {

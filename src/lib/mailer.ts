@@ -4,6 +4,8 @@ interface Mail {
   to: string;
   subject: string;
   text: string;
+  /** Resend `reply_to` — useful for contact forms so replies reach the submitter. */
+  replyTo?: string;
 }
 
 function apiKey(): string | undefined {
@@ -49,6 +51,7 @@ export async function sendMail(mail: Mail): Promise<boolean> {
         to: [mail.to],
         subject: mail.subject,
         text: mail.text,
+        ...(mail.replyTo ? { reply_to: mail.replyTo } : {}),
       }),
       signal: AbortSignal.timeout(10_000),
     });
