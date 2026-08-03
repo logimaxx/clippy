@@ -28,7 +28,7 @@ describe("team roles", () => {
 
 describe("team slugs", () => {
   test("built-in routes cannot be claimed as a team", () => {
-    for (const slug of ["api", "login", "account", "docs", "explore", "klipwall"]) {
+    for (const slug of ["api", "login", "account", "docs", "explore", "klipwall", "app"]) {
       expect(isReservedSlug(slug)).toBe(true);
     }
   });

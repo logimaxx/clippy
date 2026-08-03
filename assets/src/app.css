@@ -1088,6 +1088,39 @@ a {
   margin-left: auto;
 }
 
+.btn-install-pwa {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.install-ios-hint {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.65rem 1.5rem 0.85rem;
+  width: 100%;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--bg-sunken);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.install-ios-hint[hidden] {
+  display: none;
+}
+
+.install-ios-hint p {
+  margin: 0;
+}
+
+.install-ios-hint strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
 .site-header .theme-toggle {
   background: var(--bg);
   border-color: var(--border);

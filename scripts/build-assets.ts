@@ -117,7 +117,12 @@ writeFileSync(join(outDir, "app.css"), isDev ? cssBundle : cssBundle.replace(/\/
 const swTemplate = readFileSync(join(SRC, "sw.template.js"), "utf-8");
 const assetUrls = jsFiles
   .concat(["app.css", "manifest.json"])
-  .concat(["icons/icon-192.png", "icons/icon-512.png"])
+  .concat([
+    "icons/icon-192.png",
+    "icons/icon-512.png",
+    "icons/icon-maskable-512.png",
+    "icons/apple-touch-icon.png",
+  ])
   .map((f) => `${base}/${f}`);
 
 const swContent = swTemplate
@@ -147,9 +152,13 @@ console.log(`Manifest: ${JSON.stringify(manifest)}`);
 async function generateIcons(iconsDir: string) {
   const iconsScript = join(ROOT, "scripts", "generate-icons.ts");
   if (existsSync(iconsScript)) {
-    await import(iconsScript);
+    const mod = (await import(iconsScript)) as {
+      writeIcons?: (dir: string) => void;
+    };
+    if (typeof mod.writeIcons === "function") {
+      mod.writeIcons(iconsDir);
+    }
   } else {
-    // Minimal 1x1 PNG placeholders if generate-icons not run
     for (const size of [192, 512]) {
       const path = join(iconsDir, `icon-${size}.png`);
       if (!existsSync(path)) {

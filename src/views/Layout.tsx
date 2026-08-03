@@ -35,10 +35,14 @@ export function Layout({
     <html lang="en" data-theme="light" data-theme-default="light">
       <head>
         <meta charset="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
         <meta name="text-scale" content="scale" />
         <meta name="theme-color" content="#f0f7f5" />
         <meta name="color-scheme" content="light dark" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Webklip" />
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <meta name="description" content={description} />
         {robots && <meta name="robots" content={robots} />}
@@ -51,7 +55,7 @@ export function Layout({
         <title>{title}</title>
         <link rel="manifest" href={asset("manifest.json")} />
         <link rel="icon" href={asset("icons/icon-192.png")} />
-        <link rel="apple-touch-icon" href={asset("icons/icon-192.png")} />
+        <link rel="apple-touch-icon" href={asset("icons/apple-touch-icon.png")} />
         <link rel="stylesheet" href={asset("app.css")} />
         <script src={asset("htmx.min.js")} defer></script>
         <script src={asset("app.js")} defer></script>

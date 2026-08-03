@@ -30,7 +30,7 @@ Runtime coupling that still goes through the app:
 
 ## Reserved paths
 
-**App-owned** (always reserved in code): `account`, `api`, `new`, `login`, `klipwall`, …
+**App-owned** (always reserved in code): `account`, `api`, `app`, `new`, `login`, `klipwall`, …
 
 **Website-owned** (from JSON): `about`, `privacy`, `docs`, SEO landings (`online-clipboard`, …).
 

@@ -273,6 +273,7 @@ export const VANITY_SLUG_REGEX = /^[a-zA-Z0-9_-]{2,32}\/[a-zA-Z0-9_-]{2,64}$/;
 const APP_RESERVED_SLUGS = [
   "account",
   "api",
+  "app",
   "assets",
   "login",
   "register",

@@ -9,10 +9,11 @@ interface SiteHeaderProps {
 }
 
 export function SiteHeader({ variant = "marketing", user = null }: SiteHeaderProps) {
+  const homeHref = variant === "app" ? "/app" : "/";
   return (
     <header class="site-header">
       <div class="site-header-inner">
-        <a href="/" class="logo">
+        <a href={homeHref} class="logo">
           webklip
         </a>
         <div class="site-header-end">
@@ -34,6 +35,14 @@ export function SiteHeader({ variant = "marketing", user = null }: SiteHeaderPro
               </>
             )}
           </nav>
+          <button
+            type="button"
+            id="install-pwa"
+            class="btn btn-ghost btn-install-pwa"
+            hidden
+          >
+            Install app
+          </button>
           <ThemeToggle />
           <button
             type="button"
@@ -47,6 +56,20 @@ export function SiteHeader({ variant = "marketing", user = null }: SiteHeaderPro
         </div>
       </div>
       <div class="site-nav-backdrop" aria-hidden="true"></div>
+      <div
+        id="install-ios-hint"
+        class="install-ios-hint"
+        hidden
+        role="status"
+      >
+        <p>
+          Install Webklip: tap <strong>Share</strong>, then{" "}
+          <strong>Add to Home Screen</strong>.
+        </p>
+        <button type="button" class="btn btn-ghost" data-dismiss-ios-install>
+          Dismiss
+        </button>
+      </div>
     </header>
   );
 }

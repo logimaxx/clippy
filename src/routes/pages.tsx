@@ -241,6 +241,18 @@ pages.get("/klipwall", async (c) => {
 
 pages.get("/explore", (c) => c.redirect("/klipwall", 301));
 
+/** Product create shell — used as PWA start_url; works when marketing owns `/`. */
+pages.get("/app", async (c) => {
+  const authUser = await resolveAuth(c);
+  return c.html(
+    <AppHome
+      user={authUser}
+      createError={c.req.query("create_error")}
+      createSlug={c.req.query("create_slug")}
+    />
+  );
+});
+
 /** OSS / self-host entry. Skipped when marketing `dist/pages` serves `/`. */
 pages.get("/", async (c) => {
   const authUser = await resolveAuth(c);
@@ -259,6 +271,20 @@ function collectUploadFiles(body: Record<string, unknown>): File[] {
   return list.filter((f): f is File => f instanceof File && f.size > 0);
 }
 
+/** Prefer form `content`; otherwise compose Web Share Target title/text/url. */
+function contentFromCreateBody(body: Record<string, unknown>): string {
+  if (typeof body.content === "string" && body.content.length > 0) {
+    return body.content;
+  }
+  const parts: string[] = [];
+  for (const key of ["title", "text", "url"] as const) {
+    const value = body[key];
+    if (typeof value === "string" && value.trim()) parts.push(value.trim());
+  }
+  // Avoid duplicating URL when Android puts the same link in text + url.
+  return [...new Set(parts)].join("\n\n");
+}
+
 pages.post("/new", async (c) => {
   const authUser = await resolveAuth(c);
   const body = await c.req.parseBody({ all: true });
@@ -273,7 +299,7 @@ pages.post("/new", async (c) => {
         create_error: "taken",
         create_slug: custom,
       });
-      return c.redirect(`/?${params}`, 302);
+      return c.redirect(`/app?${params}`, 302);
     }
   }
 
@@ -287,7 +313,7 @@ pages.post("/new", async (c) => {
     }
   }
 
-  const rawContent = typeof body.content === "string" ? body.content : "";
+  const rawContent = contentFromCreateBody(body as Record<string, unknown>);
   const parsed = clipContentSchema.safeParse({ content: rawContent });
   if (!parsed.success) return c.text(contentTooLargeMessage(), 400);
   const files = collectUploadFiles(body as Record<string, unknown>);
@@ -302,7 +328,7 @@ pages.post("/new", async (c) => {
         create_error: "taken",
         create_slug: custom,
       });
-      return c.redirect(`/?${params}`, 302);
+      return c.redirect(`/app?${params}`, 302);
     }
     return c.text("Could not allocate a unique clip. Try again.", 503);
   }

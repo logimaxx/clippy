@@ -93,19 +93,76 @@
     });
   }
 
+  function isStandaloneDisplay() {
+    return (
+      window.matchMedia("(display-mode: standalone)").matches ||
+      window.matchMedia("(display-mode: window-controls-overlay)").matches ||
+      // iOS Safari
+      Boolean(navigator.standalone)
+    );
+  }
+
+  function isIosSafari() {
+    const ua = navigator.userAgent;
+    const iOS = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const webkit = /WebKit/.test(ua);
+    const chrome = /CriOS|FxiOS|EdgiOS|OPiOS|Chrome/.test(ua);
+    return iOS && webkit && !chrome;
+  }
+
   let deferredPrompt;
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    const btn = document.getElementById("install-pwa");
-    if (btn) btn.hidden = false;
+  const installBtn = document.getElementById("install-pwa");
+  const iosHint = document.getElementById("install-ios-hint");
+
+  if (installBtn) {
+    installBtn.addEventListener("click", () => {
+      window.webklipInstall?.();
+    });
+  }
+
+  iosHint?.querySelector("[data-dismiss-ios-install]")?.addEventListener("click", () => {
+    iosHint.hidden = true;
+    try {
+      localStorage.setItem("webklip-ios-install-dismissed", "1");
+    } catch {
+      /* ignore */
+    }
   });
+
+  if (isStandaloneDisplay()) {
+    if (installBtn) installBtn.hidden = true;
+    if (iosHint) iosHint.hidden = true;
+  } else {
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      if (installBtn) installBtn.hidden = false;
+      if (iosHint) iosHint.hidden = true;
+    });
+
+    window.addEventListener("appinstalled", () => {
+      deferredPrompt = null;
+      if (installBtn) installBtn.hidden = true;
+      if (iosHint) iosHint.hidden = true;
+    });
+
+    if (isIosSafari() && iosHint) {
+      let dismissed = false;
+      try {
+        dismissed = localStorage.getItem("webklip-ios-install-dismissed") === "1";
+      } catch {
+        /* ignore */
+      }
+      if (!dismissed) iosHint.hidden = false;
+    }
+  }
 
   window.webklipInstall = async function () {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     await deferredPrompt.userChoice;
     deferredPrompt = null;
+    if (installBtn) installBtn.hidden = true;
   };
 
   function showToast(message) {

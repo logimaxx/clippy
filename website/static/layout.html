@@ -2,10 +2,14 @@
 <html lang="en" data-theme="light" data-theme-default="light">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="text-scale" content="scale" />
   <meta name="theme-color" content="#f0f7f5" />
   <meta name="color-scheme" content="light dark" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Webklip" />
   <script>(function(){try{var t=localStorage.getItem("webklip-theme");if(t==="light"||t==="dark"){document.documentElement.dataset.theme=t;}else{var d=document.documentElement.dataset.themeDefault;document.documentElement.dataset.theme=d==="dark"?"dark":"light";}var th=document.documentElement.dataset.theme;var m=document.querySelector('meta[name="theme-color"]');if(m)m.setAttribute("content",th==="light"?"#f0f7f5":"#071216");}catch(e){}})();</script>
   <meta name="description" content="{{DESCRIPTION}}" />
   <title>{{TITLE}}</title>
@@ -19,7 +23,7 @@
   {{JSON_LD}}
   <link rel="manifest" href="{{ASSET_BASE}}/manifest.json" />
   <link rel="icon" href="{{ASSET_BASE}}/icons/icon-192.png" />
-  <link rel="apple-touch-icon" href="{{ASSET_BASE}}/icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="{{ASSET_BASE}}/icons/apple-touch-icon.png" />
   <link rel="stylesheet" href="{{ASSET_BASE}}/app.css" />
   <script src="{{ASSET_BASE}}/app.js" defer></script>
   {{UMAMI}}

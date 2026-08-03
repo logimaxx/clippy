@@ -55,6 +55,64 @@ test.describe("Webklip E2E", () => {
       await expect(page.getByRole("banner").getByRole("link", { name: "Security" })).toBeVisible();
     });
 
+    test("app home serves create shell for PWA", async ({ request }) => {
+      const res = await request.get("/app");
+      expect(res.ok()).toBeTruthy();
+      const html = await res.text();
+      expect(html).toContain("main");
+      expect(html).toMatch(/class="[^"]*app-home/);
+      expect(html).toMatch(/Online clipboard/i);
+      expect(html).toContain('id="create-klip"');
+      expect(html).toContain('id="install-pwa"');
+      expect(html).toMatch(/rel="manifest"/);
+      expect(html).toMatch(/name="apple-mobile-web-app-capable"[^>]*content="yes"/);
+      expect(html).toContain("viewport-fit=cover");
+    });
+
+    test("web app manifest points at /app", async ({ request }) => {
+      const page = await request.get("/app");
+      expect(page.ok()).toBeTruthy();
+      const html = await page.text();
+      const manifestHref = html.match(/href="([^"]*manifest\.json)"/)?.[1];
+      expect(manifestHref).toBeTruthy();
+
+      const manifestRes = await request.get(manifestHref!);
+      expect(manifestRes.ok()).toBeTruthy();
+      const manifest = await manifestRes.json();
+      expect(manifest.start_url).toBe("/app");
+      expect(manifest.id).toBe("/app");
+      expect(manifest.display).toBe("standalone");
+      expect(manifest.share_target?.action).toBe("/new");
+      expect(manifest.icons?.length).toBeGreaterThanOrEqual(2);
+    });
+
+    test("share-target style POST /new creates a clip from text", async ({ request }) => {
+      const marker = `Shared from OS ${uniqueSlug("share")}`;
+      const res = await request.post("/new", {
+        multipart: {
+          text: marker,
+          url: "https://example.com/shared",
+        },
+        maxRedirects: 0,
+      });
+      expect([302, 303]).toContain(res.status());
+      const location = res.headers().location ?? "";
+      expect(location).toMatch(/^\/[a-zA-Z0-9_-]{3,64}$/);
+
+      const clip = await request.get(`/api/v1/clips${location}`);
+      expect(clip.ok()).toBeTruthy();
+      const body = await clip.json();
+      expect(body.content).toContain(marker);
+      expect(body.content).toContain("https://example.com/shared");
+    });
+
+    test("app slug is reserved", async ({ request }) => {
+      const res = await request.post("/api/v1/clips/app", {
+        data: { content: "should fail" },
+      });
+      expect(res.status()).toBe(400);
+    });
+
     test("public pages default to light theme", async ({ page }) => {
       await page.goto("/");
       await expect(page.locator("html")).toHaveAttribute("data-theme", "light");
