@@ -40,7 +40,7 @@ import {
   verifyOwnerPassword,
   OWNER_PASSWORD_MIN_LEN,
 } from "../lib/owner";
-import { getTeamBySlug, canReadClip, canWriteClip } from "../lib/teams";
+import { getTeamBySlug, getMemberRole, canReadClip, canWriteClip } from "../lib/teams";
 import { trackAppAccess } from "../lib/umami";
 import {
   ensureClip,
@@ -210,6 +210,7 @@ async function renderClipPage(c: Context, slug: string) {
       burned={burned}
       cloneError={cloneError}
       cloneSlugValue={cloneSlugValue}
+      user={authUser}
     />
   );
 }
@@ -235,6 +236,7 @@ pages.get("/klipwall", async (c) => {
       page={page}
       totalPages={totalPages}
       total={total}
+      user={await resolveAuth(c)}
     />
   );
 });
@@ -292,6 +294,8 @@ pages.post("/new", async (c) => {
   const wantsCustom = Boolean(custom);
   const customOk =
     wantsCustom && isValidSlug(custom) && !isReservedSlug(custom);
+  const fromAccount = body.from === "account";
+  const createErrorBase = fromAccount ? "/account" : "/app";
 
   if (wantsCustom && customOk) {
     if (await getClip(custom)) {
@@ -299,7 +303,7 @@ pages.post("/new", async (c) => {
         create_error: "taken",
         create_slug: custom,
       });
-      return c.redirect(`/app?${params}`, 302);
+      return c.redirect(`${createErrorBase}?${params}`, 302);
     }
   }
 
@@ -328,7 +332,7 @@ pages.post("/new", async (c) => {
         create_error: "taken",
         create_slug: custom,
       });
-      return c.redirect(`/app?${params}`, 302);
+      return c.redirect(`${createErrorBase}?${params}`, 302);
     }
     return c.text("Could not allocate a unique clip. Try again.", 503);
   }
@@ -351,15 +355,52 @@ pages.post("/:team/new-clip", async (c) => {
 
   const teamSlug = c.req.param("team");
   const team = await getTeamBySlug(teamSlug);
-  if (!team) return c.text("Team not found", 404);
-
   const body = await c.req.parseBody();
+  const fromAccount = body.from === "account";
+  const accountTeamHref = `/account?team=${encodeURIComponent(teamSlug)}`;
+
+  // A team's existence is private, so a non-member gets the same answer as a
+  // missing team rather than a hint that the slug is taken.
+  const role = team ? await getMemberRole(team.id, authUser.id) : null;
+  if (!team || !role) {
+    if (fromAccount) {
+      return c.redirect(`/account?create_error=${encodeURIComponent("Team not found")}`, 302);
+    }
+    return c.text("Team not found", 404);
+  }
+
+  if (role === "viewer") {
+    if (fromAccount) {
+      return c.redirect(
+        `${accountTeamHref}&create_error=${encodeURIComponent("Viewers cannot create team clips")}`,
+        302
+      );
+    }
+    return c.text("Viewers cannot create team clips", 403);
+  }
+
   const name = typeof body.name === "string" ? body.name.trim() : "";
   const fullSlug = parseVanitySlug(teamSlug, name);
-  if (!fullSlug) return c.text("Invalid clip name", 400);
+  if (!fullSlug) {
+    if (fromAccount) {
+      return c.redirect(
+        `${accountTeamHref}&create_error=${encodeURIComponent("Invalid clip name")}`,
+        302
+      );
+    }
+    return c.text("Invalid clip name", 400);
+  }
 
   const existing = await getClip(fullSlug);
-  if (existing) return c.text("Clip already exists", 409);
+  if (existing) {
+    if (fromAccount) {
+      return c.redirect(
+        `${accountTeamHref}&create_error=${encodeURIComponent("Clip already exists")}`,
+        302
+      );
+    }
+    return c.text("Clip already exists", 409);
+  }
 
   await ensureClip(fullSlug, {
     ownerId: authUser.id,

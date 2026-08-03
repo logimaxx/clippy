@@ -137,12 +137,16 @@ Anonymous use is the default. Accounts unlock longer-lived workflows:
 | OAuth | Optional Google / GitHub sign-in when configured (`docs/OAUTH.md`) |
 | Email flows | Confirmation and password reset when `RESEND_API_KEY` + `MAIL_FROM` are set |
 | Sessions | Expire after 30 days; “sign out everywhere”; login lockout after repeated failures |
-| API keys | Create in the account UI or via the auth API (when enabled) |
+| Settings | Edit display name, change password in-app, move the account to a new email address |
+| API keys | Create and delete in the account UI, or via the auth API (when enabled) |
 | Teams | Create a workspace; invite by email; team clips use vanity URLs `/{team}/{clip-name}` |
-| Roles | Members can be admin, member, or **viewer** (read-only); ownership stays with the creator |
+| Roles | Members can be admin, member, or **viewer** (read-only); admins can change a member's role |
+| Team admin | Owners can rename a team, transfer it to another member, or delete it |
 | Account deletion | Self-service deletion from the account UI |
 
-Team clips can be restricted to team members. Invite links are bound to an email, single-use, and expire in 7 days. This is for named, reusable clip spaces — not required for the everyday “send myself a link” flow.
+Team clips are restricted to team members — creating one requires membership and a non-viewer role. Invite links are bound to an email, single-use, and expire in 7 days. This is for named, reusable clip spaces — not required for the everyday “send myself a link” flow.
+
+A team slug is fixed once created, since it forms the first half of every team clip URL. Deleting a team also deletes every clip under it.
 
 ---
 

@@ -10,9 +10,11 @@ import {
   clipVersions,
   passwordResets,
   emailVerifications,
+  emailChanges,
   teamInvites,
 } from "../db/schema";
 import { deleteClip } from "../store/clips";
+import { deleteTeam } from "./team-delete";
 
 /**
  * Erases a user and everything that belongs to them. Clips are removed through
@@ -20,18 +22,7 @@ import { deleteClip } from "../store/clips";
  */
 export async function deleteUserAccount(userId: string): Promise<void> {
   const ownedTeams = await db.select().from(teams).where(eq(teams.ownerId, userId));
-
-  for (const team of ownedTeams) {
-    const teamClips = await db
-      .select({ slug: clips.slug })
-      .from(clips)
-      .where(eq(clips.teamId, team.id));
-    for (const clip of teamClips) await deleteClip(clip.slug);
-
-    await db.delete(teamInvites).where(eq(teamInvites.teamId, team.id));
-    await db.delete(teamMembers).where(eq(teamMembers.teamId, team.id));
-    await db.delete(teams).where(eq(teams.id, team.id));
-  }
+  for (const team of ownedTeams) await deleteTeam(team.id);
 
   await db.delete(teamMembers).where(eq(teamMembers.userId, userId));
   // Invites this user sent to other teams would otherwise dangle on a missing
@@ -48,6 +39,7 @@ export async function deleteUserAccount(userId: string): Promise<void> {
   await db.delete(oauthAccounts).where(eq(oauthAccounts.userId, userId));
   await db.delete(passwordResets).where(eq(passwordResets.userId, userId));
   await db.delete(emailVerifications).where(eq(emailVerifications.userId, userId));
+  await db.delete(emailChanges).where(eq(emailChanges.userId, userId));
 
   // Versions on clips that survive (e.g. team clips owned elsewhere) lose only
   // the authorship link.

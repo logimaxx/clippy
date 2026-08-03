@@ -103,14 +103,13 @@ for (const file of jsFiles) {
   }
 }
 
-const cssBundle =
-  readFileSync(join(SRC, "fonts.css"), "utf-8") +
-  "\n" +
-  readFileSync(join(SRC, "app.css"), "utf-8") +
-  "\n" +
-  readFileSync(join(SRC, "clip-ui.css"), "utf-8") +
-  "\n" +
-  readFileSync(join(SRC, "theme-light.css"), "utf-8");
+const cssFiles = ["fonts.css", "app.css", "clip-ui.css", "theme-light.css"];
+// Alternative palettes are dev-only experiments — never ship them.
+if (isDev) cssFiles.push("theme-alt.css");
+
+const cssBundle = cssFiles
+  .map((file) => readFileSync(join(SRC, file), "utf-8"))
+  .join("\n");
 writeFileSync(join(outDir, "app.css"), isDev ? cssBundle : cssBundle.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\s+/g, " ").replace(/\s*([{}:;,])\s*/g, "$1").trim());
 
 // Service worker from template

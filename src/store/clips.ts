@@ -1,6 +1,19 @@
-import { eq, lt, and, isNotNull, isNull, or, gt, desc, sql, count } from "drizzle-orm";
+import {
+  eq,
+  lt,
+  lte,
+  and,
+  isNotNull,
+  isNull,
+  or,
+  gt,
+  asc,
+  desc,
+  sql,
+  count,
+} from "drizzle-orm";
 import { db } from "../db/client";
-import { clips, type Clip, type NewClip, type ClipVisibility } from "../db/schema";
+import { clips, teams, type Clip, type NewClip, type ClipVisibility } from "../db/schema";
 import { applyBurnExpiryCap, BURN_MAX_TTL, DEFAULT_TTL } from "../lib/constants";
 import { fireWebhook } from "../lib/webhook";
 import { getFilesDir } from "../lib/cleanup";
@@ -430,6 +443,100 @@ export async function listPublicClips(
     .orderBy(desc(clips.createdAt), desc(clips.slug))
     .limit(limit)
     .offset(Math.max(0, offset));
+}
+
+/** Wall-clock window used for “expiring soon” badges and filters. */
+export const EXPIRING_SOON_WINDOW_S = 24 * 60 * 60;
+
+export type OwnedClipRow = Clip & {
+  teamSlug: string | null;
+  teamName: string | null;
+};
+
+export interface ListOwnedClipsOpts {
+  /** `all` (default), `personal` (no team), or a team slug. */
+  team?: "all" | "personal" | string;
+  visibility?: "all" | "private" | "public";
+  /** Only clips whose TTL ends within EXPIRING_SOON_WINDOW_S. */
+  expiringSoon?: boolean;
+  limit?: number;
+}
+
+export function isExpiringSoon(
+  expiresAt: number | null,
+  now = Math.floor(Date.now() / 1000)
+): boolean {
+  if (expiresAt === null) return false;
+  return expiresAt > now && expiresAt <= now + EXPIRING_SOON_WINDOW_S;
+}
+
+export async function countOwnedClips(ownerId: string): Promise<number> {
+  const now = Math.floor(Date.now() / 1000);
+  const rows = await db
+    .select({ value: count() })
+    .from(clips)
+    .where(
+      and(
+        eq(clips.ownerId, ownerId),
+        or(isNull(clips.expiresAt), gt(clips.expiresAt, now))
+      )
+    );
+  return rows[0]?.value ?? 0;
+}
+
+/** Account-owned clips only (owner_id = user), including team-scoped ones. */
+export async function listOwnedClips(
+  ownerId: string,
+  opts: ListOwnedClipsOpts = {}
+): Promise<OwnedClipRow[]> {
+  const now = Math.floor(Date.now() / 1000);
+  const conditions = [
+    eq(clips.ownerId, ownerId),
+    // Hard-deleted by cleanup; also hide anything already past TTL.
+    or(isNull(clips.expiresAt), gt(clips.expiresAt, now)),
+  ];
+
+  if (opts.visibility === "private" || opts.visibility === "public") {
+    conditions.push(eq(clips.visibility, opts.visibility));
+  }
+
+  if (opts.team === "personal") {
+    conditions.push(isNull(clips.teamId));
+  } else if (opts.team && opts.team !== "all") {
+    conditions.push(eq(teams.slug, opts.team));
+  }
+
+  if (opts.expiringSoon) {
+    conditions.push(
+      and(
+        isNotNull(clips.expiresAt),
+        gt(clips.expiresAt, now),
+        lte(clips.expiresAt, now + EXPIRING_SOON_WINDOW_S)
+      )!
+    );
+  }
+
+  const rows = await db
+    .select({
+      clip: clips,
+      teamSlug: teams.slug,
+      teamName: teams.name,
+    })
+    .from(clips)
+    .leftJoin(teams, eq(clips.teamId, teams.id))
+    .where(and(...conditions))
+    .orderBy(
+      sql`CASE WHEN ${clips.expiresAt} IS NULL THEN 1 ELSE 0 END`,
+      asc(clips.expiresAt),
+      desc(clips.createdAt)
+    )
+    .limit(opts.limit ?? 200);
+
+  return rows.map((row) => ({
+    ...row.clip,
+    teamSlug: row.teamSlug,
+    teamName: row.teamName,
+  }));
 }
 
 export async function countPublicClips(query?: string): Promise<number> {

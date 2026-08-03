@@ -1,11 +1,12 @@
 /** @jsxImportSource hono/jsx */
 import { ThemeToggle } from "../ThemeToggle";
+import { accountInitials } from "../../lib/auth-nav";
 import type { AuthUser } from "../../lib/session";
 
 interface SiteHeaderProps {
   /** Marketing chrome links vs product-only nav for the OSS app shell. */
   variant?: "marketing" | "app";
-  user?: AuthUser | null;
+  user?: Pick<AuthUser, "id" | "email" | "name"> | null;
 }
 
 export function SiteHeader({ variant = "marketing", user = null }: SiteHeaderProps) {
@@ -19,22 +20,38 @@ export function SiteHeader({ variant = "marketing", user = null }: SiteHeaderPro
         <div class="site-header-end">
           <nav id="site-nav" class="site-nav" aria-label="Main">
             <a href="/klipwall">Klipwall</a>
-            {variant === "marketing" ? (
+            {variant === "marketing" && (
               <>
                 <a href="/#features">Features</a>
                 <a href="/about">About</a>
                 <a href="/docs">API</a>
                 <a href="/security">Security</a>
               </>
-            ) : user ? (
-              <a href="/account">Account</a>
-            ) : (
-              <>
-                <a href="/login">Log in</a>
-                <a href="/register">Register</a>
-              </>
             )}
           </nav>
+          <div class="site-auth">
+            {user ? (
+              <a
+                href="/account"
+                class="site-auth-account"
+                title={user.name?.trim() || user.email}
+              >
+                <span class="site-auth-avatar" aria-hidden="true">
+                  {accountInitials(user)}
+                </span>
+                <span class="site-auth-account-label">Account</span>
+              </a>
+            ) : (
+              <>
+                <a href="/login" class="site-auth-login">
+                  Log in
+                </a>
+                <a href="/register" class="site-auth-cta">
+                  Sign up<span class="site-auth-cta-extra">free</span>
+                </a>
+              </>
+            )}
+          </div>
           <button
             type="button"
             id="install-pwa"

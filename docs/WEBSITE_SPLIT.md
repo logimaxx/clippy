@@ -24,6 +24,7 @@ Production Docker copies `dist/` and `website/reserved-paths.json` only — not 
 Runtime coupling that still goes through the app:
 
 - Homepage `<!--EXPLORE_PREVIEW-->` filled from public clips
+- Header `<!--AUTH_NAV-->…<!--/AUTH_NAV-->` region: pages ship the signed-out Log in / Sign up cluster, and the app replaces it with the account pill when a session resolves (`src/lib/auth-nav.ts`). Statically hosted pages keep the signed-out version, so responses carry `Vary: Cookie` and must not be cached publicly.
 - `/sitemap.xml` merges static paths + public clip URLs
 - Footer resource links read `dist/pages/resource-links.json` (fallback: `website/static/landing-pages.json`)
 - Reserved slug checks merge app routes + marketing list ([`src/lib/reserved-paths.ts`](../src/lib/reserved-paths.ts))

@@ -4,6 +4,7 @@ import { SiteHeader } from "./partials/SiteHeader";
 import { SiteFooter } from "./partials/SiteFooter";
 import { clipPreviewText, formatClipDate } from "../lib/explore-preview";
 import type { Clip } from "../db/schema";
+import type { AuthUser } from "../lib/session";
 
 interface KlipwallPageProps {
   clips: Clip[];
@@ -11,6 +12,7 @@ interface KlipwallPageProps {
   page?: number;
   totalPages?: number;
   total?: number;
+  user?: Pick<AuthUser, "id" | "email" | "name"> | null;
 }
 
 function klipwallHref(page: number, query: string): string {
@@ -27,6 +29,7 @@ export function KlipwallPage({
   page = 1,
   totalPages = 1,
   total = 0,
+  user = null,
 }: KlipwallPageProps) {
   const searching = query.length > 0;
   const showPager = total > 0 && totalPages > 1;
@@ -38,7 +41,7 @@ export function KlipwallPage({
       themeToggle="none"
       bodyClass="with-chrome"
     >
-      <SiteHeader />
+      <SiteHeader user={user} />
       <main class="home explore-page">
         <h1>Klipwall</h1>
         <p class="tagline">

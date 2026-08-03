@@ -1168,4 +1168,45 @@
       syncNames();
     });
   });
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target instanceof Element ? e.target.closest("[data-copy-url]") : null;
+    if (!btn) return;
+
+    const path = btn.getAttribute("data-copy-url");
+    if (!path || !navigator.clipboard?.writeText) return;
+
+    navigator.clipboard
+      .writeText(new URL(path, location.origin).href)
+      .then(() => showToast("Link copied"))
+      .catch(() => showToast("Could not copy the link"));
+  });
+
+  document.addEventListener("change", (e) => {
+    const field = e.target;
+    if (!(field instanceof Element) || !field.hasAttribute("data-autosubmit")) return;
+    field.closest("form")?.requestSubmit();
+  });
+
+  document.addEventListener("click", (e) => {
+    const btn =
+      e.target instanceof Element ? e.target.closest("[data-password-toggle]") : null;
+    if (!btn) return;
+
+    const input = btn.closest(".password-field")?.querySelector("input");
+    if (!(input instanceof HTMLInputElement)) return;
+
+    const reveal = input.type === "password";
+    input.type = reveal ? "text" : "password";
+    btn.setAttribute("aria-pressed", reveal ? "true" : "false");
+    btn.setAttribute("aria-label", reveal ? "Hide password" : "Show password");
+
+    const caret = input.value.length;
+    input.focus();
+    try {
+      input.setSelectionRange(caret, caret);
+    } catch {
+      /* selection is unsupported on some input types */
+    }
+  });
 })();

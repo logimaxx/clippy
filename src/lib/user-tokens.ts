@@ -16,7 +16,7 @@ function nowSeconds(): number {
   return Math.floor(Date.now() / 1000);
 }
 
-function hashToken(raw: string): string {
+export function hashToken(raw: string): string {
   return createHash("sha256").update(raw).digest("hex");
 }
 

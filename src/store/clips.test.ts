@@ -2,6 +2,8 @@ import { describe, expect, test } from "bun:test";
 import {
   applyProtectionConstraints,
   clearE2eFields,
+  EXPIRING_SOON_WINDOW_S,
+  isExpiringSoon,
   needsLegacyPinGate,
 } from "./clips";
 import {
@@ -11,6 +13,16 @@ import {
   isWeakPassphrase,
   unlockPassphraseProtection,
 } from "../lib/e2e-crypto";
+
+describe("owned clip helpers", () => {
+  test("isExpiringSoon only within 24h window", () => {
+    const now = 1_700_000_000;
+    expect(isExpiringSoon(null, now)).toBe(false);
+    expect(isExpiringSoon(now - 10, now)).toBe(false);
+    expect(isExpiringSoon(now + 60, now)).toBe(true);
+    expect(isExpiringSoon(now + EXPIRING_SOON_WINDOW_S + 1, now)).toBe(false);
+  });
+});
 
 describe("needsLegacyPinGate", () => {
   test("true only for pinHash without encryption", () => {

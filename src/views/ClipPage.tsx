@@ -30,6 +30,7 @@ import {
 } from "../lib/constants";
 import { clipSeoMeta } from "../lib/clip-seo";
 import type { Clip, ClipVersion } from "../db/schema";
+import type { AuthUser } from "../lib/session";
 import { getClipFiles } from "../store/clips";
 import {
   getActiveTab,
@@ -84,6 +85,8 @@ interface ClipPageProps {
   burned?: boolean;
   cloneError?: string | null;
   cloneSlugValue?: string;
+  /** When set, show a quiet Account link in the clip chrome. */
+  user?: AuthUser | null;
 }
 
 export function ClipPage({
@@ -106,6 +109,7 @@ export function ClipPage({
   burned = false,
   cloneError = null,
   cloneSlugValue = "",
+  user = null,
 }: ClipPageProps) {
   const files = getClipFiles(clip);
   const deviceLabel = `${devices} device${devices === 1 ? "" : "s"}`;
@@ -213,6 +217,11 @@ export function ClipPage({
           )}
 
           <div class="header-actions">
+            {user && (
+              <a href="/account" class="btn btn--sm header-account-link">
+                Account
+              </a>
+            )}
             {!readOnly && (
               <button
                 type="button"

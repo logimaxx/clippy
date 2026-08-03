@@ -347,6 +347,18 @@ export function remainingSeconds(expiresAt: number | null): number | null {
   return Math.max(0, expiresAt - Math.floor(Date.now() / 1000));
 }
 
+/** Short relative expiry for library lists (“in 12m”, “in 2d”). */
+export function formatExpiresIn(expiresAt: number | null): string {
+  if (expiresAt === null) return "No expiry";
+  const rem = remainingSeconds(expiresAt);
+  if (rem === null || rem <= 0) return "Expired";
+  if (rem < 60) return `in ${rem}s`;
+  if (rem < 3600) return `in ${Math.max(1, Math.round(rem / 60))}m`;
+  if (rem < 86400) return `in ${Math.max(1, Math.round(rem / 3600))}h`;
+  if (rem < 86400 * 45) return `in ${Math.max(1, Math.round(rem / 86400))}d`;
+  return `in ${Math.max(1, Math.round(rem / 31536000))}y`;
+}
+
 /**
  * Only same-site relative paths may be used as a post-login destination, so a
  * `next` parameter cannot be turned into an open redirect.

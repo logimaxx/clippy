@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "../db/client";
 import { users, apiKeys } from "../db/schema";
 import {
@@ -141,7 +141,7 @@ auth.delete("/api/v1/auth/api-keys/:id", async (c) => {
   if (!user) return c.json({ error: "Unauthorized" }, 401);
 
   const id = c.req.param("id");
-  await db.delete(apiKeys).where(eq(apiKeys.id, id));
+  await db.delete(apiKeys).where(and(eq(apiKeys.id, id), eq(apiKeys.userId, user.id)));
   return c.json({ ok: true });
 });
 

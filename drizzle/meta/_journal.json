@@ -92,6 +92,13 @@
       "when": 1731200000000,
       "tag": "0012_team_invites",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1731300000000,
+      "tag": "0013_email_changes",
+      "breakpoints": true
     }
   ]
 }

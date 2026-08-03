@@ -86,12 +86,8 @@ export function AppHome({ user, createError, createSlug }: AppHomeProps) {
 
         {!user && (
           <p class="app-home-auth">
-            <a href="/login" class="btn btn-ghost">
-              Log in
-            </a>
-            <a href="/register" class="btn btn-ghost">
-              Register
-            </a>
+            An account keeps your clips in one place and adds teams with vanity
+            URLs. <a href="/register">Create a free account →</a>
           </p>
         )}
       </main>

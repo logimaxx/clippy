@@ -461,26 +461,311 @@ a {
   font-size: 0.85rem;
 }
 
+/* Centered auth pages: login, register, verify, reset, invite */
 .account-page .account-section {
-  margin: 2rem 0;
+  margin: 2rem auto;
   text-align: left;
   max-width: 480px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
-.account-page .team-list {
+.account-page .account-danger {
+  border: 1px solid var(--danger-muted);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.account-page .account-danger h2 {
+  color: var(--danger);
+}
+
+.account-page .muted {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+/* Signed-in user section: sidebar shell + card content */
+.account-layout {
+  width: 100%;
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 1.75rem 1.25rem 4rem;
+  display: grid;
+  grid-template-columns: minmax(200px, 232px) minmax(0, 1fr);
+  gap: 2rem;
+  align-items: start;
+  text-align: left;
+}
+
+.account-side {
+  position: sticky;
+  top: calc(var(--header-h) + 1rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
+.account-identity {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.account-identity:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--border-subtle));
+  box-shadow: var(--shadow-md);
+}
+
+.account-identity:hover .account-identity-go,
+.account-identity.is-active .account-identity-go {
+  color: var(--accent);
+}
+
+.account-identity.is-active {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border-subtle));
+}
+
+.account-identity-go {
+  margin-left: auto;
+  flex-shrink: 0;
+  color: var(--text-tertiary);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.account-avatar {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-full);
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+}
+
+.account-identity-text {
+  min-width: 0;
+}
+
+.account-identity-name {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-identity-email {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.account-nav-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.55rem 0.7rem;
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: background var(--transition), color var(--transition);
+}
+
+.account-nav-item:hover {
+  background: var(--bg-elevated);
+  border-color: var(--border-subtle);
+  color: var(--text-primary);
+}
+
+.account-nav-item.is-active {
+  background: var(--bg-elevated);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border-subtle));
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.account-nav-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.account-nav-count {
+  flex-shrink: 0;
+  min-width: 1.4rem;
+  padding: 0 0.35rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-sunken);
+  color: var(--text-tertiary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.account-nav-item.is-active .account-nav-count {
+  background: var(--accent-muted);
+  color: var(--accent);
+}
+
+.account-nav-desc {
+  font-size: 0.75rem;
+  color: var(--text-tertiary);
+  font-weight: 400;
+}
+
+.account-content {
+  min-width: 0;
+}
+
+.account-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.account-head h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 3vw, 1.9rem);
+  line-height: 1.15;
+  margin: 0;
+  color: var(--text-primary);
+}
+
+.account-head-sub {
+  margin: 0.3rem 0 0;
+  color: var(--text-tertiary);
+  font-size: 0.9rem;
+}
+
+.account-head-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.account-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: 1.15rem 1.25rem;
+  box-shadow: var(--shadow-sm);
+  text-align: left;
+}
+
+.account-card + .account-card {
+  margin-top: 1rem;
+}
+
+.account-card > h2 {
+  margin: 0;
+  font-size: 1.02rem;
+  color: var(--text-primary);
+}
+
+.account-card-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+}
+
+.account-card-body {
+  margin-top: 1rem;
+}
+
+.account-card--danger {
+  border-color: color-mix(in srgb, var(--danger) 32%, var(--border-subtle));
+}
+
+.account-card--danger > h2 {
+  color: var(--danger);
+}
+
+.account-card--flush {
+  padding: 0.35rem 0.5rem;
+}
+
+.account-card .home-form,
+.account-card .inline-form {
+  max-width: 26rem;
+}
+
+.account-card .home-form > .btn {
+  align-self: flex-start;
+}
+
+.account-card .home-form--row {
+  max-width: none;
+}
+
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.account-empty {
+  margin: 0;
+  padding: 1.5rem 1rem;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 0.9rem;
+}
+
+.account-empty strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.team-list {
   list-style: none;
   padding: 0;
-  margin: 0.5rem 0 1rem;
+  margin: 0;
 }
 
-.account-page .team-list li {
-  padding: 0.35rem 0;
-  border-bottom: 1px solid var(--border);
+.team-list li {
+  padding: 0.55rem 0;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-.account-page .team-member {
+.team-list li:last-child {
+  border-bottom: none;
+}
+
+.team-member {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -492,25 +777,319 @@ a {
   font-size: 0.8rem;
 }
 
-.account-page .account-actions {
+.team-member-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.team-member-actions .inline-form {
+  max-width: none;
+  margin-bottom: 0;
+}
+
+.team-member-actions select {
+  width: auto;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.8rem;
+}
+
+/* My clips */
+.my-clips-create[open] > summary {
+  margin-bottom: 1rem;
+}
+
+.my-clips-create > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-primary);
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.my-clips-create > summary::-webkit-details-marker {
+  display: none;
+}
+
+.my-clips-create > summary::before {
+  content: "+";
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: var(--radius-full);
+  background: var(--accent-muted);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.my-clips-create[open] > summary::before {
+  content: "−";
+}
+
+.my-clips-create-hint {
+  margin: 0.15rem 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-tertiary);
+}
+
+.my-clips-create-form {
+  gap: 0.6rem;
+}
+
+.my-clips-create-form .home-paste-input {
+  min-height: 7rem;
+}
+
+.my-clips-create-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
 }
 
-.account-page .account-danger {
-  border: 1px solid var(--danger-muted);
-  border-radius: 8px;
-  padding: 1rem;
+.my-clips-create-row .slug-input {
+  flex: 1;
+  min-width: 12rem;
 }
 
-.account-page .account-danger h2 {
-  color: var(--danger);
+.my-clips-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin: 1.25rem 0 0.75rem;
 }
 
-.account-page .muted {
-  color: var(--muted);
+.my-clips-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.my-clips-filters .slug-input {
+  width: auto;
+  min-width: 7.5rem;
+  padding: 0.35rem 0.5rem;
   font-size: 0.85rem;
+}
+
+.my-clips-soon-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.my-clips-density {
+  display: inline-flex;
+  padding: 0.15rem;
+  gap: 0.15rem;
+  background: var(--bg-sunken);
+  border-radius: var(--radius-md);
+}
+
+.my-clips-density-btn {
+  padding: 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.my-clips-density-btn.is-active {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: var(--shadow-sm);
+}
+
+.my-clips-count {
+  margin: 0 0 0.5rem;
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+}
+
+.my-clips-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.my-clips-item {
+  position: relative;
+}
+
+.my-clips-list--list .my-clips-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.35rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.my-clips-list--list .my-clips-item:last-child {
+  border-bottom: none;
+}
+
+.my-clips-list--list .my-clips-item:hover {
+  background: var(--bg-sunken);
+  border-radius: var(--radius-sm);
+}
+
+.my-clips-list--list .my-clips-link {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.my-clips-list--cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.75rem;
+}
+
+.my-clips-list--cards .my-clips-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.85rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+}
+
+.my-clips-list--cards .my-clips-item:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--border-subtle));
+}
+
+.my-clips-list--cards .my-clips-link {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.my-clips-slug {
+  font-weight: 600;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+.my-clips-preview {
+  font-size: 0.82rem;
+  color: var(--text-tertiary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.my-clips-chips {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+}
+
+.my-clips-list--list .my-clips-chips {
+  flex: 1;
+}
+
+.badge--team {
+  background: var(--accent-muted);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.badge--public {
+  background: var(--success-muted);
+  color: var(--success);
+}
+
+.badge--private {
+  background: var(--bg-sunken);
+  color: var(--text-tertiary);
+}
+
+.my-clips-expires {
+  color: var(--text-tertiary);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.my-clips-expires.is-soon {
+  color: var(--warning);
+  font-weight: 600;
+}
+
+.my-clips-copy {
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+
+.header-account-link {
+  text-decoration: none;
+}
+
+@media (max-width: 900px) {
+  .account-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1.25rem;
+    padding-top: 1.25rem;
+  }
+
+  .account-side {
+    position: static;
+  }
+
+  .account-nav {
+    flex-direction: row;
+    gap: 0.35rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    scrollbar-width: none;
+  }
+
+  .account-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .account-nav-item {
+    flex-shrink: 0;
+    padding: 0.4rem 0.75rem;
+    border-color: var(--border-subtle);
+  }
+
+  .account-nav-desc {
+    display: none;
+  }
+
+  .my-clips-list--list .my-clips-chips {
+    flex: none;
+  }
 }
 
 .oauth-buttons {
@@ -974,11 +1553,11 @@ a {
 }
 
 .app-home-auth {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-top: 1.75rem;
+  max-width: 34rem;
+  margin: 1.75rem auto 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
 }
 
 .home::before {
@@ -1023,6 +1602,61 @@ a {
   border-radius: var(--radius);
   color: var(--text);
   font-size: 1rem;
+}
+
+.password-field {
+  position: relative;
+  display: flex;
+}
+
+.password-field__input {
+  flex: 1;
+  min-width: 0;
+  padding-right: 2.75rem;
+}
+
+.password-field__toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.password-field__toggle:hover {
+  color: var(--text);
+}
+
+.password-field__toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.password-field__icon {
+  display: flex;
+}
+
+.password-field__icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.password-field__icon--hide,
+.password-field__toggle[aria-pressed="true"] .password-field__icon--show {
+  display: none;
+}
+
+.password-field__toggle[aria-pressed="true"] .password-field__icon--hide {
+  display: flex;
 }
 
 .hint {
@@ -1216,6 +1850,101 @@ a {
   color: var(--accent);
 }
 
+.site-auth {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding-left: 0.85rem;
+  border-left: 1px solid var(--border-subtle);
+}
+
+.site-auth a {
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+.site-auth-login {
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-weight: 500;
+  transition: color var(--transition), background var(--transition);
+}
+
+.site-auth-login:hover {
+  color: var(--accent);
+  background: var(--accent-muted);
+}
+
+.site-auth-cta {
+  display: inline-flex;
+  align-items: center;
+  /* Flex items drop the whitespace around "free", so space them here. */
+  gap: 0.3em;
+  padding: 0.45rem 0.95rem;
+  border-radius: var(--radius-full);
+  background: var(--accent);
+  color: var(--accent-text);
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  box-shadow: var(--shadow-sm);
+  transition: background var(--transition), transform var(--transition),
+    box-shadow var(--transition);
+}
+
+.site-auth-cta:hover {
+  background: var(--accent-hover);
+  color: var(--accent-text);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.site-auth-cta:active {
+  transform: none;
+  box-shadow: var(--shadow-sm);
+}
+
+.site-auth-account {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.75rem 0.3rem 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--bg);
+  color: var(--muted);
+  font-weight: 500;
+  transition: border-color var(--transition), color var(--transition);
+}
+
+.site-auth-account:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.site-auth-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: var(--radius-full);
+  background: var(--accent-muted);
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-auth-cta:hover {
+    transform: none;
+  }
+}
+
 @media (max-width: 767px) {
   .site-header-inner {
     padding: 0.75rem 1rem;
@@ -1281,6 +2010,40 @@ a {
 
   body.site-nav-open {
     overflow: hidden;
+  }
+
+  .site-auth {
+    gap: 0.35rem;
+    padding-left: 0;
+    border-left: none;
+  }
+
+  .site-auth a {
+    font-size: 0.85rem;
+  }
+
+  .site-auth-login {
+    padding: 0.4rem 0.45rem;
+  }
+
+  .site-auth-cta {
+    padding: 0.4rem 0.8rem;
+  }
+
+  /* Header space is tight next to the theme and menu buttons. */
+  .site-auth-cta-extra,
+  .site-auth-account-label {
+    display: none;
+  }
+
+  .site-auth-account {
+    padding: 0.25rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .site-auth-login {
+    display: none;
   }
 }
 
@@ -1815,7 +2578,8 @@ a {
 
 .feature-highlights {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  /* 190px lets the ten highlights land as two full rows of five at 1100px. */
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
   gap: 1rem;
 }
 
@@ -1943,6 +2707,8 @@ a {
 }
 
 .landing-section {
+  /* Auto side margins stop a flex item from stretching, hence the explicit width. */
+  width: 100%;
   max-width: 1100px;
   margin: 0 auto;
   margin-bottom: 2rem;
@@ -2118,6 +2884,54 @@ a {
   line-height: 1.5;
 }
 
+.use-case-card code,
+.feature-highlight code {
+  padding: 0.1rem 0.3rem;
+  border-radius: 4px;
+  background: var(--bg-sunken);
+  font-family: var(--mono);
+  font-size: 0.85em;
+  overflow-wrap: anywhere;
+}
+
+/* Accounts & teams */
+.accounts-section {
+  text-align: center;
+}
+
+.accounts-section h2 {
+  margin-bottom: 0.75rem;
+}
+
+.accounts-section .use-case-card {
+  text-align: left;
+}
+
+.accounts-intro {
+  max-width: 40rem;
+  margin: 0 auto 2rem;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.6;
+}
+
+.accounts-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.accounts-note {
+  max-width: 34rem;
+  margin: 1rem auto 0;
+  color: var(--text-tertiary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
 /* Why Webklip */
 .why-webklip {
   text-align: center;
@@ -2182,6 +2996,7 @@ a {
 
 /* SEO landing pages */
 .seo-landing-hero {
+  width: 100%;
   max-width: 720px;
   margin: 0 auto;
   padding: 3rem 1.5rem 2rem;

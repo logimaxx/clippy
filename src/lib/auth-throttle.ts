@@ -7,6 +7,9 @@ const REGISTER_WINDOW_MS = 60 * 60 * 1000;
 const RESET_PER_IP = 5;
 const RESET_PER_EMAIL = 3;
 const RESET_WINDOW_MS = 60 * 60 * 1000;
+const EMAIL_CHANGE_PER_USER = 3;
+const EMAIL_CHANGE_PER_TARGET = 3;
+const EMAIL_CHANGE_WINDOW_MS = 60 * 60 * 1000;
 
 const attempts = new Map<string, { count: number; resetAt: number }>();
 
@@ -24,6 +27,16 @@ function isLocked(key: string): boolean {
   return entry.count >= MAX_LOGIN_ATTEMPTS;
 }
 
+function recordFailure(key: string) {
+  const now = Date.now();
+  let entry = attempts.get(key);
+  if (!entry || now >= entry.resetAt) {
+    entry = { count: 0, resetAt: now + LOCKOUT_MS };
+  }
+  entry.count += 1;
+  attempts.set(key, entry);
+}
+
 export function canAttemptLogin(headers: Headers, email: string): boolean {
   const ip = getClientIp(headers);
   return !keysFor(ip, email).some(isLocked);
@@ -31,15 +44,7 @@ export function canAttemptLogin(headers: Headers, email: string): boolean {
 
 export function recordLoginFailure(headers: Headers, email: string) {
   const ip = getClientIp(headers);
-  const now = Date.now();
-  for (const key of keysFor(ip, email)) {
-    let entry = attempts.get(key);
-    if (!entry || now >= entry.resetAt) {
-      entry = { count: 0, resetAt: now + LOCKOUT_MS };
-    }
-    entry.count += 1;
-    attempts.set(key, entry);
-  }
+  for (const key of keysFor(ip, email)) recordFailure(key);
 }
 
 export function clearLoginFailures(headers: Headers, email: string) {
@@ -59,6 +64,45 @@ export function canRequestPasswordReset(headers: Headers, email: string): boolea
   const perEmail = rateLimit(`reset-email:${email}`, RESET_PER_EMAIL, RESET_WINDOW_MS)
     .allowed;
   return perIp && perEmail;
+}
+
+/**
+ * Password and email changes ask for the current password again. The session
+ * already proves who the caller is, so this only slows down someone poking at a
+ * borrowed unlocked browser — but it costs nothing to make guessing pointless.
+ */
+function passwordCheckKey(userId: string): string {
+  return `pwcheck:${userId}`;
+}
+
+export function canConfirmPassword(userId: string): boolean {
+  return !isLocked(passwordCheckKey(userId));
+}
+
+export function recordPasswordConfirmFailure(userId: string) {
+  recordFailure(passwordCheckKey(userId));
+}
+
+export function clearPasswordConfirmFailures(userId: string) {
+  attempts.delete(passwordCheckKey(userId));
+}
+
+/**
+ * The address is chosen by the requester, so this form could otherwise mail a
+ * stranger's inbox on demand. Capped per account and per target address.
+ */
+export function canRequestEmailChange(userId: string, email: string): boolean {
+  const perUser = rateLimit(
+    `email-change-user:${userId}`,
+    EMAIL_CHANGE_PER_USER,
+    EMAIL_CHANGE_WINDOW_MS
+  ).allowed;
+  const perTarget = rateLimit(
+    `email-change-target:${email}`,
+    EMAIL_CHANGE_PER_TARGET,
+    EMAIL_CHANGE_WINDOW_MS
+  ).allowed;
+  return perUser && perTarget;
 }
 
 setInterval(() => {

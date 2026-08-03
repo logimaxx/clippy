@@ -54,6 +54,7 @@ interface BuildContext {
   umamiScript: string;
   footerTracking: string;
   trustAnalytics: string;
+  oauthSignIn: string;
   resourceLinks: string;
   umami: {
     analyticsSection: string;
@@ -104,6 +105,17 @@ function umamiConfig(): { script: string } | null {
   };
 }
 
+/** OAuth buttons only exist on the login page when both halves of a pair are set. */
+function oauthProviderNames(): string[] {
+  const pairs: [string, string, string][] = [
+    ["Google", "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
+    ["GitHub", "GITHUB_CLIENT_ID", "GITHUB_CLIENT_SECRET"],
+  ];
+  return pairs
+    .filter(([, id, secret]) => process.env[id]?.trim() && process.env[secret]?.trim())
+    .map(([name]) => name);
+}
+
 function replaceVars(template: string, vars: Record<string, string>): string {
   let out = template;
   for (const [key, value] of Object.entries(vars)) {
@@ -145,6 +157,7 @@ function buildDocsBody(activePath: string, content: string): string {
 
 function buildContext(): BuildContext {
   const umami = umamiConfig();
+  const oauthProviders = oauthProviderNames();
   const landingPages = JSON.parse(
     readFileSync(join(STATIC, "landing-pages.json"), "utf-8")
   ) as LandingPage[];
@@ -166,6 +179,10 @@ function buildContext(): BuildContext {
     trustAnalytics: umami
       ? "Anonymous usage logs only — no content or editor tracking"
       : "No analytics trackers",
+    oauthSignIn:
+      oauthProviders.length > 0
+        ? `Sign up with an email and password, or with ${oauthProviders.join(" or ")}.`
+        : "Sign up with an email and password.",
     resourceLinks,
     umami: {
       analyticsSection: umami
@@ -458,6 +475,7 @@ function writePage(urlPath: string, filename: string, html: string) {
 // Homepage
 const homeBody = replaceVars(readFileSync(join(STATIC, "pages", "home.html"), "utf-8"), {
   TRUST_ANALYTICS: ctx.trustAnalytics,
+  OAUTH_SIGN_IN: ctx.oauthSignIn,
 });
 writePage(
   "/",
@@ -465,7 +483,7 @@ writePage(
   renderPage(layout, header, footer, homeBody, ctx, {
     title: "Webklip — Online Clipboard for Instant Text & File Sharing",
     description:
-      "Free online clipboard with live sync. Share text and files between devices on a temporary private link that acts like a disposable workspace. No account, expires in 15 minutes by default.",
+      "Free online clipboard with live sync. Share text and files between devices on a temporary private link that acts like a disposable workspace. No account needed; add a free one for teams and vanity URLs.",
     canonical: "/",
     ogTitle: "Webklip — Stop using chat as your clipboard",
     ogDescription:
@@ -527,6 +545,7 @@ for (const page of legalPages) {
     LEGAL_UPDATED: ctx.legalUpdated,
     UMAMI_ANALYTICS_SECTION: ctx.umami.analyticsSection,
     COOKIE_CONSENT_NOTE: ctx.umami.cookieConsent,
+    OAUTH_SIGN_IN: ctx.oauthSignIn,
   });
   writePage(
     page.path,

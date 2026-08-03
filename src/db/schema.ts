@@ -128,6 +128,28 @@ export const emailVerifications = sqliteTable(
   ]
 );
 
+export const emailChanges = sqliteTable(
+  "email_changes",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    /** The address being moved to; only written to `users` once confirmed. */
+    newEmail: text("new_email").notNull(),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    usedAt: integer("used_at"),
+    createdAt: integer("created_at")
+      .notNull()
+      .$defaultFn(() => Math.floor(Date.now() / 1000)),
+  },
+  (table) => [
+    uniqueIndex("email_changes_token_unique").on(table.tokenHash),
+    index("idx_email_changes_user").on(table.userId),
+  ]
+);
+
 export const apiKeys = sqliteTable("api_keys", {
   id: text("id").primaryKey(),
   userId: text("user_id")
@@ -190,6 +212,7 @@ export const teamMembers = sqliteTable(
 
 export type PasswordReset = typeof passwordResets.$inferSelect;
 export type EmailVerification = typeof emailVerifications.$inferSelect;
+export type EmailChange = typeof emailChanges.$inferSelect;
 export const teamInvites = sqliteTable(
   "team_invites",
   {

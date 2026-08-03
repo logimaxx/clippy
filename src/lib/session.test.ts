@@ -4,8 +4,12 @@ import {
   canAttemptLogin,
   recordLoginFailure,
   clearLoginFailures,
+  canConfirmPassword,
   canRegister,
+  canRequestEmailChange,
   canRequestPasswordReset,
+  clearPasswordConfirmFailures,
+  recordPasswordConfirmFailure,
 } from "./auth-throttle";
 import { isMailerConfigured, mailerRecentlyFailed, sendMail } from "./mailer";
 import { isEmailVerificationRequired, verifyUrl } from "./email-verification";
@@ -114,6 +118,50 @@ describe("password reset throttle", () => {
     );
     expect(results.slice(0, 5)).toEqual([true, true, true, true, true]);
     expect(results.slice(5)).toEqual([false, false]);
+  });
+});
+
+describe("current-password confirmation throttle", () => {
+  test("locks the account's settings forms after repeated wrong passwords", () => {
+    const userId = "user-pwcheck-1";
+    clearPasswordConfirmFailures(userId);
+
+    expect(canConfirmPassword(userId)).toBe(true);
+    for (let i = 0; i < 8; i++) recordPasswordConfirmFailure(userId);
+    expect(canConfirmPassword(userId)).toBe(false);
+  });
+
+  test("a correct password clears the counter", () => {
+    const userId = "user-pwcheck-2";
+    for (let i = 0; i < 8; i++) recordPasswordConfirmFailure(userId);
+    clearPasswordConfirmFailures(userId);
+    expect(canConfirmPassword(userId)).toBe(true);
+  });
+
+  test("one account's failures do not lock another", () => {
+    const attacked = "user-pwcheck-3";
+    const bystander = "user-pwcheck-4";
+    clearPasswordConfirmFailures(bystander);
+    for (let i = 0; i < 8; i++) recordPasswordConfirmFailure(attacked);
+    expect(canConfirmPassword(bystander)).toBe(true);
+  });
+});
+
+describe("email change throttle", () => {
+  test("caps how often one account can send a confirmation", () => {
+    const userId = "user-emailchange-1";
+    const results = Array.from({ length: 5 }, (_, i) =>
+      canRequestEmailChange(userId, `target${i}@example.com`)
+    );
+    expect(results).toEqual([true, true, true, false, false]);
+  });
+
+  test("caps how often one address can be mailed across accounts", () => {
+    const email = "victim@example.com";
+    const results = Array.from({ length: 5 }, (_, i) =>
+      canRequestEmailChange(`user-emailchange-sender-${i}`, email)
+    );
+    expect(results).toEqual([true, true, true, false, false]);
   });
 });
 

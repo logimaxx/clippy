@@ -19,6 +19,7 @@ Open http://localhost:3000
 
 - **Accounts** — register/login at `/register`, `/login`, dashboard at `/account`; optional Google/GitHub OAuth
 - **Account security** — login lockout after repeated failures, sessions that expire after 30 days and can be revoked ("sign out everywhere"), self-service account deletion, plus email confirmation and password reset when `RESEND_API_KEY` is set
+- **Account settings** — edit the display name, change the password in-app, and move the account to a new email address (confirmed from the new address) at `/account/settings`
 
 ### Email confirmation
 
@@ -38,7 +39,9 @@ With a mailer configured, a new email/password sign-up cannot sign in until the 
 
 Owners and admins invite by email from `/teams/{team-slug}`. The invite link is bound to that address, works once, and expires in 7 days; it is emailed when a mailer is configured and always shown in the UI so it can be shared by hand. Roles are **admin** (manage members), **member** (read and write clips), and **viewer** (read only) — ownership stays with the creator and cannot be granted through an invite.
 
-Team pages and member lists are visible to members only; everyone else gets a 404. Admins can revoke pending invites and remove members, members can leave, and the owner can only release the team by deleting their account.
+Team pages and member lists are visible to members only; everyone else gets a 404. Admins can revoke pending invites, change a member's role, and remove members; members can leave. The owner can additionally rename the team, transfer it to another member (becoming an admin in the process), or delete it outright, which also removes every clip under `/{team}/`.
+
+A team's slug is fixed once created, because it forms the first half of every team clip URL.
 
 ### Passphrase E2E encryption
 

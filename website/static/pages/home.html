@@ -55,7 +55,7 @@
   <div class="feature-highlights">
     <div class="feature-highlight">
       <span class="feature-highlight-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4v6h-6"/><path d="M3 20v-6h6"/><path d="M4.6 9a8 8 0 0 1 13.3-2.9L21 9"/><path d="M3 15l3.1 2.9A8 8 0 0 0 19.4 15"/></svg>
       </span>
       <strong>Real-time sync</strong>
       <span>Updates appear on every open device as you type or paste</span>
@@ -65,7 +65,7 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
       </span>
       <strong>No account required</strong>
-      <span>Your link is the key</span>
+      <span>Your link is the key — signing up stays optional</span>
     </div>
     <div class="feature-highlight">
       <span class="feature-highlight-icon" aria-hidden="true">
@@ -116,6 +116,13 @@
       <strong>Multiple tabs</strong>
       <span>Keep notes, code, and drafts on one clip — more than a single paste</span>
     </div>
+    <div class="feature-highlight">
+      <span class="feature-highlight-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </span>
+      <strong>Teams &amp; vanity URLs</strong>
+      <span>With a free account: shared spaces at <code>/team/clip-name</code></span>
+    </div>
   </div>
 </section>
 
@@ -145,12 +152,50 @@
   </div>
 </section>
 
+<section id="accounts" class="landing-section accounts-section">
+  <h2>Accounts and teams, when you want them</h2>
+  <p class="accounts-intro">
+    Anonymous clips stay the default — nothing here gates the paste box above.
+    A free account just gives the clips you keep coming back to a home.
+  </p>
+  <div class="use-case-grid use-case-grid--compact">
+    <div class="use-case-card">
+      <h3>Your clips in one place</h3>
+      <p>
+        Every clip you own on one dashboard, with the time it has left. Extend or delete a clip
+        without digging for the link you sent yourself.
+      </p>
+    </div>
+    <div class="use-case-card">
+      <h3>Teams with names you can guess</h3>
+      <p>
+        Invite people by email and share a reusable space at
+        <code>webklip.com/team/clip-name</code> — with admin, member, and read-only viewer roles.
+      </p>
+    </div>
+    <div class="use-case-card">
+      <h3>Keys for scripts and CI</h3>
+      <p>
+        Issue API keys for the REST API and CLI, and point clip webhooks at your own services.
+      </p>
+    </div>
+  </div>
+  <div class="accounts-actions">
+    <a href="/register" class="btn btn-primary btn-lg">Create a free account</a>
+    <a href="/login" class="btn">Log in</a>
+  </div>
+  <p class="accounts-note">
+    Free, no payment details. {{OAUTH_SIGN_IN}}
+    Delete your account, your teams, and their clips yourself at any time.
+  </p>
+</section>
+
 <section id="trust" class="landing-section trust-section">
   <h2>Built for privacy</h2>
   <ul class="trust-list">
     <li>No ads</li>
     <li>{{TRUST_ANALYTICS}}</li>
-    <li>Anonymous — no account needed</li>
+    <li>Anonymous by default — an account is optional, never required to share</li>
     <li>Expires in 15 minutes by default (you can extend)</li>
     <li>Automatic deletion after expiry — we do not keep abandoned clips</li>
     <li>Choose passphrase end-to-end encryption for sensitive content</li>

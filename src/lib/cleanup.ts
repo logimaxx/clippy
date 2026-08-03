@@ -5,6 +5,7 @@ import {
   purgeUnverifiedAccounts,
 } from "./email-verification";
 import { purgeExpiredInvites } from "./team-invites";
+import { purgeExpiredEmailChanges } from "./email-change";
 import { existsSync } from "node:fs";
 import { readdir, unlink } from "node:fs/promises";
 import { join } from "node:path";
@@ -26,6 +27,7 @@ export async function startCleanupJob() {
       await purgeExpiredResetTokens();
       await purgeExpiredVerificationTokens();
       await purgeExpiredInvites();
+      await purgeExpiredEmailChanges();
       await purgeUnverifiedAccounts();
     } catch (err) {
       console.error("Cleanup error:", err);

@@ -6,6 +6,7 @@ import { startCleanupJob } from "./lib/cleanup";
 import { startStatsSnapshotJob } from "./lib/stats-snapshot";
 import { getAdminPath, isAdminEnabled } from "./lib/admin";
 import { injectLiveReloadHtml, liveReloadPort } from "./lib/dev-live-reload";
+import { devPaletteEnabled, injectDevPaletteHtml } from "./lib/dev-palette";
 import { pages } from "./routes/pages";
 import { staticPages } from "./routes/static";
 import { seedPublicClips } from "./lib/seed-public-clips";
@@ -94,13 +95,16 @@ app.use("*", async (c, next) => {
   c.res.headers.set("Cache-Control", "no-cache");
 
   const lrPort = liveReloadPort();
-  if (!lrPort) return;
+  const palette = devPaletteEnabled();
+  if (!lrPort && !palette) return;
 
   const status = c.res.status;
   const statusText = c.res.statusText;
   const headers = new Headers(c.res.headers);
-  const html = await c.res.text();
-  c.res = new Response(injectLiveReloadHtml(html, lrPort), {
+  let html = await c.res.text();
+  if (lrPort) html = injectLiveReloadHtml(html, lrPort);
+  if (palette) html = injectDevPaletteHtml(html);
+  c.res = new Response(html, {
     status,
     statusText,
     headers,

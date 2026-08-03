@@ -5,6 +5,8 @@ import { getUmamiConfig, umamiScriptTag } from "../lib/umami";
 import { listPublicClips } from "../store/clips";
 import { renderExplorePreviewHtml } from "../lib/explore-preview";
 import { siteUrl } from "../lib/constants";
+import { injectAuthNav } from "../lib/auth-nav";
+import { resolveAuth } from "../lib/session";
 
 const PAGES_DIR = join(process.cwd(), "dist", "pages");
 const EXPLORE_PREVIEW_MARKER = "<!--EXPLORE_PREVIEW-->";
@@ -146,7 +148,8 @@ staticPages.get("*", async (c, next) => {
       "Cache-Control": "public, max-age=300",
     });
   }
-  return c.html(html);
+  html = injectAuthNav(html, await resolveAuth(c));
+  return c.html(html, 200, { Vary: "Cookie" });
 });
 
 export { staticPages, loadRoutes };

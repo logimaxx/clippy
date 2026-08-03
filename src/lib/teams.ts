@@ -106,6 +106,37 @@ export async function addTeamMember(
     .onConflictDoNothing();
 }
 
+export async function updateTeamMemberRole(
+  teamId: string,
+  userId: string,
+  role: TeamRole
+): Promise<void> {
+  await db
+    .update(teamMembers)
+    .set({ role })
+    .where(and(eq(teamMembers.teamId, teamId), eq(teamMembers.userId, userId)));
+}
+
+export async function renameTeam(teamId: string, name: string): Promise<void> {
+  await db.update(teams).set({ name }).where(eq(teams.id, teamId));
+}
+
+/**
+ * Hands a team to an existing member. `teams.ownerId` is the authoritative
+ * record and the `owner` row in `team_members` mirrors it, so both move here.
+ * The new owner is promoted first: interrupted half-way that leaves two owner
+ * rows, which an admin can still fix, rather than a team with none.
+ */
+export async function transferTeamOwnership(
+  teamId: string,
+  fromUserId: string,
+  toUserId: string
+): Promise<void> {
+  await updateTeamMemberRole(teamId, toUserId, "owner");
+  await db.update(teams).set({ ownerId: toUserId }).where(eq(teams.id, teamId));
+  await updateTeamMemberRole(teamId, fromUserId, "admin");
+}
+
 export async function removeTeamMember(teamId: string, userId: string): Promise<void> {
   await db
     .delete(teamMembers)
