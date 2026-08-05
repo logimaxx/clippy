@@ -27,6 +27,11 @@ interface LandingCompare {
   footnote?: string;
 }
 
+interface LandingSection {
+  heading: string;
+  paragraphs: string[];
+}
+
 interface LandingPage {
   slug: string;
   title: string;
@@ -44,6 +49,8 @@ interface LandingPage {
   heroVariant?: "paste" | "file" | "signup";
   /** Optional side-by-side comparison table (e.g. competitor vs Webklip) */
   compare?: LandingCompare;
+  /** Mid-page topic blocks for consolidated SEO guides */
+  sections?: LandingSection[];
   /** Override for the benefits section heading */
   benefitsHeading?: string;
 }
@@ -378,6 +385,18 @@ ${rows}
 </section>`;
 }
 
+function buildLandingSections(sections: LandingSection[]): string {
+  return sections
+    .map((section) => {
+      const paragraphs = section.paragraphs.map((p) => `<p>${p}</p>`).join("\n    ");
+      return `<section class="landing-section seo-landing-prose seo-landing-topic">
+  <h2>${escapeHtml(section.heading)}</h2>
+  ${paragraphs}
+</section>`;
+    })
+    .join("\n\n");
+}
+
 function buildLandingBody(page: LandingPage, allPages: LandingPage[]): string {
   const related = page.relatedSlugs
     .map((slug) => allPages.find((p) => p.slug === slug))
@@ -410,6 +429,10 @@ function buildLandingBody(page: LandingPage, allPages: LandingPage[]): string {
   const benefitsHeading =
     page.benefitsHeading ?? `Why use Webklip for ${page.h1.toLowerCase()}?`;
   const compareSection = page.compare ? `\n\n${buildCompareSection(page.compare)}` : "";
+  const topicSections =
+    page.sections && page.sections.length > 0
+      ? `\n\n${buildLandingSections(page.sections)}`
+      : "";
 
   return `<section class="seo-landing-hero">
   <h1>${page.h1}</h1>
@@ -419,7 +442,7 @@ function buildLandingBody(page: LandingPage, allPages: LandingPage[]): string {
 
 <section class="landing-section seo-landing-prose">
   ${paragraphs}
-</section>${compareSection}
+</section>${topicSections}${compareSection}
 
 <section class="landing-section">
   <h2>${escapeHtml(benefitsHeading)}</h2>
@@ -636,6 +659,24 @@ for (const page of docsPages) {
   );
 }
 
+const seoRedirects = JSON.parse(
+  readFileSync(join(STATIC, "seo-redirects.json"), "utf-8")
+) as Record<string, string>;
+
+for (const [from, to] of Object.entries(seoRedirects)) {
+  if (!from.startsWith("/") || !to.startsWith("/")) {
+    throw new Error(`Invalid SEO redirect: ${from} → ${to}`);
+  }
+  if (routes[from]) {
+    throw new Error(`SEO redirect source collides with a built page: ${from}`);
+  }
+  if (!routes[to] && to !== "/") {
+    throw new Error(`SEO redirect target is not a built page: ${from} → ${to}`);
+  }
+}
+
+writeFileSync(join(OUT, "seo-redirects.json"), JSON.stringify(seoRedirects, null, 2));
+
 const sitemapPaths = [...Object.keys(routes), "/klipwall", "/contact"].sort((a, b) => {
   if (a === "/") return -1;
   if (b === "/") return 1;
@@ -651,7 +692,10 @@ writeFileSync(join(OUT, "routes.json"), JSON.stringify(routes, null, 2));
 /** First path segment reserved so clips cannot collide with marketing URLs. */
 const reservedPathSegments = [
   ...new Set(
-    Object.keys(routes)
+    [
+      ...Object.keys(routes),
+      ...Object.keys(seoRedirects),
+    ]
       .filter((p) => p !== "/")
       .map((p) => p.replace(/^\//, "").split("/")[0])
       .filter(Boolean)
@@ -675,6 +719,9 @@ writeFileSync(
 );
 
 console.log(`Static pages built → ${OUT} (${Object.keys(routes).length} pages)`);
+console.log(
+  `SEO redirects → ${Object.keys(seoRedirects).length} (301 from retired landings)`
+);
 console.log(
   `Reserved marketing paths → ${reservedPathSegments.length} segments (${join(WEBSITE, "reserved-paths.json")})`
 );

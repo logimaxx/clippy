@@ -261,7 +261,7 @@ test.describe("Webklip E2E", () => {
     test("landing page loads", async ({ page }) => {
       await page.goto("/online-clipboard");
       await expect(page.getByRole("heading", { level: 1 })).toContainText(
-        "Online Clipboard"
+        "Online Clipboard with Live Sync"
       );
     });
 
@@ -993,34 +993,19 @@ test.describe("Webklip E2E", () => {
       );
     });
 
-    test("creates clip with file from temporary-file-sharing landing", async ({
-      page,
+    test("retired SEO landings redirect to consolidated pages", async ({
+      request,
     }) => {
-      const slug = uniqueSlug("landfile");
-      const filePath = join(tmpdir(), `webklip-e2e-land-${Date.now()}.txt`);
-      const body = `landing upload ${Date.now()}`;
-      writeFileSync(filePath, body);
-
-      try {
-        await page.goto("/temporary-file-sharing");
-        await page
-          .locator(".landing-hero-upload input[type='file']")
-          .setInputFiles(filePath);
-        await expect(page.locator(".landing-file-names")).toContainText(
-          "webklip-e2e-land"
-        );
-        await page.fill('.landing-hero-upload input[name="slug"]', slug);
-        await page
-          .locator(".landing-hero-upload")
-          .getByRole("button", { name: /Create a? clip/i })
-          .click();
-        await expect(page).toHaveURL(new RegExp(`/${slug}$`));
-        await expect(page.locator(".file-attachment, .file-card")).toHaveCount(1);
-        await expect(page.locator(".file-attachment, .file-card")).toContainText(
-          "webklip-e2e-land"
-        );
-      } finally {
-        unlinkSync(filePath);
+      const redirects: Array<[string, string]> = [
+        ["/temporary-file-sharing", "/online-clipboard"],
+        ["/burn-after-read", "/secure-clipboard"],
+        ["/share-code-snippets", "/for-developers"],
+      ];
+      for (const [from, to] of redirects) {
+        const res = await request.get(from, { maxRedirects: 0 });
+        expect(res.status()).toBe(301);
+        const location = res.headers().location ?? "";
+        expect(location).toMatch(new RegExp(`${to.replace("/", "\\/")}$`));
       }
     });
   });

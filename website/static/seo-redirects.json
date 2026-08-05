@@ -1,0 +1,15 @@
+{
+  "/live-sync": "/online-clipboard",
+  "/share-text-between-devices": "/online-clipboard",
+  "/temporary-notes": "/online-clipboard",
+  "/temporary-file-sharing": "/online-clipboard",
+  "/qr-clipboard": "/online-clipboard",
+  "/share-screenshot": "/online-clipboard",
+  "/encrypted-clipboard": "/secure-clipboard",
+  "/burn-after-read": "/secure-clipboard",
+  "/share-password": "/secure-clipboard",
+  "/share-credentials-with-team": "/secure-clipboard",
+  "/share-code-snippets": "/for-developers",
+  "/clipboard-api": "/for-developers",
+  "/markdown-paste": "/for-developers"
+}

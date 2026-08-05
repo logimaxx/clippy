@@ -3137,6 +3137,10 @@ a {
   margin-bottom: 0;
 }
 
+.seo-landing-topic h2 {
+  margin-bottom: 0.85rem;
+}
+
 .seo-use-cases {
   max-width: 640px;
   margin: 0 auto;

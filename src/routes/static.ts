@@ -12,6 +12,7 @@ const PAGES_DIR = join(process.cwd(), "dist", "pages");
 const EXPLORE_PREVIEW_MARKER = "<!--EXPLORE_PREVIEW-->";
 
 let routes: Record<string, string> | null = null;
+let seoRedirects: Record<string, string> | null = null;
 
 function loadRoutes(): Record<string, string> {
   const isDev = process.env.WEBKLIP_DEV === "1";
@@ -24,6 +25,21 @@ function loadRoutes(): Record<string, string> {
   }
   routes = JSON.parse(readFileSync(manifestPath, "utf-8")) as Record<string, string>;
   return routes;
+}
+
+function loadSeoRedirects(): Record<string, string> {
+  const isDev = process.env.WEBKLIP_DEV === "1";
+  if (seoRedirects && !isDev) return seoRedirects;
+  const redirectsPath = join(PAGES_DIR, "seo-redirects.json");
+  if (!existsSync(redirectsPath)) {
+    seoRedirects = {};
+    return seoRedirects;
+  }
+  seoRedirects = JSON.parse(readFileSync(redirectsPath, "utf-8")) as Record<
+    string,
+    string
+  >;
+  return seoRedirects;
 }
 
 function readPage(filename: string): string {
@@ -133,6 +149,11 @@ Sitemap: ${base.replace(/\/$/, "")}/sitemap.xml
 });
 
 staticPages.get("*", async (c, next) => {
+  const redirectTo = loadSeoRedirects()[c.req.path];
+  if (redirectTo) {
+    return c.redirect(redirectTo, 301);
+  }
+
   const filename = loadRoutes()[c.req.path];
   if (!filename || !existsSync(join(PAGES_DIR, filename))) {
     return next();
